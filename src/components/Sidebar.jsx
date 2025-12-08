@@ -7,7 +7,7 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user, isCollapsed,
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'trips', label: 'My Trips', icon: Map },
         { id: 'expenses', label: 'Expenses', icon: PieChart },
-        { id: 'settings', label: 'Settings', icon: Settings },
+        { id: 'profile', label: 'My Profile', icon: Settings }, // Replaced Settings or added new
     ];
 
     return (

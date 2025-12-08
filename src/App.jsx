@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, query, onSnapshot, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
 import { auth, db } from './firebase.js';
 import { appId } from './constants.js';
 
@@ -11,11 +11,16 @@ import TripDetail from './components/TripDetail';
 import Dashboard from './components/Dashboard';
 import Layout from './components/Layout';
 import About from './components/About';
+import VerifyEmail from './components/VerifyEmail';
+import ProfileCompletion from './components/ProfileCompletion';
+import Profile from './components/Profile';
 
 export default function App() {
   // --- Auth State ---
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [profileCheckLoading, setProfileCheckLoading] = useState(true);
 
   // --- App View State ---
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'trips', 'expenses', 'settings'
@@ -24,8 +29,27 @@ export default function App() {
 
   // Listen for auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+
+      if (currentUser) {
+        // Check Profile Completion in Firestore
+        try {
+          const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid);
+          const userSnap = await getDoc(userDocRef);
+
+          if (userSnap.exists() && userSnap.data().isProfileComplete) {
+            setIsProfileComplete(true);
+          } else {
+            setIsProfileComplete(false);
+          }
+        } catch (error) {
+          console.error("Error checking profile:", error);
+        }
+      } else {
+        setIsProfileComplete(false);
+      }
+      setProfileCheckLoading(false);
       setAuthLoading(false);
     });
     return () => unsubscribe();
@@ -33,7 +57,7 @@ export default function App() {
 
   // Fetch trips
   useEffect(() => {
-    if (!user) {
+    if (!user || !isProfileComplete) {
       setTripsList([]);
       return;
     }
@@ -53,13 +77,14 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isProfileComplete]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       setCurrentTripId(null);
       setCurrentView('dashboard');
+      setIsProfileComplete(false);
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -97,10 +122,22 @@ export default function App() {
     }
   };
 
-  if (authLoading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+  if (authLoading || (user && profileCheckLoading)) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+  }
 
   if (!user) {
     return <Auth />;
+  }
+
+  // 1. Email Verification Check (Skip if no email, e.g. Phone Auth)
+  if (user.email && !user.emailVerified) {
+    return <VerifyEmail user={user} />;
+  }
+
+  // 2. Profile Completion Check
+  if (!isProfileComplete) {
+    return <ProfileCompletion user={user} onComplete={() => setIsProfileComplete(true)} />;
   }
 
   // If a specific trip is open, show the editor (Full screen mode)
@@ -142,6 +179,7 @@ export default function App() {
       )}
 
       {currentView === 'about' && <About />}
+      {currentView === 'profile' && <Profile user={user} />}
 
       {/* Placeholders for upcoming sections */}
       {(currentView === 'expenses' || currentView === 'settings') && (
