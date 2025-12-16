@@ -9,6 +9,7 @@ import Insights from './Insights';
 import Expenses from './Expenses';
 import Files from './Files';
 import TripMap from './TripMap';
+import NotificationBell from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TripDetail = ({ user, tripId, setCurrentTripId }) => {
@@ -111,6 +112,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                     <button className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2">
                         <Share2 size={16} /> Share
                     </button>
+                    <NotificationBell user={user} tripId={tripId} />
+
                     <span className={`text-xs font-medium px-2 py-1 rounded-full transition-colors ${syncStatus === 'synced' ? 'text-slate-400' : 'text-amber-500'}`}>
                         {syncStatus === 'saving' ? 'Saving...' : 'Saved'}
                     </span>
@@ -176,11 +179,11 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeTab === 'itinerary' && <Planner days={days} setDays={setDays} />}
+                                {activeTab === 'itinerary' && <Planner days={days} setDays={setDays} user={user} tripId={tripId} />}
                                 {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={setTravelers} />}
                                 {activeTab === 'expenses' && <Expenses days={days} />}
                                 {activeTab === 'map' && <TripMap />}
-                                {activeTab === 'files' && <Files />}
+                                {activeTab === 'files' && <Files user={user} tripId={tripId} />}
                             </motion.div>
                         </AnimatePresence>
                     </div>

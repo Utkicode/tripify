@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
+import NotificationBell from './NotificationBell';
 
-const Layout = ({ children, user, handleLogout, currentView, setCurrentView }) => {
+const Layout = ({ children, user, handleLogout, currentView, setCurrentView, setCurrentTripId }) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -41,10 +42,12 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView }) =
                                 className="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-slate-400"
                             />
                         </div>
-                        <button className="p-2 text-slate-400 hover:text-slate-600 relative">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
+                        <NotificationBell
+                            user={user}
+                            tripId={null}
+                            setCurrentTripId={setCurrentTripId}
+                            setCurrentView={setCurrentView}
+                        />
                     </div>
                 </header>
 

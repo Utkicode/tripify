@@ -14,6 +14,7 @@ import About from './components/About';
 import VerifyEmail from './components/VerifyEmail';
 import ProfileCompletion from './components/ProfileCompletion';
 import Profile from './components/Profile';
+import ProTips from './components/ProTips';
 
 export default function App() {
   // --- Auth State ---
@@ -158,6 +159,7 @@ export default function App() {
       handleLogout={handleLogout}
       currentView={currentView}
       setCurrentView={setCurrentView}
+      setCurrentTripId={setCurrentTripId}
     >
       {currentView === 'dashboard' && (
         <Dashboard
@@ -166,6 +168,7 @@ export default function App() {
           setCurrentTripId={setCurrentTripId}
           createNewTrip={createNewTrip}
           deleteTrip={deleteTrip}
+          setCurrentView={setCurrentView}
         />
       )}
 
@@ -180,6 +183,7 @@ export default function App() {
 
       {currentView === 'about' && <About />}
       {currentView === 'profile' && <Profile user={user} />}
+      {currentView === 'protips' && <ProTips />}
 
       {/* Placeholders for upcoming sections */}
       {(currentView === 'expenses' || currentView === 'settings') && (
