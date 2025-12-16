@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Map, Settings, LogOut, ChevronLeft, ChevronRight, PieChart } from 'lucide-react';
+import { LayoutDashboard, Map, Settings, LogOut, ChevronLeft, ChevronRight, PieChart, Info, Lightbulb } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Sidebar = ({ currentView, setCurrentView, handleLogout, user, isCollapsed, setIsCollapsed }) => {
@@ -7,6 +7,8 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user, isCollapsed,
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'trips', label: 'My Trips', icon: Map },
         { id: 'expenses', label: 'Expenses', icon: PieChart },
+        { id: 'protips', label: 'Pro Tips', icon: Lightbulb },
+        { id: 'about', label: 'About Us', icon: Info },
         { id: 'profile', label: 'My Profile', icon: Settings }, // Replaced Settings or added new
     ];
 
@@ -36,7 +38,7 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user, isCollapsed,
                 {navItems.map((item) => (
                     <button
                         key={item.id}
-                        onClick={() => setCurrentView(item.id === 'trips' ? 'dashboard' : item.id)} // Mapping trips to dashboard view for now as they are same in current structure
+                        onClick={() => setCurrentView(item.id)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${currentView === item.id
                             ? 'bg-blue-50 text-blue-600 font-semibold'
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 font-medium'

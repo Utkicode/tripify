@@ -1,9 +1,37 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Map, Calendar, DollarSign, ArrowUpRight, ArrowRight } from 'lucide-react';
+import { TrendingUp, Map, Calendar, IndianRupee, ArrowUpRight, ArrowRight } from 'lucide-react';
 import TripList from './TripList';
 
-const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTrip }) => {
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from '../firebase';
+import { appId } from '../constants';
+import { formatDistanceToNow } from 'date-fns';
+
+const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTrip, setCurrentView }) => {
+    // Activity State
+    const [activities, setActivities] = React.useState([]);
+
+    React.useEffect(() => {
+        if (!user) return;
+
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'),
+            orderBy('timestamp', 'desc'),
+            limit(5)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newActivities = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setActivities(newActivities);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
     // Calculate Stats
     const totalTrips = tripsList.length;
     const totalBudget = tripsList.reduce((acc, trip) => acc + (trip.totalCost || 0), 0);
@@ -57,7 +85,7 @@ const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTri
                     label="Total Budget"
                     value={`₹${(totalBudget / 1000).toFixed(1)}k`}
                     subtext="Across all active trips"
-                    icon={DollarSign}
+                    icon={IndianRupee}
                     color="bg-purple-500"
                 />
                 <StatCard
@@ -73,7 +101,10 @@ const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTri
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
                     <h3 className="text-xl font-bold text-slate-800">Recent Trips</h3>
-                    <button className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group">
+                    <button
+                        onClick={() => setCurrentView('trips')}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group"
+                    >
                         View all <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
@@ -92,17 +123,25 @@ const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTri
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-800 mb-4">Activity Feed</h3>
                     <div className="space-y-4">
-                        {[1, 2].map((i) => (
-                            <div key={i} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
-                                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
-                                    You
+                        {activities.length === 0 ? (
+                            <p className="text-slate-400 text-sm">No recent functionality.</p>
+                        ) : (
+                            activities.map((activity) => (
+                                <div key={activity.id} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
+                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                                        {activity.user?.[0] || 'U'}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-slate-700">
+                                            <span className="font-semibold">{activity.user || 'User'}</span> {activity.message}
+                                        </p>
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            {activity.timestamp ? formatDistanceToNow(activity.timestamp, { addSuffix: true }) : 'Just now'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-slate-700"><span className="font-semibold">You</span> updated the itinerary for <span className="font-semibold text-blue-600">Bali Trip</span>.</p>
-                                    <p className="text-xs text-slate-400 mt-1">2 hours ago</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -112,7 +151,10 @@ const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTri
                         <p className="text-indigo-100 text-sm leading-relaxed mb-4">
                             Did you know? Organizing your expenses by category helps you save up to 15% on travel costs.
                         </p>
-                        <button className="text-xs bg-white text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90">
+                        <button
+                            onClick={() => setCurrentView('protips')}
+                            className="text-xs bg-white text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90"
+                        >
                             Learn More
                         </button>
                     </div>

@@ -1,10 +1,36 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Calendar, MapPin, Tag, MoreHorizontal, Clock, DollarSign, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Calendar, MapPin, Tag, MoreHorizontal, Clock, IndianRupee, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 
-const Planner = ({ days, setDays }) => {
+import { collection, addDoc } from "firebase/firestore";
+import { db } from '../firebase';
+import { appId } from '../constants';
+
+const Planner = ({ days, setDays, user, tripId }) => {
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
+
+    const logActivity = async (message, type = 'edit') => {
+        if (!user || !tripId) return;
+        try {
+            const activity = {
+                type,
+                message,
+                user: user.displayName || 'User',
+                timestamp: Date.now(),
+                tripId: tripId // Add tripId for context
+            };
+
+            // 1. Trip Level
+            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'activities'), activity);
+
+            // 2. Global Level (for Dashboard)
+            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'), activity);
+
+        } catch (error) {
+            console.error("Error logging activity:", error);
+        }
+    };
 
     const addDay = () => {
         const newDay = {
@@ -15,12 +41,14 @@ const Planner = ({ days, setDays }) => {
         };
         setDays([...days, newDay]);
         setExpandedDay(newDay.id);
+        logActivity(`added a new day: ${newDay.dayName}`, 'add');
     };
 
     const deleteDay = (dayId) => {
         if (!confirm('Delete this day?')) return;
         setDays(days.filter(d => d.id !== dayId));
         if (expandedDay === dayId) setExpandedDay(days[0]?.id || null);
+        logActivity(`deleted a day`, 'delete');
     };
 
     const addItem = (dayId) => {
@@ -39,6 +67,7 @@ const Planner = ({ days, setDays }) => {
             return day;
         });
         setDays(updatedDays);
+        logActivity(`added an activity`, 'add');
     };
 
     const updateItem = (dayId, itemId, field, value) => {
@@ -63,6 +92,7 @@ const Planner = ({ days, setDays }) => {
             return day;
         });
         setDays(updatedDays);
+        logActivity(`removed an activity`, 'delete');
     };
 
     const updateDay = (dayId, field, value) => {
@@ -90,8 +120,8 @@ const Planner = ({ days, setDays }) => {
                                     key={day.id}
                                     onClick={() => setExpandedDay(day.id)}
                                     className={`w-full text-left px-4 py-3 rounded-xl mb-1 flex items-center justify-between group transition-all ${expandedDay === day.id
-                                            ? 'bg-blue-600 text-white shadow-md'
-                                            : 'hover:bg-slate-50 text-slate-600'
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'hover:bg-slate-50 text-slate-600'
                                         }`}
                                 >
                                     <div>
@@ -219,7 +249,7 @@ const Planner = ({ days, setDays }) => {
 
                                                                     <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                                                                         <div className="bg-slate-50 rounded-xl px-3 py-2 flex items-center gap-2 border border-slate-100">
-                                                                            <DollarSign size={14} className="text-slate-400" />
+                                                                            <IndianRupee size={14} className="text-slate-400" />
                                                                             <input
                                                                                 type="number"
                                                                                 value={item.amount}
@@ -266,8 +296,8 @@ const Planner = ({ days, setDays }) => {
                                     key={day.id}
                                     onClick={() => setExpandedDay(day.id)}
                                     className={`px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium border ${expandedDay === day.id
-                                            ? 'bg-slate-900 text-white border-slate-900'
-                                            : 'bg-white text-slate-600 border-slate-200'
+                                        ? 'bg-slate-900 text-white border-slate-900'
+                                        : 'bg-white text-slate-600 border-slate-200'
                                         }`}
                                 >
                                     Day {index + 1}

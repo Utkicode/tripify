@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, Tag, TrendingUp, Filter, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { IndianRupee, Tag, TrendingUp, Filter, AlertCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 
@@ -30,7 +30,7 @@ const Expenses = ({ days }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><DollarSign size={20} /></div>
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><IndianRupee size={20} /></div>
                         {totalCost > 0 && <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-bold flex items-center">+<ArrowUpRight size={12} /></span>}
                     </div>
                     <p className="text-slate-500 text-sm font-medium">Total Spending</p>
