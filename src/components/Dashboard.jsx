@@ -1,166 +1,175 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Map, Calendar, IndianRupee, ArrowUpRight, ArrowRight } from 'lucide-react';
-import TripList from './TripList';
+import { TrendingUp, Map, IndianRupee, ArrowRight, Plus, DollarSign } from 'lucide-react';
+import { useProfile } from '../context/ProfileContext';
+import { getCurrencySymbol } from '../utils/currency';
+import { EMPTY_STATE_MESSAGES } from './dashboard/SmartExamples';
 
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { db } from '../firebase';
-import { appId } from '../constants';
-import { formatDistanceToNow } from 'date-fns';
+// New Components
+import NBAWidget from './dashboard/NBAWidget';
+import InsightCard from './dashboard/InsightCard';
+import TripStoryCard from './dashboard/TripStoryCard';
+import SmartTipWidget from './dashboard/SmartTipWidget';
 
-const Dashboard = ({ user, tripsList, setCurrentTripId, createNewTrip, deleteTrip, setCurrentView }) => {
-    // Activity State
-    const [activities, setActivities] = React.useState([]);
+const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView, setTargetTab }) => {
+    const { profile, user } = useProfile();
 
-    React.useEffect(() => {
-        if (!user) return;
+    // safe fallbacks
+    const currencyCode = profile?.behavior?.defaultCurrency || 'USD';
+    const currencySymbol = getCurrencySymbol(currencyCode);
+    const displayName = profile?.identity?.displayName || user?.displayName || 'Traveler';
+    const firstName = displayName.split(' ')[0];
 
-        const q = query(
-            collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'),
-            orderBy('timestamp', 'desc'),
-            limit(5)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const newActivities = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setActivities(newActivities);
-        });
-
-        return () => unsubscribe();
-    }, [user]);
-
-    // Calculate Stats
+    // --- Metric Calculations ---
     const totalTrips = tripsList.length;
     const totalBudget = tripsList.reduce((acc, trip) => acc + (trip.totalCost || 0), 0);
-    const upcomingTrips = tripsList.filter(t => t.updatedAt > Date.now() - 86400000); // Mock logic for now
 
-    const StatCard = ({ label, value, subtext, icon: Icon, color }) => (
-        <motion.div
-            whileHover={{ y: -4 }}
-            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all"
-        >
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${color} bg-opacity-10 text-opacity-100`}>
-                    <Icon size={22} className={color.replace('bg-', 'text-')} />
-                </div>
-                <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                    +12% <ArrowUpRight size={12} className="ml-0.5" />
-                </span>
-            </div>
-            <h3 className="text-slate-500 text-sm font-medium mb-1">{label}</h3>
-            <p className="text-2xl font-bold text-slate-800">{value}</p>
-            {subtext && <p className="text-xs text-slate-400 mt-2">{subtext}</p>}
-        </motion.div>
-    );
+    // Mocking "Spent" vs "Budget" logic for now as we only have totalCost (budget)
+    const totalSpent = totalBudget * 0.82;
+
+    const upcomingTrips = tripsList
+        .filter(t => !t.isArchived)
+        .sort((a, b) => (a.startDate || 0) - (b.startDate || 0))
+        .slice(0, 3);
+
+    // --- Handlers ---
+    const handleNBAAction = (action) => {
+        if (action.action === 'create_trip') createNewTrip();
+        else if (action.tripId) setCurrentTripId(action.tripId);
+    };
+
+    const handleTipAction = (action) => {
+        if (upcomingTrips.length === 0) {
+            createNewTrip();
+            return;
+        }
+
+        const tripId = upcomingTrips[0].id;
+        let tab = 'itinerary';
+
+        switch (action) {
+            case 'view_expenses': tab = 'expenses'; break;
+            case 'view_files': tab = 'files'; break;
+            case 'open_checklist': tab = 'itinerary'; break;
+            case 'view_itinerary': tab = 'itinerary'; break;
+            default: return;
+        }
+
+        setTargetTab(tab);
+        setCurrentTripId(tripId);
+    };
+
+    // Helper to format currency
+    const formatMoney = (amount) => {
+        return `${currencySymbol}${(amount / 1000).toFixed(1)}k`;
+    };
 
     return (
-        <div className="space-y-8 pb-10">
-            {/* Welcome Section */}
-            <div className="flex justify-between items-end">
+        <div className="space-y-8 pb-20">
+            {/* 1. Header & Welcome */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-800 mb-2">Welcome back, {user.displayName?.split(' ')[0] || user.name?.split(' ')[0] || 'Traveler'} 👋</h2>
-                    <p className="text-slate-500">Here's what's happening with your adventures.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                        Good Afternoon, {firstName}
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                        Here is your daily travel briefing.
+                    </p>
                 </div>
-                <button
-                    onClick={createNewTrip}
-                    className="hidden sm:flex btn-primary"
-                >
-                    Create New Trip
-                </button>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                    label="Total Trips"
-                    value={totalTrips}
-                    subtext="4 trips this year"
-                    icon={Map}
-                    color="bg-blue-500"
-                />
-                <StatCard
-                    label="Total Budget"
-                    value={`₹${(totalBudget / 1000).toFixed(1)}k`}
-                    subtext="Across all active trips"
-                    icon={IndianRupee}
-                    color="bg-purple-500"
-                />
-                <StatCard
-                    label="Travel Days"
-                    value="12"
-                    subtext="Upcoming days away"
-                    icon={Calendar}
-                    color="bg-amber-500"
-                />
-            </div>
-
-            {/* Recent Trips Section */}
-            <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-slate-800">Recent Trips</h3>
+                <div className="flex gap-3">
                     <button
-                        onClick={() => setCurrentView('trips')}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 group"
+                        onClick={createNewTrip}
+                        className="btn-primary flex items-center gap-2 shadow-lg shadow-blue-200"
                     >
-                        View all <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        <Plus size={20} /> New Trip
                     </button>
                 </div>
+            </header>
 
-                <TripList
-                    tripsList={tripsList}
-                    setCurrentTripId={setCurrentTripId}
-                    createNewTrip={createNewTrip}
-                    deleteTrip={deleteTrip}
-                    limit={3}
+            {/* 2. Next Best Action (Hero) */}
+            <section>
+                <NBAWidget
+                    trips={tripsList}
+                    user={user}
+                    onActionClick={handleNBAAction}
                 />
-            </div>
+            </section>
 
-            {/* Activity Feed Placeholder */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4">Activity Feed</h3>
-                    <div className="space-y-4">
-                        {activities.length === 0 ? (
-                            <p className="text-slate-400 text-sm">No recent functionality.</p>
-                        ) : (
-                            activities.map((activity) => (
-                                <div key={activity.id} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
-                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
-                                        {activity.user?.[0] || 'U'}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-slate-700">
-                                            <span className="font-semibold">{activity.user || 'User'}</span> {activity.message}
-                                        </p>
-                                        <p className="text-xs text-slate-400 mt-1">
-                                            {activity.timestamp ? formatDistanceToNow(activity.timestamp, { addSuffix: true }) : 'Just now'}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
+            {/* 3. Insight Grid (Metrics) */}
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <InsightCard
+                    label="Active Trips"
+                    value={totalTrips}
+                    subtext="1 trip in planning"
+                    icon={Map}
+                    color="bg-blue-500"
+                    trend="up"
+                    trendLabel="+1"
+                />
+                <InsightCard
+                    label="Total Budget"
+                    value={formatMoney(totalBudget)}
+                    subtext="Planned across trips"
+                    icon={currencyCode === 'INR' ? IndianRupee : DollarSign}
+                    color="bg-purple-500"
+                />
+                <InsightCard
+                    label="Actual Spent"
+                    value={formatMoney(totalSpent)}
+                    subtext="82% of budget utilized"
+                    icon={TrendingUp}
+                    color="bg-emerald-500"
+                    trend={totalSpent > totalBudget ? 'down' : 'up'}
+                    trendLabel="On Track"
+                />
+                <SmartTipWidget
+                    onViewTip={handleTipAction}
+                />
+            </section>
 
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h3 className="text-lg font-bold mb-2">Pro Tip 💡</h3>
-                        <p className="text-indigo-100 text-sm leading-relaxed mb-4">
-                            Did you know? Organizing your expenses by category helps you save up to 15% on travel costs.
-                        </p>
+            {/* 4. Active Trips (Story Cards) */}
+            <section className="space-y-4">
+                <div className="flex justify-between items-center px-1">
+                    <h3 className="text-xl font-bold text-slate-800">Your Adventures</h3>
+                    {tripsList.length > 3 && (
                         <button
-                            onClick={() => setCurrentView('protips')}
-                            className="text-xs bg-white text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-opacity-90"
+                            onClick={() => setCurrentView('trips')}
+                            className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group"
                         >
-                            Learn More
+                            View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </button>
-                    </div>
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+                    )}
                 </div>
-            </div>
+
+                {upcomingTrips.length === 0 ? (
+                    // Empty State
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center"
+                    >
+                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Map size={32} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">{EMPTY_STATE_MESSAGES.no_trips.headline}</h3>
+                        <p className="text-slate-500 max-w-sm mx-auto mb-6">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>
+                        <button onClick={createNewTrip} className="text-blue-600 font-bold hover:text-blue-700">
+                            {EMPTY_STATE_MESSAGES.no_trips.cta}
+                        </button>
+                    </motion.div>
+                ) : (
+                    // Story Grid
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {upcomingTrips.map(trip => (
+                            <TripStoryCard
+                                key={trip.id}
+                                trip={trip}
+                                onClick={setCurrentTripId}
+                            />
+                        ))}
+                    </div>
+                )}
+            </section>
         </div>
     );
 };

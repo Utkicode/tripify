@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Calendar, MapPin, Tag, MoreHorizontal, Clock, IndianRupee, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Calendar, Tag, ChevronRight, IndianRupee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
+import { useProfile } from '../context/ProfileContext';
 
 import { collection, addDoc } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId } from '../constants';
+import AddExpenseModal from './AddExpenseModal';
 
 const Planner = ({ days, setDays, user, tripId }) => {
+    const { profile } = useProfile();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
+    const [expenseModalInfo, setExpenseModalInfo] = useState({ isOpen: false, data: {} });
 
     const logActivity = async (message, type = 'edit') => {
         if (!user || !tripId) return;
@@ -51,18 +55,34 @@ const Planner = ({ days, setDays, user, tripId }) => {
         logActivity(`deleted a day`, 'delete');
     };
 
+    const sortItems = (items) => {
+        return [...items].sort((a, b) => a.time.localeCompare(b.time));
+    };
+
     const addItem = (dayId) => {
+        const day = days.find(d => d.id === dayId);
+        let newItemTime;
+
+        // Use Profile Preference for Day Start Time if it's the first item
+        if (day && day.items.length === 0 && profile?.preferences?.dayStartTime) {
+            newItemTime = profile.preferences.dayStartTime;
+        } else {
+            const now = new Date();
+            newItemTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+
         const newItem = {
             id: Date.now(),
             name: '',
             amount: '',
             category: 'Misc',
-            time: '09:00',
+            time: newItemTime,
             notes: ''
         };
         const updatedDays = days.map(day => {
             if (day.id === dayId) {
-                return { ...day, items: [...day.items, newItem] };
+                // Add new item and Sort
+                return { ...day, items: sortItems([...day.items, newItem]) };
             }
             return day;
         });
@@ -77,7 +97,8 @@ const Planner = ({ days, setDays, user, tripId }) => {
                     if (item.id === itemId) return { ...item, [field]: value };
                     return item;
                 });
-                return { ...day, items: updatedItems };
+                // Sort if time was changed
+                return { ...day, items: field === 'time' ? sortItems(updatedItems) : updatedItems };
             }
             return day;
         });
@@ -201,13 +222,15 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                             className="flex gap-6 group"
                                                         >
                                                             {/* Time & Icon */}
-                                                            <div className="flex flex-col items-center gap-2 pt-1 shrink-0 w-14">
-                                                                <input
-                                                                    type="time"
-                                                                    value={item.time}
-                                                                    onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
-                                                                    className="text-xs font-bold text-slate-400 bg-transparent border-none p-0 w-full text-center focus:text-blue-600 focus:ring-0"
-                                                                />
+                                                            <div className="flex flex-col items-center gap-3 pt-1 shrink-0 w-20">
+                                                                <div className="flex items-center justify-center">
+                                                                    <input
+                                                                        type="time"
+                                                                        value={item.time}
+                                                                        onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
+                                                                        className="text-sm font-bold text-slate-700 bg-white/50 border border-slate-200 rounded-md px-1 py-0.5 w-auto text-center focus:text-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm"
+                                                                    />
+                                                                </div>
                                                                 <div
                                                                     className="w-10 h-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center text-white z-10 transition-transform group-hover:scale-110"
                                                                     style={{ backgroundColor: CATEGORIES.find(c => c.name === item.category)?.color || '#94a3b8' }}
@@ -258,12 +281,29 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                                                 className="bg-transparent border-none w-20 text-sm font-semibold text-slate-700 p-0 focus:ring-0 text-right"
                                                                             />
                                                                         </div>
-                                                                        <button
-                                                                            onClick={() => deleteItem(day.id, item.id)}
-                                                                            className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                                                        >
-                                                                            <Trash2 size={18} />
-                                                                        </button>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                onClick={() => setExpenseModalInfo({
+                                                                                    isOpen: true,
+                                                                                    data: {
+                                                                                        name: item.name,
+                                                                                        amount: item.amount,
+                                                                                        category: item.category,
+                                                                                        date: day.date
+                                                                                    }
+                                                                                })}
+                                                                                className="text-slate-300 hover:text-green-600 p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                                                                title="Log as Expense"
+                                                                            >
+                                                                                <IndianRupee size={18} />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => deleteItem(day.id, item.id)}
+                                                                                className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                                            >
+                                                                                <Trash2 size={18} />
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -310,6 +350,14 @@ const Planner = ({ days, setDays, user, tripId }) => {
                     </div>
                 </div>
             )}
+
+            <AddExpenseModal
+                isOpen={expenseModalInfo.isOpen}
+                onClose={() => setExpenseModalInfo({ ...expenseModalInfo, isOpen: false })}
+                user={user}
+                tripId={tripId}
+                initialData={expenseModalInfo.data}
+            />
         </div>
     );
 };

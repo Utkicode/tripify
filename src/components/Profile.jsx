@@ -1,162 +1,121 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, AlignLeft, Save, Loader, Camera } from 'lucide-react';
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { updateProfile } from "firebase/auth";
-import { db } from '../firebase';
-import { appId } from '../constants';
-import { motion } from 'framer-motion';
+import { User, Settings, Map, CheckCircle, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useProfile } from '../context/ProfileContext';
 
-const Profile = ({ user }) => {
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [formData, setFormData] = useState({
-        displayName: user.displayName || '',
-        phoneNumber: '',
-        bio: ''
-    });
-    const [message, setMessage] = useState({ type: '', text: '' });
+// Sub-components
+import ProfileIdentity from './profile/ProfileIdentity';
+import ProfilePreferences from './profile/ProfilePreferences';
+import ProfileSettings from './profile/ProfileSettings';
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
+const TABS = [
+    { id: 'identity', label: 'Identity', icon: User },
+    { id: 'preferences', label: 'Travel Defaults', icon: Map },
+    { id: 'settings', label: 'Settings', icon: Settings },
+];
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    setFormData({
-                        displayName: data.displayName || user.displayName || '',
-                        phoneNumber: data.phoneNumber || '',
-                        bio: data.bio || ''
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+const Profile = () => {
+    const { profile, loading } = useProfile();
+    const [activeTab, setActiveTab] = useState('identity');
 
-        fetchProfile();
-    }, [user]);
+    // Calculate score for display (0-100)
+    const score = profile?.metadata?.completenessScore
+        ? Math.round(profile.metadata.completenessScore * 100)
+        : 0;
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const getScoreColor = (s) => {
+        if (s < 40) return 'text-red-500 bg-red-50';
+        if (s < 80) return 'text-amber-500 bg-amber-50';
+        return 'text-emerald-500 bg-emerald-50';
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setMessage({ type: '', text: '' });
-
-        try {
-            // 1. Update Auth Profile (Display Name)
-            if (formData.displayName !== user.displayName) {
-                await updateProfile(user, { displayName: formData.displayName });
-            }
-
-            // 2. Update Firestore
-            const docRef = doc(db, 'artifacts', appId, 'users', user.uid);
-            await updateDoc(docRef, {
-                displayName: formData.displayName,
-                phoneNumber: formData.phoneNumber,
-                bio: formData.bio,
-                updatedAt: Date.now()
-            });
-
-            setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            setMessage({ type: 'error', text: 'Failed to update profile.' });
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) return <div className="flex justify-center p-12"><Loader className="animate-spin text-blue-500" /></div>;
+    if (loading) return null; // Or skeleton
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
-            <header>
-                <h1 className="text-3xl font-bold text-slate-800">My Profile</h1>
-                <p className="text-slate-500">Manage your personal information and preferences.</p>
-            </header>
-
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
-            >
-                {/* Avatar Section (Visual only for now) */}
-                <div className="flex flex-col items-center mb-8">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white text-3xl font-bold mb-3 relative group cursor-pointer overflow-hidden">
-                        {user.displayName ? user.displayName[0].toUpperCase() : <User />}
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Camera size={24} />
-                        </div>
-                    </div>
-                    <p className="text-slate-400 text-sm">{user.email}</p>
+        <div className="max-w-4xl mx-auto space-y-8 pb-20">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile & Settings</h1>
+                    <p className="text-slate-500">Manage your identity and calibrate Tripify behavior.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                <User size={16} /> Full Name
-                            </label>
-                            <input
-                                type="text"
-                                name="displayName"
-                                value={formData.displayName}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
+                {/* Completeness Card */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 min-w-[240px]">
+                    <div className="relative w-12 h-12 flex items-center justify-center">
+                        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path
+                                className="text-slate-100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
                             />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                <Phone size={16} /> Phone Number
-                            </label>
-                            <input
-                                type="tel"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
+                            <path
+                                className={`${score >= 80 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-blue-500'} transition-all duration-1000`}
+                                strokeDasharray={`${score}, 100`}
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
                             />
-                        </div>
+                        </svg>
+                        <span className="text-xs font-bold text-slate-700">{score}%</span>
                     </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                            <AlignLeft size={16} /> Bio
-                        </label>
-                        <textarea
-                            name="bio"
-                            value={formData.bio}
-                            onChange={handleChange}
-                            rows={4}
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none resize-none"
-                            placeholder="Tell us a bit about yourself..."
-                        />
+                    <div>
+                        <h4 className="text-sm font-bold text-slate-800">Profile Strength</h4>
+                        <p className="text-xs text-slate-400">
+                            {score < 100 ? 'Add more info to unlock insights.' : 'You are all set!'}
+                        </p>
                     </div>
+                </div>
+            </div>
 
-                    {message.text && (
-                        <div className={`p-3 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                            {message.text}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end pt-2">
+            <div className="flex flex-col md:flex-row gap-8">
+                {/* Sidebar Tabs */}
+                <div className="w-full md:w-64 space-y-2">
+                    {TABS.map(tab => (
                         <button
-                            type="submit"
-                            disabled={saving}
-                            className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 transition-all disabled:opacity-70"
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === tab.id
+                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                                    : 'bg-transparent text-slate-500 hover:bg-slate-100'
+                                }`}
                         >
-                            {saving ? <Loader className="animate-spin" size={18} /> : <><Save size={18} /> Save Changes</>}
+                            <tab.icon size={18} />
+                            {tab.label}
                         </button>
+                    ))}
+
+                    <div className="pt-6 mt-6 border-t border-slate-100">
+                        <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex gap-3 text-blue-700">
+                            <Shield size={20} className="shrink-0" />
+                            <p className="text-xs font-medium leading-relaxed">
+                                Your data is private and only used to personalize your trip planning experience.
+                            </p>
+                        </div>
                     </div>
-                </form>
-            </motion.div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 min-h-[400px] bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8 relative overflow-hidden">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className="relative z-10"
+                        >
+                            {activeTab === 'identity' && <ProfileIdentity />}
+                            {activeTab === 'preferences' && <ProfilePreferences />}
+                            {activeTab === 'settings' && <ProfileSettings />}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </div>
         </div>
     );
 };

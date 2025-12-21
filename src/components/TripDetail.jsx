@@ -12,14 +12,16 @@ import TripMap from './TripMap';
 import NotificationBell from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TripDetail = ({ user, tripId, setCurrentTripId }) => {
+const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
     const [destination, setDestination] = useState('');
     const [days, setDays] = useState([]);
     const [travelers, setTravelers] = useState([]);
-    const [activeTab, setActiveTab] = useState('itinerary');
+    const [activeTab, setActiveTab] = useState(initialTab || 'itinerary');
+    const [budget, setBudget] = useState(0);
     const [syncStatus, setSyncStatus] = useState('synced');
     const [detailLoading, setDetailLoading] = useState(false);
+    const hasUnsavedChanges = React.useRef(false);
 
     // --- Data Sync: Fetch Detail ---
     useEffect(() => {
@@ -28,24 +30,48 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
 
         const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId);
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            // Ignore updates if we have unsaved local changes to prevent reversion
+            if (hasUnsavedChanges.current) return;
+
             setDetailLoading(false);
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                // Direct state updates from server do NOT mark as unsaved
                 if (JSON.stringify(data.days) !== JSON.stringify(days)) setDays(data.days || createInitialDays());
                 if (JSON.stringify(data.travelers) !== JSON.stringify(travelers)) setTravelers(data.travelers || createInitialTravelers());
                 if (data.tripName && data.tripName !== tripName) setTripName(data.tripName);
                 if (data.destination && data.destination !== destination) setDestination(data.destination || '');
+                if (data.budget !== undefined && data.budget !== budget) setBudget(data.budget);
             }
         }, (error) => {
             console.error("Error fetching trip details:", error);
             setDetailLoading(false);
         });
         return () => unsubscribe();
-    }, [user, tripId]);
+    }, [user, tripId]); // Removed dependencies to prevent listener recreation
+
+    // Wrappers to track USER changes
+    const handleSetDays = (newDays) => {
+        hasUnsavedChanges.current = true;
+        setDays(newDays);
+    };
+
+    const handleSetTravelers = (newTravelers) => {
+        hasUnsavedChanges.current = true;
+        setTravelers(newTravelers);
+    };
+
+    const handleUpdateTripInfo = (field, value) => {
+        hasUnsavedChanges.current = true;
+        if (field === 'tripName') setTripName(value);
+        if (field === 'destination') setDestination(value);
+        if (field === 'budget') setBudget(Number(value));
+    };
 
     // --- Data Sync: Save Changes ---
     useEffect(() => {
-        if (!user || !tripId || detailLoading) return;
+        // Only save if explicitly marked as unsaved (user action)
+        if (!user || !tripId || detailLoading || !hasUnsavedChanges.current) return;
 
         const saveData = async () => {
             setSyncStatus('saving');
@@ -58,11 +84,13 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                     travelers,
                     tripName,
                     destination,
+                    budget,
                     updatedAt: Date.now(),
                     totalCost,
                     travelerCount: travelers.length
                 });
                 setSyncStatus('synced');
+                hasUnsavedChanges.current = false; // Sync complete
             } catch (error) {
                 console.error("Save error:", error);
                 setSyncStatus('error');
@@ -71,7 +99,15 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
 
         const timer = setTimeout(saveData, 1000);
         return () => clearTimeout(timer);
-    }, [days, travelers, tripName, destination, user, tripId]);
+    }, [days, travelers, tripName, destination, budget, user, tripId]);
+
+    // --- Deep Link Handling ---
+    useEffect(() => {
+        if (initialTab) {
+            setActiveTab(initialTab);
+            if (clearInitialTab) clearInitialTab();
+        }
+    }, [initialTab, clearInitialTab]);
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
@@ -91,7 +127,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                         <input
                             type="text"
                             value={tripName}
-                            onChange={(e) => setTripName(e.target.value)}
+                            onChange={(e) => handleUpdateTripInfo('tripName', e.target.value)}
                             className="text-base font-bold text-slate-800 border-none bg-transparent focus:ring-2 focus:ring-blue-100 p-1 hover:bg-slate-50 rounded transition-colors cursor-text min-w-[200px]"
                             placeholder="Trip Name"
                         />
@@ -135,7 +171,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                                 <input
                                     type="text"
                                     value={destination}
-                                    onChange={(e) => setDestination(e.target.value)}
+                                    onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
                                     placeholder="Add Destination"
                                     className="bg-transparent border-none text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md"
                                 />
@@ -179,9 +215,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId }) => {
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeTab === 'itinerary' && <Planner days={days} setDays={setDays} user={user} tripId={tripId} />}
-                                {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={setTravelers} />}
-                                {activeTab === 'expenses' && <Expenses days={days} />}
+                                {activeTab === 'itinerary' && <Planner days={days} setDays={handleSetDays} user={user} tripId={tripId} />}
+                                {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
+                                {activeTab === 'expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} />}
                                 {activeTab === 'map' && <TripMap />}
                                 {activeTab === 'files' && <Files user={user} tripId={tripId} />}
                             </motion.div>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, query, onSnapshot, addDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { collection, query, onSnapshot, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { auth, db } from './firebase.js';
 import { appId } from './constants.js';
+import { useProfile } from './context/ProfileContext';
 
 import Auth from './components/Auth';
 import TripList from './components/TripList';
@@ -16,47 +17,28 @@ import ProfileCompletion from './components/ProfileCompletion';
 import Profile from './components/Profile';
 import ProTips from './components/ProTips';
 
+import AuthActionHandler from './components/AuthActionHandler';
+
 export default function App() {
-  // --- Auth State ---
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
-  const [profileCheckLoading, setProfileCheckLoading] = useState(true);
+  // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
+  const params = new URLSearchParams(window.location.search);
+  const authMode = params.get('mode');
+  const oobCode = params.get('oobCode');
+
+  if (authMode && oobCode) {
+    return <AuthActionHandler />;
+  }
+
+  // --- Auth & Profile State (from Context) ---
+  const { user, loading, isProfileComplete, refreshProfile } = useProfile();
 
   // --- App View State ---
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'trips', 'expenses', 'settings'
   const [currentTripId, setCurrentTripId] = useState(null);
+  const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
 
-  // Listen for auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-
-      if (currentUser) {
-        // Check Profile Completion in Firestore
-        try {
-          const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid);
-          const userSnap = await getDoc(userDocRef);
-
-          if (userSnap.exists() && userSnap.data().isProfileComplete) {
-            setIsProfileComplete(true);
-          } else {
-            setIsProfileComplete(false);
-          }
-        } catch (error) {
-          console.error("Error checking profile:", error);
-        }
-      } else {
-        setIsProfileComplete(false);
-      }
-      setProfileCheckLoading(false);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch trips
+  // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
     if (!user || !isProfileComplete) {
       setTripsList([]);
@@ -84,8 +66,8 @@ export default function App() {
     try {
       await signOut(auth);
       setCurrentTripId(null);
+      setTargetTab(null);
       setCurrentView('dashboard');
-      setIsProfileComplete(false);
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -123,7 +105,7 @@ export default function App() {
     }
   };
 
-  if (authLoading || (user && profileCheckLoading)) {
+  if (loading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
   }
 
@@ -138,7 +120,7 @@ export default function App() {
 
   // 2. Profile Completion Check
   if (!isProfileComplete) {
-    return <ProfileCompletion user={user} onComplete={() => setIsProfileComplete(true)} />;
+    return <ProfileCompletion user={user} onComplete={() => refreshProfile(user.uid)} />; // Force refresh on completion
   }
 
   // If a specific trip is open, show the editor (Full screen mode)
@@ -148,6 +130,8 @@ export default function App() {
         user={user}
         tripId={currentTripId}
         setCurrentTripId={setCurrentTripId}
+        initialTab={targetTab}
+        clearInitialTab={() => setTargetTab(null)}
       />
     );
   }
@@ -169,6 +153,7 @@ export default function App() {
           createNewTrip={createNewTrip}
           deleteTrip={deleteTrip}
           setCurrentView={setCurrentView}
+          setTargetTab={setTargetTab}
         />
       )}
 

@@ -6,16 +6,9 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
     // Apply limit if provided (for dashboard view)
     const displayedTrips = limit ? tripsList.slice(0, limit) : tripsList;
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
+    // Simplified animations to prevent 'opacity: 0' stuck state
     const item = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 10 },
         show: { opacity: 1, y: 0 }
     };
 
@@ -36,30 +29,22 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
             )}
 
             {displayedTrips.length === 0 ? (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200"
-                >
-                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><MapPin size={32} /></div>
+                <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"><MapPin size={32} /></div>
                     <h3 className="text-lg font-bold text-slate-700 mb-2">No trips found</h3>
                     <p className="text-slate-500 mb-6">Ready to start your next adventure?</p>
                     <button onClick={createNewTrip} className="text-blue-600 font-bold hover:text-blue-700 flex items-center justify-center gap-2 mx-auto">
                         CREATE TRIP <ArrowRight size={16} />
                     </button>
-                </motion.div>
+                </div>
             ) : (
-                <motion.div
-                    variants={container}
-                    initial="hidden"
-                    animate="show"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence mode="popLayout">
                         {displayedTrips.map((trip, index) => (
                             <motion.div
                                 key={trip.id}
-                                variants={item}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 layout
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 onClick={() => setCurrentTripId(trip.id)}
@@ -120,7 +105,7 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                             <span className="font-bold text-sm">Create New Trip</span>
                         </motion.button>
                     )}
-                </motion.div>
+                </div>
             )}
         </div>
     );

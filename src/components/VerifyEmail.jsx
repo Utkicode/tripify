@@ -20,9 +20,14 @@ const VerifyEmail = ({ user }) => {
         if (cooldown > 0) return;
         setLoading(true);
         try {
-            await sendEmailVerification(user);
-            setMessage('Verification email sent! Please check your inbox.');
-            setCooldown(60);
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                await sendEmailVerification(currentUser);
+                setMessage('Verification email sent! Please check your inbox.');
+                setCooldown(60);
+            } else {
+                setMessage('Error: No authenticated user found.');
+            }
         } catch (error) {
             setMessage('Error sending email: ' + error.message);
         }
@@ -32,9 +37,12 @@ const VerifyEmail = ({ user }) => {
     const handleReload = async () => {
         setLoading(true);
         try {
-            await user.reload();
-            // App.jsx will automatically detect the change in user.emailVerified
-            window.location.reload(); // Force hard reload to ensure state sync if needed
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                await currentUser.reload();
+                // App.jsx will automatically detect the change in user.emailVerified
+                window.location.reload(); // Force hard reload to ensure state sync if needed
+            }
         } catch (error) {
             setMessage('Error checking status: ' + error.message);
         }
