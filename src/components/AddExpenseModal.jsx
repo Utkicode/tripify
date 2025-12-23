@@ -16,17 +16,25 @@ const CurrencyIcon = ({ currency }) => {
     }
 };
 
-const AddExpenseModal = ({ isOpen, onClose, user, tripId, initialData = null }) => {
+const AddExpenseModal = ({ isOpen, onClose, user, tripId, travelers = [], initialData = null }) => {
     const { profile } = useProfile();
     const defaultCurrency = profile?.behavior?.defaultCurrency || 'USD';
 
     // Use empty object if initialData is null for safe access
     const data = initialData || {};
 
+    // Combine current user with travelers for a complete list
+    const allStartParticipants = [
+        { id: user.uid, name: "Me" },
+        ...travelers.filter(t => t.id !== user.uid) // Avoid duplicates if user is in travelers list (unlikely but safe)
+    ];
+
     const [amount, setAmount] = useState(data.amount || '');
     const [category, setCategory] = useState(data.category || CATEGORIES[0].name);
     const [description, setDescription] = useState(data.name || '');
     const [date, setDate] = useState(data.date || new Date().toISOString().split('T')[0]);
+    const [paidBy, setPaidBy] = useState(user.uid);
+    const [splitParticipants, setSplitParticipants] = useState(allStartParticipants.map(p => p.id));
     const [loading, setLoading] = useState(false);
 
     // Update state when initialData changes or modal opens
@@ -37,8 +45,26 @@ const AddExpenseModal = ({ isOpen, onClose, user, tripId, initialData = null }) 
             setCategory(d.category || CATEGORIES[0].name);
             setDescription(d.name || '');
             if (d.date) setDate(d.date);
+            setPaidBy(d.paidBy || user.uid);
+
+            // If editing, load split participants. If new, default to all.
+            if (d.splitDetails) {
+                setSplitParticipants(Object.keys(d.splitDetails));
+            } else {
+                setSplitParticipants(allStartParticipants.map(p => p.id));
+            }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, user.uid, travelers]);
+
+    const toggleParticipant = (id) => {
+        if (splitParticipants.includes(id)) {
+            if (splitParticipants.length > 1) { // Prevent unchecking the last person
+                setSplitParticipants(splitParticipants.filter(p => p !== id));
+            }
+        } else {
+            setSplitParticipants([...splitParticipants, id]);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -46,6 +72,20 @@ const AddExpenseModal = ({ isOpen, onClose, user, tripId, initialData = null }) 
 
         setLoading(true);
         try {
+            // Calculate Split (Equal)
+            const splitAmount = Number(amount) / splitParticipants.length;
+            const splitDetails = {};
+            splitParticipants.forEach(uid => {
+                splitDetails[uid] = Number(splitAmount.toFixed(2));
+            });
+
+            // Adjust rounding error on the first participant 
+            const calculatedTotal = Object.values(splitDetails).reduce((a, b) => a + b, 0);
+            const diff = Number(amount) - calculatedTotal;
+            if (diff !== 0 && splitParticipants.length > 0) {
+                splitDetails[splitParticipants[0]] += diff;
+            }
+
             await ExpenseService.addExpense(user.uid, tripId, {
                 amount: Number(amount),
                 category,
@@ -53,7 +93,10 @@ const AddExpenseModal = ({ isOpen, onClose, user, tripId, initialData = null }) 
                 date,
                 currency: defaultCurrency,
                 userName: user.displayName || user.email,
-                userId: user.uid
+                userId: user.uid,
+                paidBy,
+                splitType: 'EQUAL',
+                splitDetails
             });
             onClose();
             // Reset form
@@ -171,9 +214,42 @@ const AddExpenseModal = ({ isOpen, onClose, user, tripId, initialData = null }) 
                                 </div>
                             </div>
 
+                            {/* Paid By & Split */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Paid By</label>
+                                    <select
+                                        value={paidBy}
+                                        onChange={(e) => setPaidBy(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-blue-100 outline-none appearance-none"
+                                    >
+                                        <option value={user.uid}>Me ({user.displayName || 'You'})</option>
+                                        {travelers.filter(t => t.id !== user.uid).map(t => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Split With</label>
+                                    <div className="bg-slate-50 rounded-xl p-2 max-h-32 overflow-y-auto">
+                                        {allStartParticipants.map(participant => (
+                                            <label key={participant.id} className="flex items-center gap-2 p-2 hover:bg-slate-100 rounded-lg cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={splitParticipants.includes(participant.id)}
+                                                    onChange={() => toggleParticipant(participant.id)}
+                                                    className="rounded text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span className="text-sm text-slate-700 truncate">{participant.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
                             <button
                                 type="submit"
-                                disabled={loading || !amount}
+                                disabled={loading || !amount || splitParticipants.length === 0}
                                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                             >
                                 {loading ? 'Saving...' : <><Check size={20} /> Save Expense</>}

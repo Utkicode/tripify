@@ -12,15 +12,19 @@ import TripMap from './TripMap';
 import NotificationBell from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import InviteModal from './InviteModal';
+
 const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
     const [destination, setDestination] = useState('');
     const [days, setDays] = useState([]);
     const [travelers, setTravelers] = useState([]);
+    const [collaborators, setCollaborators] = useState([]); // Track who has access
     const [activeTab, setActiveTab] = useState(initialTab || 'itinerary');
     const [budget, setBudget] = useState(0);
     const [syncStatus, setSyncStatus] = useState('synced');
     const [detailLoading, setDetailLoading] = useState(false);
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
     const hasUnsavedChanges = React.useRef(false);
 
     // --- Data Sync: Fetch Detail ---
@@ -28,7 +32,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         if (!user || !tripId) return;
         setDetailLoading(true);
 
-        const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId);
+        const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             // Ignore updates if we have unsaved local changes to prevent reversion
             if (hasUnsavedChanges.current) return;
@@ -42,6 +46,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 if (data.tripName && data.tripName !== tripName) setTripName(data.tripName);
                 if (data.destination && data.destination !== destination) setDestination(data.destination || '');
                 if (data.budget !== undefined && data.budget !== budget) setBudget(data.budget);
+                if (data.collaborators) setCollaborators(data.collaborators);
             }
         }, (error) => {
             console.error("Error fetching trip details:", error);
@@ -76,7 +81,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         const saveData = async () => {
             setSyncStatus('saving');
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId);
+                const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
                 const totalCost = days ? days.reduce((total, day) => total + day.items.reduce((dTotal, item) => dTotal + Number(item.amount), 0), 0) : 0;
 
                 await updateDoc(docRef, {
@@ -112,7 +117,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
             {/* Top Navigation Bar (Workspace Header) */}
-            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-6 h-16 flex items-center justify-between">
+            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-4 md:px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setCurrentTripId(null)}
@@ -141,11 +146,17 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 {t.name?.[0] || 'T'}
                             </div>
                         ))}
-                        <button className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs text-slate-500 hover:bg-slate-200 transition-colors">
+                        <button
+                            onClick={() => setIsInviteOpen(true)}
+                            className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs text-slate-500 hover:bg-slate-200 transition-colors"
+                        >
                             <Plus size={14} />
                         </button>
                     </div>
-                    <button className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2">
+                    <button
+                        onClick={() => setIsInviteOpen(true)}
+                        className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2"
+                    >
                         <Share2 size={16} /> Share
                     </button>
                     <NotificationBell user={user} tripId={tripId} />
@@ -159,21 +170,21 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             {/* Content Area */}
             <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Cover Image Area (Mockup) */}
-                <div className="h-48 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0">
+                <div className="h-40 md:h-48 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0 transition-all">
                     <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-0 left-0 w-full p-6 flex justify-between items-end bg-gradient-to-t from-black/60 to-transparent">
-                        <div className="text-white">
-                            <div className="flex items-center gap-2 mb-2 text-white/80 text-sm font-medium">
-                                <Calendar size={16} /> {days.length} Days  •  <Users size={16} /> {travelers.length} Travelers
+                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end bg-gradient-to-t from-black/60 to-transparent">
+                        <div className="text-white w-full">
+                            <div className="flex items-center gap-2 mb-2 text-white/80 text-xs md:text-sm font-medium">
+                                <Calendar size={14} className="md:w-4 md:h-4" /> {days.length} Days  •  <Users size={14} className="md:w-4 md:h-4" /> {travelers.length} Travelers
                             </div>
                             <div className="flex items-center gap-2">
-                                <MapPin size={24} className="text-white/80" />
+                                <MapPin size={20} className="text-white/80 md:w-6 md:h-6" />
                                 <input
                                     type="text"
                                     value={destination}
                                     onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
                                     placeholder="Add Destination"
-                                    className="bg-transparent border-none text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md"
+                                    className="bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md"
                                 />
                             </div>
                         </div>
@@ -181,8 +192,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 </div>
 
                 {/* Tabs */}
-                <div className="border-b border-slate-200 bg-white px-6">
-                    <div className="flex gap-6">
+                <div className="border-b border-slate-200 bg-white px-4 md:px-6">
+                    <div className="flex gap-6 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         {[
                             { id: 'itinerary', label: 'Itinerary' },
                             { id: 'expenses', label: 'Expenses' },
@@ -205,7 +216,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 </div>
 
                 {/* Main Tab Content */}
-                <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
+                <div className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
                     <div className="max-w-5xl mx-auto pb-20">
                         <AnimatePresence mode="wait">
                             <motion.div
@@ -217,14 +228,23 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                             >
                                 {activeTab === 'itinerary' && <Planner days={days} setDays={handleSetDays} user={user} tripId={tripId} />}
                                 {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
-                                {activeTab === 'expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} />}
-                                {activeTab === 'map' && <TripMap />}
+                                {activeTab === 'expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} />}
+                                {activeTab === 'map' && <TripMap days={days} />}
                                 {activeTab === 'files' && <Files user={user} tripId={tripId} />}
                             </motion.div>
                         </AnimatePresence>
                     </div>
                 </div>
             </div>
+
+            {/* Invite Modal */}
+            <InviteModal
+                isOpen={isInviteOpen}
+                onClose={() => setIsInviteOpen(false)}
+                tripId={tripId}
+                currentUser={user}
+                currentCollaborators={collaborators}
+            />
         </div>
     );
 };

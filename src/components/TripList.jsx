@@ -65,7 +65,7 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                             {trip.tripName}
                                         </h3>
                                         <button
-                                            onClick={(e) => deleteTrip(e, trip.id)}
+                                            onClick={(e) => deleteTrip(e, trip.id, trip.tripName)}
                                             className="text-slate-300 hover:text-red-500 bg-transparent hover:bg-red-50 p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100"
                                             title="Delete Trip"
                                         >

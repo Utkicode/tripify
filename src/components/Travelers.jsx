@@ -1,22 +1,40 @@
-import React from 'react';
-import { Trash2, User as UserIcon, UserPlus, Mail, Phone, Calendar, UserCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, User as UserIcon, UserPlus, Mail, Phone, Calendar, UserCircle2, Utensils, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Input from './ui/Input';
 import Select from './ui/Select';
+import ConfirmationModal from './ConfirmationModal';
 
 const Travelers = ({ travelers, setTravelers }) => {
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, idx: null });
+
     const handleTravelerChange = (idx, field, val) => {
         const newTravelers = [...travelers];
         newTravelers[idx][field] = val;
         setTravelers(newTravelers);
     };
 
-    const addTraveler = () => setTravelers([...travelers, { id: Date.now().toString(), name: '', email: '', phone: '', age: '', gender: '' }]);
+    const addTraveler = () => setTravelers([...travelers, {
+        id: Date.now().toString(),
+        name: '',
+        email: '',
+        phone: '',
+        age: '',
+        gender: '',
+        dietaryPreferences: '',
+        specialNeeds: ''
+    }]);
 
-    const removeTraveler = (idx) => {
+    const confirmDelete = (idx) => {
+        setDeleteModal({ isOpen: true, idx });
+    };
+
+    const handleDeleteTraveler = () => {
+        if (deleteModal.idx === null) return;
         const newTravelers = [...travelers];
-        newTravelers.splice(idx, 1);
+        newTravelers.splice(deleteModal.idx, 1);
         setTravelers(newTravelers);
+        setDeleteModal({ isOpen: false, idx: null });
     };
 
     return (
@@ -32,7 +50,7 @@ const Travelers = ({ travelers, setTravelers }) => {
                         className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative group"
                     >
                         <button
-                            onClick={() => removeTraveler(idx)}
+                            onClick={() => confirmDelete(idx)}
                             className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                         >
                             <Trash2 size={18} />
@@ -76,6 +94,20 @@ const Travelers = ({ travelers, setTravelers }) => {
                                     ]}
                                 />
                             </div>
+                            <Input
+                                label="Dietary Preferences"
+                                icon={Utensils}
+                                value={t.dietaryPreferences}
+                                onChange={(e) => handleTravelerChange(idx, 'dietaryPreferences', e.target.value)}
+                                placeholder="Vegetarian, Vegan, Nut allergy..."
+                            />
+                            <Input
+                                label="Special Needs"
+                                icon={Heart}
+                                value={t.specialNeeds}
+                                onChange={(e) => handleTravelerChange(idx, 'specialNeeds', e.target.value)}
+                                placeholder="Medical info, accessibility..."
+                            />
                         </div>
                     </motion.div>
                 ))}
@@ -94,6 +126,15 @@ const Travelers = ({ travelers, setTravelers }) => {
                 <span className="font-bold text-lg">Add New Traveler</span>
                 <span className="text-sm opacity-70">Track details for another person</span>
             </motion.button>
+
+            <ConfirmationModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, idx: null })}
+                onConfirm={handleDeleteTraveler}
+                title="Delete Traveler?"
+                message="Are you sure you want to remove this traveler? This action cannot be undone."
+                confirmText="Delete Traveler"
+            />
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Calendar, Tag, ChevronRight, IndianRupee } from 'lucide-react';
+import { Plus, Trash2, Calendar, Tag, ChevronRight, IndianRupee, MapPin, Search, Loader, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { useProfile } from '../context/ProfileContext';
@@ -13,27 +13,38 @@ const Planner = ({ days, setDays, user, tripId }) => {
     const { profile } = useProfile();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
     const [expenseModalInfo, setExpenseModalInfo] = useState({ isOpen: false, data: {} });
+    const [locationSearch, setLocationSearch] = useState({ isOpen: false, dayId: null, itemId: null });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
-    const logActivity = async (message, type = 'edit') => {
-        if (!user || !tripId) return;
+    // ... existing logs ...
+
+    const handleSearchLocation = async (e) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
         try {
-            const activity = {
-                type,
-                message,
-                user: user.displayName || 'User',
-                timestamp: Date.now(),
-                tripId: tripId // Add tripId for context
-            };
-
-            // 1. Trip Level
-            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'activities'), activity);
-
-            // 2. Global Level (for Dashboard)
-            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'), activity);
-
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+            const data = await response.json();
+            setSearchResults(data);
         } catch (error) {
-            console.error("Error logging activity:", error);
+            console.error("Search error:", error);
+        } finally {
+            setIsSearching(false);
         }
+    };
+
+    const selectLocation = (loc) => {
+        updateItem(locationSearch.dayId, locationSearch.itemId, 'location', {
+            name: loc.display_name.split(',')[0],
+            address: loc.display_name,
+            lat: parseFloat(loc.lat),
+            lon: parseFloat(loc.lon)
+        });
+        setLocationSearch({ isOpen: false, dayId: null, itemId: null });
+        setSearchQuery('');
+        setSearchResults([]);
     };
 
     const addDay = () => {
@@ -77,7 +88,8 @@ const Planner = ({ days, setDays, user, tripId }) => {
             amount: '',
             category: 'Misc',
             time: newItemTime,
-            notes: ''
+            notes: '',
+            location: null
         };
         const updatedDays = days.map(day => {
             if (day.id === dayId) {
@@ -261,13 +273,25 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                                             placeholder="Activity name..."
                                                                             className="w-full font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 text-lg placeholder:text-slate-300"
                                                                         />
-                                                                        <input
-                                                                            type="text"
-                                                                            value={item.notes}
-                                                                            onChange={(e) => updateItem(day.id, item.id, 'notes', e.target.value)}
-                                                                            placeholder="Add notes, location, or details..."
-                                                                            className="w-full text-sm text-slate-500 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300"
-                                                                        />
+
+                                                                        {/* Location & Notes */}
+                                                                        <div className="space-y-1">
+                                                                            {item.location && (
+                                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit">
+                                                                                    <MapPin size={12} />
+                                                                                    {item.location.name}
+                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-blue-800"><X size={12} /></button>
+                                                                                </div>
+                                                                            )}
+
+                                                                            <input
+                                                                                type="text"
+                                                                                value={item.notes}
+                                                                                onChange={(e) => updateItem(day.id, item.id, 'notes', e.target.value)}
+                                                                                placeholder="Add notes, e.g. tickets..."
+                                                                                className="w-full text-sm text-slate-500 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300"
+                                                                            />
+                                                                        </div>
                                                                     </div>
 
                                                                     <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
@@ -282,6 +306,13 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                                             />
                                                                         </div>
                                                                         <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                onClick={() => setLocationSearch({ isOpen: true, dayId: day.id, itemId: item.id })}
+                                                                                className={`text-slate-300 hover:text-blue-600 p-2 hover:bg-blue-50 rounded-lg transition-colors ${item.location ? 'text-blue-500' : ''}`}
+                                                                                title="Set Location"
+                                                                            >
+                                                                                <MapPin size={18} />
+                                                                            </button>
                                                                             <button
                                                                                 onClick={() => setExpenseModalInfo({
                                                                                     isOpen: true,
@@ -358,6 +389,65 @@ const Planner = ({ days, setDays, user, tripId }) => {
                 tripId={tripId}
                 initialData={expenseModalInfo.data}
             />
+
+            {/* Location Search Modal */}
+            <AnimatePresence>
+                {locationSearch.isOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 className="font-bold text-slate-800">Search Location</h3>
+                                <button onClick={() => setLocationSearch({ isOpen: false, dayId: null, itemId: null })} className="p-1 hover:bg-slate-100 rounded-full text-slate-500">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="p-4">
+                                <form onSubmit={handleSearchLocation} className="mb-4">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="E.g. Eiffel Tower, Paris"
+                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-slate-800"
+                                            autoFocus
+                                        />
+                                        <button type="submit" disabled={isSearching} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50">
+                                            {isSearching ? <Loader className="animate-spin" size={20} /> : <Search size={20} />}
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div className="max-h-60 overflow-y-auto space-y-2">
+                                    {searchResults.length > 0 ? (
+                                        searchResults.map((result, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => selectLocation(result)}
+                                                className="w-full text-left p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100 group"
+                                            >
+                                                <p className="font-semibold text-slate-800 text-sm group-hover:text-blue-600">{result.display_name.split(',')[0]}</p>
+                                                <p className="text-xs text-slate-500 truncate">{result.display_name}</p>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        !isSearching && searchQuery && <p className="text-center text-slate-400 text-sm py-4">No results found.</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="p-3 bg-slate-50 text-right text-xs text-slate-400">
+                                Search powered by OpenStreetMap
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -28,7 +28,7 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
         if (!user) return;
 
         const collectionPath = tripId
-            ? collection(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'activities')
+            ? collection(db, 'artifacts', appId, 'trips', tripId, 'activities')
             : collection(db, 'artifacts', appId, 'users', user.uid, 'notifications');
 
         const q = query(

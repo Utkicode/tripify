@@ -18,7 +18,7 @@ const Files = ({ user, tripId }) => {
         if (!user || !tripId) return;
 
         const q = query(
-            collection(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'files'),
+            collection(db, 'artifacts', appId, 'trips', tripId, 'files'),
             orderBy('createdAt', 'desc')
         );
 
@@ -50,6 +50,11 @@ const Files = ({ user, tripId }) => {
 
         try {
             // 1. Upload to Firebase Storage
+            // Keep using user/trip structure for organization, or switch to trip/file? 
+            // Let's migrate to trip centric: trips/{tripId}/files/{name}
+            // But for now, to ensure we don't break permissions if rules rely on user, we can keep it?
+            // Actually, for consistency, let's use the trip ID in storage too if possible, but strict user rules might block us.
+            // Let's stick to the current storage path for safety, but update the FIRESTORE path for sharing.
             const storageRef = ref(storage, `users/${user.uid}/trips/${tripId}/files/${Date.now()}_${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -67,13 +72,14 @@ const Files = ({ user, tripId }) => {
                     // 2. Get Download URL
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-                    // 3. Save Metadata to Firestore
-                    await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'files'), {
+                    // 3. Save Metadata to Firestore (Global)
+                    await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'files'), {
                         name: file.name,
                         type: file.type,
                         size: formatBytes(file.size),
                         url: downloadURL,
                         storagePath: uploadTask.snapshot.ref.fullPath,
+                        uploadedBy: user.uid, // Track uploader
                         createdAt: Date.now(),
                         date: new Date().toLocaleDateString()
                     });
@@ -122,8 +128,8 @@ const Files = ({ user, tripId }) => {
             const storageRef = ref(storage, file.storagePath);
             await deleteObject(storageRef);
 
-            // 2. Delete from Firestore
-            await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId, 'files', file.id));
+            // 2. Delete from Firestore (Global)
+            await deleteDoc(doc(db, 'artifacts', appId, 'trips', tripId, 'files', file.id));
         } catch (error) {
             console.error("Error deleting file:", error);
             alert("Failed to delete file. Check permissions.");

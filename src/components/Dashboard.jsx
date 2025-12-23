@@ -10,6 +10,7 @@ import NBAWidget from './dashboard/NBAWidget';
 import InsightCard from './dashboard/InsightCard';
 import TripStoryCard from './dashboard/TripStoryCard';
 import SmartTipWidget from './dashboard/SmartTipWidget';
+import { calculateGlobalStats, calculateTripStats } from '../utils/analytics';
 
 const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView, setTargetTab }) => {
     const { profile, user } = useProfile();
@@ -21,11 +22,17 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     const firstName = displayName.split(' ')[0];
 
     // --- Metric Calculations ---
-    const totalTrips = tripsList.length;
-    const totalBudget = tripsList.reduce((acc, trip) => acc + (trip.totalCost || 0), 0);
+    const { totalBudget, totalSpent } = React.useMemo(() => calculateGlobalStats(tripsList), [tripsList]);
 
-    // Mocking "Spent" vs "Budget" logic for now as we only have totalCost (budget)
-    const totalSpent = totalBudget * 0.82;
+    // Enrich trips with financial stats for Intelligence Engine
+    const enrichedTrips = React.useMemo(() => {
+        return tripsList.map(trip => {
+            const stats = calculateTripStats(trip);
+            return { ...trip, ...stats, totalCost: stats.spent }; // Ensure totalCost is present
+        });
+    }, [tripsList]);
+
+    const totalTrips = tripsList.length;
 
     const upcomingTrips = tripsList
         .filter(t => !t.isArchived)
@@ -35,7 +42,11 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     // --- Handlers ---
     const handleNBAAction = (action) => {
         if (action.action === 'create_trip') createNewTrip();
-        else if (action.tripId) setCurrentTripId(action.tripId);
+        else if (action.tripId) {
+            setCurrentTripId(action.tripId);
+            if (action.action === 'view_trip_expenses') setTargetTab('expenses');
+            if (action.action === 'view_trip_itinerary') setTargetTab('itinerary');
+        }
     };
 
     const handleTipAction = (action) => {
@@ -65,12 +76,17 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <div className="space-y-6 md:space-y-8 pb-20">
             {/* 1. Header & Welcome */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                        Good Afternoon, {firstName}
+                        {(() => {
+                            const hours = new Date().getHours();
+                            if (hours < 12) return 'Good Morning';
+                            if (hours < 18) return 'Good Afternoon';
+                            return 'Good Evening';
+                        })()}, {firstName}
                     </h1>
                     <p className="text-slate-500 mt-1">
                         Here is your daily travel briefing.
@@ -89,18 +105,18 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
             {/* 2. Next Best Action (Hero) */}
             <section>
                 <NBAWidget
-                    trips={tripsList}
+                    trips={enrichedTrips}
                     user={user}
                     onActionClick={handleNBAAction}
                 />
             </section>
 
-            {/* 3. Insight Grid (Metrics) */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 4. Insight Grid (Metrics) */}
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <InsightCard
                     label="Active Trips"
                     value={totalTrips}
-                    subtext="1 trip in planning"
+                    subtext="All planned adventures"
                     icon={Map}
                     color="bg-blue-500"
                     trend="up"
@@ -116,12 +132,13 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                 <InsightCard
                     label="Actual Spent"
                     value={formatMoney(totalSpent)}
-                    subtext="82% of budget utilized"
+                    subtext="Current total spending"
                     icon={TrendingUp}
                     color="bg-emerald-500"
                     trend={totalSpent > totalBudget ? 'down' : 'up'}
-                    trendLabel="On Track"
+                    trendLabel={totalSpent > totalBudget ? 'Over Budget' : 'On Track'}
                 />
+
                 <SmartTipWidget
                     onViewTip={handleTipAction}
                 />

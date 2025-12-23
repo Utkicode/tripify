@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Settings, Map, CheckCircle, Shield } from 'lucide-react';
+import { User, Settings, Map, CheckCircle, Shield, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../context/ProfileContext';
 
@@ -14,7 +14,7 @@ const TABS = [
     { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-const Profile = () => {
+const Profile = ({ user, onLogout }) => {
     const { profile, loading } = useProfile();
     const [activeTab, setActiveTab] = useState('identity');
 
@@ -79,8 +79,8 @@ const Profile = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === tab.id
-                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                                    : 'bg-transparent text-slate-500 hover:bg-slate-100'
+                                ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                                : 'bg-transparent text-slate-500 hover:bg-slate-100'
                                 }`}
                         >
                             <tab.icon size={18} />
@@ -88,7 +88,15 @@ const Profile = () => {
                         </button>
                     ))}
 
-                    <div className="pt-6 mt-6 border-t border-slate-100">
+                    <div className="pt-6 mt-6 border-t border-slate-100 space-y-4">
+                        <button
+                            onClick={onLogout}
+                            className="w-full flex md:hidden items-center gap-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+                        >
+                            <LogOut size={18} />
+                            Sign Out
+                        </button>
+
                         <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex gap-3 text-blue-700">
                             <Shield size={20} className="shrink-0" />
                             <p className="text-xs font-medium leading-relaxed">
@@ -115,8 +123,8 @@ const Profile = () => {
                         </motion.div>
                     </AnimatePresence>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

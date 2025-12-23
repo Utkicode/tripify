@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { signOut } from "firebase/auth";
-import { collection, query, onSnapshot, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc, deleteDoc, doc, where } from "firebase/firestore";
 import { auth, db } from './firebase.js';
 import { appId } from './constants.js';
 import { useProfile } from './context/ProfileContext';
@@ -16,8 +16,10 @@ import VerifyEmail from './components/VerifyEmail';
 import ProfileCompletion from './components/ProfileCompletion';
 import Profile from './components/Profile';
 import ProTips from './components/ProTips';
+import GlobalExpenses from './components/GlobalExpenses';
 
 import AuthActionHandler from './components/AuthActionHandler';
+import ConfirmationModal from './components/ConfirmationModal';
 
 export default function App() {
   // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
@@ -33,8 +35,43 @@ export default function App() {
   const { user, loading, isProfileComplete, refreshProfile } = useProfile();
 
   // --- App View State ---
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'trips', 'expenses', 'settings'
-  const [currentTripId, setCurrentTripId] = useState(null);
+  // --- App View State ---
+  // Initialize from URL query params to persist state on refresh
+  const [currentView, setCurrentView] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('view') || 'dashboard';
+  });
+
+  const [currentTripId, setCurrentTripId] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('trip') || null;
+  });
+
+  // Sync URL with State changes
+  useEffect(() => {
+    // Avoid interfering with auth action URLs (like verify email)
+    if (new URLSearchParams(window.location.search).get('mode')) return;
+
+    const url = new URL(window.location);
+
+    if (currentTripId) {
+      url.searchParams.set('trip', currentTripId);
+      url.searchParams.delete('view');
+    } else {
+      url.searchParams.delete('trip');
+      if (currentView !== 'dashboard') {
+        url.searchParams.set('view', currentView);
+      } else {
+        url.searchParams.delete('view');
+      }
+    }
+
+    // Only update if changed to avoid unnecessary pushState calls
+    if (url.toString() !== window.location.toString()) {
+      window.history.pushState({}, '', url);
+    }
+  }, [currentView, currentTripId]);
+
   const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
 
@@ -45,8 +82,11 @@ export default function App() {
       return;
     }
 
-    // Create query for user's trips
-    const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'trips'));
+    // New shared query: Find trips where I am a collaborator
+    const q = query(
+      collection(db, 'artifacts', appId, 'trips'),
+      where('collaborators', 'array-contains', user.uid)
+    );
 
     // Real-time listener
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -81,28 +121,68 @@ export default function App() {
         createdAt: Date.now(),
         updatedAt: Date.now(),
         days: [], // Start empty
-        travelers: [],
-        travelerCount: 0,
-        totalCost: 0
+        travelers: [{ id: user.uid, name: user.displayName || 'You', email: user.email }], // Initial traveler is creator
+        travelerCount: 1,
+        totalCost: 0,
+        ownerId: user.uid,
+        collaborators: [user.uid] // Critical for access control
       };
 
-      const docRef = await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'trips'), newTrip);
+      const docRef = await addDoc(collection(db, 'artifacts', appId, 'trips'), newTrip);
+
+      // Log Notification (Global)
+      // Note: We might want a separate notifications system later, keeping local for now or moving to global too?
+      // Keeping notifications local for now as they are user-specific.
+      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'), {
+        type: 'create',
+        message: `Created a new trip`,
+        user: user.displayName || 'User',
+        timestamp: Date.now(),
+        read: false
+      });
+
       setCurrentTripId(docRef.id); // Open the new trip immediately
     } catch (error) {
       console.error("Error creating trip:", error);
     }
   };
 
-  const deleteTrip = async (e, tripId) => {
-    e.stopPropagation(); // Prevent opening the trip
-    if (!confirm('Are you sure you want to delete this trip?')) return;
+  // --- Delete Trip Logic ---
+  const [deleteModalInfo, setDeleteModalInfo] = useState({ isOpen: false, tripId: null, tripName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const confirmDeleteTrip = async () => {
+    const { tripId, tripName } = deleteModalInfo;
+    if (!tripId) return;
+
+    setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId));
+      // 1. Delete the trip document (Global)
+      await deleteDoc(doc(db, 'artifacts', appId, 'trips', tripId));
+
+      // 2. Close if currently open
       if (currentTripId === tripId) setCurrentTripId(null);
+
+      // 3. Log Notification
+      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'notifications'), {
+        type: 'delete',
+        message: `Trip '${tripName || 'Untitled'}' was deleted`,
+        user: user.displayName || 'User',
+        timestamp: Date.now(),
+        read: false
+      });
+
     } catch (error) {
       console.error("Error deleting trip:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalInfo({ isOpen: false, tripId: null, tripName: '' });
     }
+  };
+
+  const deleteTrip = (e, tripId, tripName) => {
+    e.stopPropagation();
+    setDeleteModalInfo({ isOpen: true, tripId, tripName });
   };
 
   if (loading) {
@@ -124,6 +204,7 @@ export default function App() {
   }
 
   // If a specific trip is open, show the editor (Full screen mode)
+  // If a specific trip is open, show the editor (Full screen mode)
   if (currentTripId) {
     return (
       <TripDetail
@@ -138,47 +219,61 @@ export default function App() {
 
   // Default Layout with Sidebar
   return (
-    <Layout
-      user={user}
-      handleLogout={handleLogout}
-      currentView={currentView}
-      setCurrentView={setCurrentView}
-      setCurrentTripId={setCurrentTripId}
-    >
-      {currentView === 'dashboard' && (
-        <Dashboard
-          user={user}
-          tripsList={tripsList}
-          setCurrentTripId={setCurrentTripId}
-          createNewTrip={createNewTrip}
-          deleteTrip={deleteTrip}
-          setCurrentView={setCurrentView}
-          setTargetTab={setTargetTab}
-        />
-      )}
+    <>
+      <Layout
+        user={user}
+        handleLogout={handleLogout}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        setCurrentTripId={setCurrentTripId}
+      >
+        {currentView === 'dashboard' && (
+          <Dashboard
+            user={user}
+            tripsList={tripsList}
+            setCurrentTripId={setCurrentTripId}
+            createNewTrip={createNewTrip}
+            deleteTrip={deleteTrip}
+            setCurrentView={setCurrentView}
+            setTargetTab={setTargetTab}
+          />
+        )}
 
-      {currentView === 'trips' && (
-        <TripList
-          tripsList={tripsList}
-          setCurrentTripId={setCurrentTripId}
-          createNewTrip={createNewTrip}
-          deleteTrip={deleteTrip}
-        />
-      )}
+        {currentView === 'trips' && (
+          <TripList
+            tripsList={tripsList}
+            setCurrentTripId={setCurrentTripId}
+            createNewTrip={createNewTrip}
+            deleteTrip={deleteTrip}
+          />
+        )}
 
-      {currentView === 'about' && <About />}
-      {currentView === 'profile' && <Profile user={user} />}
-      {currentView === 'protips' && <ProTips />}
+        {currentView === 'about' && <About />}
+        {currentView === 'profile' && <Profile user={user} onLogout={handleLogout} />}
+        {currentView === 'protips' && <ProTips />}
 
-      {/* Placeholders for upcoming sections */}
-      {(currentView === 'expenses' || currentView === 'settings') && (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-          <div className="text-4xl mb-4">🚧</div>
-          <h2 className="text-xl font-bold text-slate-600">Coming Soon</h2>
-          <p>This module is under development.</p>
-        </div>
-      )}
+        {/* Placeholders for upcoming sections */}
+        {currentView === 'expenses' && (
+          <GlobalExpenses tripsList={tripsList} setCurrentView={setCurrentView} />
+        )}
 
-    </Layout>
+        {currentView === 'settings' && (
+          <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className="text-4xl mb-4">🚧</div>
+            <h2 className="text-xl font-bold text-slate-600">Coming Soon</h2>
+            <p>This module is under development.</p>
+          </div>
+        )}
+
+      </Layout>
+      <ConfirmationModal
+        isOpen={deleteModalInfo.isOpen}
+        onClose={() => setDeleteModalInfo({ ...deleteModalInfo, isOpen: false })}
+        onConfirm={confirmDeleteTrip}
+        title="Delete Trip?"
+        message={`Are you sure you want to delete "${deleteModalInfo.tripName}"? This action cannot be undone.`}
+        isLoading={isDeleting}
+      />
+    </>
   );
 }

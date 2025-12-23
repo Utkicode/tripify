@@ -4,7 +4,8 @@ import { appId } from "../constants";
 
 // Helper to get the expenses collection reference
 const getExpensesRef = (uid, tripId) => {
-    return collection(db, 'artifacts', appId, 'users', uid, 'trips', tripId, 'expenses');
+    // Note: uid is kept in valid parameters for backward compatibility if needed, but unused for the new global path
+    return collection(db, 'artifacts', appId, 'trips', tripId, 'expenses');
 };
 
 export const ExpenseService = {
@@ -31,7 +32,7 @@ export const ExpenseService = {
      */
     deleteExpense: async (uid, tripId, expenseId) => {
         try {
-            const expenseRef = doc(db, 'artifacts', appId, 'users', uid, 'trips', tripId, 'expenses', expenseId);
+            const expenseRef = doc(db, 'artifacts', appId, 'trips', tripId, 'expenses', expenseId);
             await deleteDoc(expenseRef);
         } catch (error) {
             console.error("Error deleting expense:", error);
@@ -44,7 +45,7 @@ export const ExpenseService = {
      */
     updateExpense: async (uid, tripId, expenseId, updates) => {
         try {
-            const expenseRef = doc(db, 'artifacts', appId, 'users', uid, 'trips', tripId, 'expenses', expenseId);
+            const expenseRef = doc(db, 'artifacts', appId, 'trips', tripId, 'expenses', expenseId);
             await updateDoc(expenseRef, {
                 ...updates,
                 updatedAt: serverTimestamp()

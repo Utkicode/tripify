@@ -130,8 +130,37 @@ export const getNextBestActions = (trips, user) => {
         });
     }
 
-    // Rule 4: Budget Check
-    if (nearestTrip.totalCost === 0 && readiness.score > 40) {
+    // Rule 4: Budget Alerts
+    const pctUsed = nearestTrip.budget > 0 ? (nearestTrip.totalCost / nearestTrip.budget) : 0;
+
+    // Critical Overrun
+    if (nearestTrip.budget > 0 && pctUsed > 1.0) {
+        actions.push({
+            id: `budget_over_${nearestTrip.id}`,
+            tripId: nearestTrip.id,
+            type: 'critical',
+            priority: 98, // Very High Priority
+            title: 'Budget Exceeded',
+            message: `You've spent ${(pctUsed * 100).toFixed(0)}% of your budget! Adjust your plans?`,
+            cta: 'Check Wallet',
+            action: 'view_trip_expenses'
+        });
+    }
+    // High Usage Warning
+    else if (nearestTrip.budget > 0 && pctUsed > 0.8) {
+        actions.push({
+            id: `budget_warn_${nearestTrip.id}`,
+            tripId: nearestTrip.id,
+            type: 'high',
+            priority: 85,
+            title: 'Approaching Budget Limit',
+            message: `You've used ${(pctUsed * 100).toFixed(0)}% of your budget.`,
+            cta: 'View Expenses',
+            action: 'view_trip_expenses'
+        });
+    }
+    // No expenses yet
+    else if (nearestTrip.totalCost === 0 && readiness.score > 40) {
         actions.push({
             id: `add_budget_${nearestTrip.id}`,
             tripId: nearestTrip.id,

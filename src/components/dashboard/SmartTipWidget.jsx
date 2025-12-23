@@ -10,7 +10,8 @@ const SmartTipWidget = ({ onViewTip }) => {
     // Rotate tips every session or on refresh.
     // For demo, we'll just pick random on mount or simple state
     useEffect(() => {
-        // Random start tip
+        // Simple random selection for variety
+        // Future: specific tips based on user state (e.g. "Add a budget" if none set)
         const randomStart = Math.floor(Math.random() * SMART_TIPS.length);
         setCurrentIndex(randomStart);
     }, []);
