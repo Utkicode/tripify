@@ -163,7 +163,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center"
+                        className="bg-white rounded-2xl border border-dashed border-slate-300 p-6 md:p-12 text-center"
                     >
                         <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Map size={32} />

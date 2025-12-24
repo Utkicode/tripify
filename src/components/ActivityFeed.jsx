@@ -99,7 +99,7 @@ const ActivityFeed = ({ activities, setCurrentTripId, setCurrentView, onClose })
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-slate-800 leading-snug">
-                                    <span className="font-semibold">{activity.user || 'Someone'}</span> {activity.message}
+                                    <span className="font-semibold">{activity.userName || activity.user || 'Someone'}</span> {activity.text || activity.message}
                                 </p>
                                 <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
                                     {activity.timestamp ? formatDistanceToNow(activity.timestamp, { addSuffix: true }) : 'Just now'}

@@ -67,9 +67,9 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onActionClick(topAction)}
-                        className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 whitespace-nowrap shadow-sm transition-all ${isPrimary
-                                ? 'bg-white text-blue-600 hover:bg-blue-50'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                        className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-all w-full sm:w-auto ${isPrimary
+                            ? 'bg-white text-blue-600 hover:bg-blue-50'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                             }`}
                     >
                         {topAction.cta} <ArrowRight size={16} />

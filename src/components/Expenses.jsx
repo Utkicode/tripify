@@ -230,8 +230,8 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                         ))}
                     </div>
 
-                    {/* Expense List */}
-                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-[300px]">
+                    {/* Desktop Expense Table */}
+                    <div className="hidden md:block bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-[300px]">
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-slate-50 border-b border-slate-100">
@@ -292,6 +292,47 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+
+                    {/* Mobile Expense List */}
+                    <div className="md:hidden space-y-3">
+                        {filteredExpenses.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                                {filterCategory === 'All' ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span>No expenses yet.</span>
+                                        <button onClick={() => setIsAddModalOpen(true)} className="text-blue-600 font-medium">Add Expense</button>
+                                    </div>
+                                ) : 'No expenses in this category.'}
+                            </div>
+                        ) : (
+                            filteredExpenses.map((expense) => {
+                                const payer = travelers.find(t => t.id === expense.paidBy)?.name || 'Someone';
+                                return (
+                                    <div key={expense.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <div className="font-bold text-slate-800 text-[15px]">{expense.description || 'Untitled'}</div>
+                                                <div className="text-xs text-slate-400 mt-0.5">{expense.dayName} • {expense.date}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-bold text-slate-900">₹{Number(expense.amount).toLocaleString()}</div>
+                                                <div className="text-xs text-slate-500 mt-0.5">Paid by {expense.paidBy === user.uid ? 'You' : payer}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
+                                            <CategoryBadge category={expense.category} />
+                                            <button
+                                                onClick={() => handleDelete(expense.id)}
+                                                className="p-1.5 text-slate-300 hover:text-red-500 bg-slate-50 rounded-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </>
             ) : (

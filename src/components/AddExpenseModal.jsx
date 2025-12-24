@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { ExpenseService } from '../services/ExpenseService';
 import { useProfile } from '../context/ProfileContext';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../firebase';
+import { appId } from '../constants';
 
 const CurrencyIcon = ({ currency }) => {
     switch (currency) {
@@ -98,6 +101,22 @@ const AddExpenseModal = ({ isOpen, onClose, user, tripId, travelers = [], initia
                 splitType: 'EQUAL',
                 splitDetails
             });
+
+            // Log Activity for Notifications
+            try {
+                const collaboratorIds = allStartParticipants.map(p => p.id);
+                await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                    text: `added a new expense: ${description || category}`,
+                    type: 'money',
+                    timestamp: Date.now(),
+                    performedBy: user.uid,
+                    userName: user.displayName || 'Traveler',
+                    collaborators: collaboratorIds
+                });
+            } catch (err) {
+                console.error("Failed to log expense activity", err);
+            }
+
             onClose();
             // Reset form
             setAmount('');

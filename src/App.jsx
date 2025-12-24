@@ -226,6 +226,7 @@ export default function App() {
         currentView={currentView}
         setCurrentView={setCurrentView}
         setCurrentTripId={setCurrentTripId}
+        tripsList={tripsList}
       >
         {currentView === 'dashboard' && (
           <Dashboard

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Calendar, Tag, ChevronRight, IndianRupee, MapPin, Search, Loader, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
@@ -9,7 +9,7 @@ import { db } from '../firebase';
 import { appId } from '../constants';
 import AddExpenseModal from './AddExpenseModal';
 
-const Planner = ({ days, setDays, user, tripId }) => {
+const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
     const { profile } = useProfile();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
     const [expenseModalInfo, setExpenseModalInfo] = useState({ isOpen: false, data: {} });
@@ -18,22 +18,46 @@ const Planner = ({ days, setDays, user, tripId }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    // ... existing logs ...
-
-    const handleSearchLocation = async (e) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-        setIsSearching(true);
+    const logActivity = async (message, type = 'update') => {
+        if (!user || !tripId) return;
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
-            const data = await response.json();
-            setSearchResults(data);
+            await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                text: message,
+                type,
+                timestamp: Date.now(),
+                performedBy: user.uid,
+                userName: user.displayName || 'Traveler',
+                collaborators: collaborators // key for filtering notifications
+            });
         } catch (error) {
-            console.error("Search error:", error);
-        } finally {
-            setIsSearching(false);
+            console.error("Failed to log activity:", error);
         }
     };
+
+    // Debounced Search Effect
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (!searchQuery.trim()) {
+                setSearchResults([]);
+                return;
+            }
+
+            setIsSearching(true);
+            try {
+                // Determine user's current view logic or just global search
+                // For now, global search via Nominatim
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`);
+                const data = await response.json();
+                setSearchResults(data);
+            } catch (error) {
+                console.error("Search error:", error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const selectLocation = (loc) => {
         updateItem(locationSearch.dayId, locationSearch.itemId, 'location', {
@@ -188,7 +212,7 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                         className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
                                     >
                                         {/* Day Header */}
-                                        <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+                                        <div className="p-4 md:p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -205,7 +229,7 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                     type="text"
                                                     value={day.dayName}
                                                     onChange={(e) => updateDay(day.id, 'dayName', e.target.value)}
-                                                    className="text-3xl font-black text-slate-800 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full"
+                                                    className="text-2xl md:text-3xl font-black text-slate-800 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full"
                                                     placeholder="Day Title"
                                                 />
                                             </div>
@@ -218,9 +242,9 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                         </div>
 
                                         {/* Timeline */}
-                                        <div className="p-8 relative">
+                                        <div className="p-4 md:p-8 relative">
                                             {/* Vertical Line */}
-                                            <div className="absolute left-[54px] top-8 bottom-8 w-0.5 bg-slate-100 z-0"></div>
+                                            <div className="absolute left-[38px] md:left-[54px] top-8 bottom-8 w-0.5 bg-slate-100 z-0"></div>
 
                                             <div className="space-y-6 relative z-10">
                                                 <AnimatePresence initial={false}>
@@ -231,16 +255,16 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                             initial={{ opacity: 0, y: 10 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             exit={{ opacity: 0, scale: 0.9 }}
-                                                            className="flex gap-6 group"
+                                                            className="flex gap-3 md:gap-6 group"
                                                         >
                                                             {/* Time & Icon */}
-                                                            <div className="flex flex-col items-center gap-3 pt-1 shrink-0 w-20">
+                                                            <div className="flex flex-col items-center gap-3 pt-1 shrink-0 w-12 md:w-20">
                                                                 <div className="flex items-center justify-center">
                                                                     <input
                                                                         type="time"
                                                                         value={item.time}
                                                                         onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
-                                                                        className="text-sm font-bold text-slate-700 bg-white/50 border border-slate-200 rounded-md px-1 py-0.5 w-auto text-center focus:text-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm"
+                                                                        className="text-xs md:text-sm font-bold text-slate-700 bg-white/50 border border-slate-200 rounded-md px-1 py-0.5 w-full text-center focus:text-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm"
                                                                     />
                                                                 </div>
                                                                 <div
@@ -252,9 +276,9 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                             </div>
 
                                                             {/* Card */}
-                                                            <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm group-hover:shadow-md group-hover:border-blue-200 transition-all">
+                                                            <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm group-hover:shadow-md group-hover:border-blue-200 transition-all min-w-0">
                                                                 <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                                                                    <div className="flex-1 w-full space-y-2">
+                                                                    <div className="flex-1 w-full space-y-2 min-w-0">
                                                                         <div className="flex items-center gap-2">
                                                                             <select
                                                                                 value={item.category}
@@ -277,10 +301,10 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                                         {/* Location & Notes */}
                                                                         <div className="space-y-1">
                                                                             {item.location && (
-                                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit">
-                                                                                    <MapPin size={12} />
-                                                                                    {item.location.name}
-                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-blue-800"><X size={12} /></button>
+                                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit max-w-full">
+                                                                                    <MapPin size={12} className="shrink-0" />
+                                                                                    <span className="truncate">{item.location.name}</span>
+                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-blue-800 shrink-0"><X size={12} /></button>
                                                                                 </div>
                                                                             )}
 
@@ -345,8 +369,8 @@ const Planner = ({ days, setDays, user, tripId }) => {
                                                 <motion.button
                                                     layout
                                                     onClick={() => addItem(day.id)}
-                                                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50/50 transition-all font-bold flex items-center justify-center gap-2 group ml-20"
-                                                    style={{ width: 'calc(100% - 5rem)' }}
+                                                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50/50 transition-all font-bold flex items-center justify-center gap-2 group md:ml-20 ml-12"
+                                                    style={{ width: 'auto', flex: 1 }} // Reset fixed width calc
                                                 >
                                                     <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
                                                         <Plus size={16} />
@@ -403,46 +427,67 @@ const Planner = ({ days, setDays, user, tripId }) => {
                         >
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                                 <h3 className="font-bold text-slate-800">Search Location</h3>
-                                <button onClick={() => setLocationSearch({ isOpen: false, dayId: null, itemId: null })} className="p-1 hover:bg-slate-100 rounded-full text-slate-500">
+                                <button
+                                    onClick={() => setLocationSearch({ isOpen: false, dayId: null, itemId: null })}
+                                    className="p-1 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"
+                                >
                                     <X size={20} />
                                 </button>
                             </div>
                             <div className="p-4">
-                                <form onSubmit={handleSearchLocation} className="mb-4">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            placeholder="E.g. Eiffel Tower, Paris"
-                                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-slate-800"
-                                            autoFocus
-                                        />
-                                        <button type="submit" disabled={isSearching} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50">
-                                            {isSearching ? <Loader className="animate-spin" size={20} /> : <Search size={20} />}
-                                        </button>
+                                <div className="relative mb-4">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search for a place..."
+                                        className="w-full pl-11 pr-10 py-3 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-blue-500 rounded-xl transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                                        autoFocus
+                                    />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                        {isSearching ? (
+                                            <Loader className="animate-spin text-blue-500" size={18} />
+                                        ) : searchQuery ? (
+                                            <button onClick={() => { setSearchQuery(''); setSearchResults([]); }} className="hover:text-slate-600">
+                                                <X size={18} />
+                                            </button>
+                                        ) : null}
                                     </div>
-                                </form>
+                                </div>
 
-                                <div className="max-h-60 overflow-y-auto space-y-2">
+                                <div className="max-h-[300px] overflow-y-auto space-y-1 -mx-2 px-2 custom-scrollbar">
                                     {searchResults.length > 0 ? (
                                         searchResults.map((result, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => selectLocation(result)}
-                                                className="w-full text-left p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100 group"
+                                                className="w-full text-left p-3 hover:bg-blue-50 hover:border-blue-100 rounded-xl transition-all border border-transparent flex items-start gap-3 group"
                                             >
-                                                <p className="font-semibold text-slate-800 text-sm group-hover:text-blue-600">{result.display_name.split(',')[0]}</p>
-                                                <p className="text-xs text-slate-500 truncate">{result.display_name}</p>
+                                                <div className="p-2 bg-slate-100 text-slate-400 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors mt-0.5">
+                                                    <MapPin size={18} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-slate-800 text-sm group-hover:text-blue-700 truncate">{result.display_name.split(',')[0]}</p>
+                                                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{result.display_name}</p>
+                                                </div>
                                             </button>
                                         ))
                                     ) : (
-                                        !isSearching && searchQuery && <p className="text-center text-slate-400 text-sm py-4">No results found.</p>
+                                        !isSearching && searchQuery && (
+                                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-2 text-slate-300">
+                                                    <MapPin size={24} />
+                                                </div>
+                                                <p className="text-slate-500 text-sm font-medium">No locations found</p>
+                                                <p className="text-xs text-slate-400">Try a different search term</p>
+                                            </div>
+                                        )
                                     )}
                                 </div>
                             </div>
-                            <div className="p-3 bg-slate-50 text-right text-xs text-slate-400">
-                                Search powered by OpenStreetMap
+                            <div className="p-3 bg-slate-50 border-t border-slate-100 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Powered by OpenStreetMap
                             </div>
                         </motion.div>
                     </div>

@@ -117,30 +117,30 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
             {/* Top Navigation Bar (Workspace Header) */}
-            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-4 md:px-6 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-3 md:px-6 h-14 md:h-16 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                     <button
                         onClick={() => setCurrentTripId(null)}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors shrink-0"
                         title="Back to Dashboard"
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="h-6 w-px bg-slate-200"></div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-500 hidden sm:inline">Trips /</span>
+                    <div className="h-6 w-px bg-slate-200 shrink-0"></div>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-sm font-semibold text-slate-500 hidden md:inline shrink-0">Trips /</span>
                         <input
                             type="text"
                             value={tripName}
                             onChange={(e) => handleUpdateTripInfo('tripName', e.target.value)}
-                            className="text-base font-bold text-slate-800 border-none bg-transparent focus:ring-2 focus:ring-blue-100 p-1 hover:bg-slate-50 rounded transition-colors cursor-text min-w-[200px]"
+                            className="text-base font-bold text-slate-800 border-none bg-transparent focus:ring-2 focus:ring-blue-100 p-1 hover:bg-slate-50 rounded transition-colors cursor-text w-full min-w-[100px] text-ellipsis"
                             placeholder="Trip Name"
                         />
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex -space-x-2 mr-2">
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                    <div className="hidden sm:flex -space-x-2 mr-2">
                         {travelers.slice(0, 3).map((t, i) => (
                             <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
                                 {t.name?.[0] || 'T'}
@@ -155,13 +155,13 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     </div>
                     <button
                         onClick={() => setIsInviteOpen(true)}
-                        className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2"
+                        className="p-2 md:px-3 md:py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2"
                     >
-                        <Share2 size={16} /> Share
+                        <Share2 size={18} /> <span className="hidden md:inline">Share</span>
                     </button>
                     <NotificationBell user={user} tripId={tripId} />
 
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full transition-colors ${syncStatus === 'synced' ? 'text-slate-400' : 'text-amber-500'}`}>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full transition-colors hidden sm:inline-block ${syncStatus === 'synced' ? 'text-slate-400' : 'text-amber-500'}`}>
                         {syncStatus === 'saving' ? 'Saving...' : 'Saved'}
                     </span>
                 </div>
@@ -226,7 +226,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeTab === 'itinerary' && <Planner days={days} setDays={handleSetDays} user={user} tripId={tripId} />}
+                                {activeTab === 'itinerary' && <Planner days={days} setDays={handleSetDays} user={user} tripId={tripId} collaborators={collaborators} />}
                                 {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
                                 {activeTab === 'expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} />}
                                 {activeTab === 'map' && <TripMap days={days} />}
