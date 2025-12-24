@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Map, Zap, Save, Loader, Coffee } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../../context/ProfileContext';
 
 const PACE_OPTIONS = [
@@ -65,36 +65,55 @@ const ProfilePreferences = () => {
     };
 
     const OptionCard = ({ option, selected, onClick, icon: Icon }) => (
-        <div
+        <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onClick(option.value)}
-            className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3 ${selected
-                    ? 'border-blue-500 bg-blue-50/50'
-                    : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm'
+            className={`cursor-pointer p-4 rounded-2xl border transition-all flex items-start gap-4 h-full ${selected
+                ? 'border-blue-500 bg-blue-50/50 shadow-sm ring-1 ring-blue-500/20'
+                : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-md'
                 }`}
         >
-            <div className={`mt-0.5 p-2 rounded-lg ${selected ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                <Icon size={18} />
+            <div className={`mt-1 p-2.5 rounded-xl transition-colors ${selected ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'}`}>
+                <Icon size={20} />
             </div>
             <div>
-                <h4 className={`font-bold text-sm ${selected ? 'text-blue-900' : 'text-slate-700'}`}>{option.label}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">{option.desc}</p>
+                <h4 className={`font-bold text-base ${selected ? 'text-slate-900' : 'text-slate-700'}`}>{option.label}</h4>
+                <p className="text-xs font-medium text-slate-500 mt-1 leading-relaxed">{option.desc}</p>
             </div>
-        </div>
+        </motion.div>
     );
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            className="space-y-10"
         >
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Travel Preferences</h2>
+                    <p className="text-slate-500 mt-1">Customize how Tripify plans your days.</p>
+                </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={saving}
+                    className="btn-primary flex items-center gap-2 group"
+                >
+                    {saving ? <Loader className="animate-spin" size={18} /> : <><Save size={18} /> Save Changes</>}
+                </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-10">
                 {/* Travel Pace */}
-                <div className="space-y-3">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <Zap size={16} className="text-amber-500" /> Travel Pace
-                    </label>
-                    <div className="grid md:grid-cols-3 gap-3">
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                            <Zap size={18} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800">Travel Pace</h3>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-4">
                         {PACE_OPTIONS.map(opt => (
                             <OptionCard
                                 key={opt.value}
@@ -105,14 +124,19 @@ const ProfilePreferences = () => {
                             />
                         ))}
                     </div>
-                </div>
+                </section>
+
+                <div className="w-full h-px bg-slate-100" />
 
                 {/* Transport */}
-                <div className="space-y-3">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <Map size={16} className="text-emerald-500" /> Preferred Transport
-                    </label>
-                    <div className="grid md:grid-cols-3 gap-3">
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                            <Map size={18} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800">Transport Preference</h3>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-4">
                         {TRANSPORT_OPTIONS.map(opt => (
                             <OptionCard
                                 key={opt.value}
@@ -123,44 +147,49 @@ const ProfilePreferences = () => {
                             />
                         ))}
                     </div>
-                </div>
+                </section>
+
+                <div className="w-full h-px bg-slate-100" />
 
                 {/* Day Start Time */}
-                <div className="space-y-3">
-                    <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <Clock size={16} className="text-blue-500" /> Typical Start Time
-                    </label>
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <div className="p-3 bg-white rounded-lg shadow-sm text-slate-600">
-                            <Coffee size={24} />
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <Clock size={18} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800">Daily Schedule</h3>
+                    </div>
+                    <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-200 max-w-lg">
+                        <div className="p-4 bg-white rounded-xl shadow-sm text-slate-600">
+                            <Coffee size={28} />
                         </div>
                         <div className="flex-1">
-                            <p className="text-sm text-slate-500 mb-1">When do you usually start your activities?</p>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Typical Start Time</label>
                             <input
                                 type="time"
                                 name="dayStartTime"
                                 value={formData.dayStartTime}
                                 onChange={handleChange}
-                                className="bg-transparent font-bold text-slate-800 text-xl outline-none"
+                                className="bg-transparent font-bold text-slate-800 text-3xl outline-none w-full"
                             />
+                            <p className="text-xs text-slate-400 mt-2">We'll schedule your first activity around this time.</p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                {/* Floating Success Message */}
+                <AnimatePresence>
                     {message && (
-                        <span className={`text-sm font-bold ${message.includes('Failed') ? 'text-red-500' : 'text-emerald-500'}`}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className={`fixed bottom-8 right-8 px-6 py-3 rounded-xl shadow-lg font-bold text-white flex items-center gap-2 z-50 ${message.includes('Failed') ? 'bg-red-500' : 'bg-emerald-500'}`}
+                        >
                             {message}
-                        </span>
+                        </motion.div>
                     )}
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="ml-auto px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 transition-all disabled:opacity-70 shadow-lg shadow-slate-900/10 active:scale-95"
-                    >
-                        {saving ? <Loader className="animate-spin" size={18} /> : <><Save size={18} /> Save Preferences</>}
-                    </button>
-                </div>
+                </AnimatePresence>
             </form>
         </motion.div>
     );

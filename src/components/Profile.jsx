@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Settings, Map, CheckCircle, Shield, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Settings, Map, LogOut, Shield, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../context/ProfileContext';
 
@@ -9,122 +9,130 @@ import ProfilePreferences from './profile/ProfilePreferences';
 import ProfileSettings from './profile/ProfileSettings';
 
 const TABS = [
-    { id: 'identity', label: 'Identity', icon: User },
-    { id: 'preferences', label: 'Travel Defaults', icon: Map },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'identity', label: 'Identity', icon: User, desc: 'Personal details' },
+    { id: 'preferences', label: 'Travel Defaults', icon: Map, desc: 'Pace & Transport' },
+    { id: 'settings', label: 'Settings', icon: Settings, desc: 'App preferences' },
 ];
 
 const Profile = ({ user, onLogout }) => {
     const { profile, loading } = useProfile();
     const [activeTab, setActiveTab] = useState('identity');
 
-    // Calculate score for display (0-100)
+    // Calculate score
     const score = profile?.metadata?.completenessScore
         ? Math.round(profile.metadata.completenessScore * 100)
         : 0;
 
-    const getScoreColor = (s) => {
-        if (s < 40) return 'text-red-500 bg-red-50';
-        if (s < 80) return 'text-amber-500 bg-amber-50';
-        return 'text-emerald-500 bg-emerald-50';
-    };
-
-    if (loading) return null; // Or skeleton
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-20">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Profile & Settings</h1>
-                    <p className="text-slate-500">Manage your identity and calibrate Tripify behavior.</p>
-                </div>
-
-                {/* Completeness Card */}
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 min-w-[240px]">
-                    <div className="relative w-12 h-12 flex items-center justify-center">
-                        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 36 36">
-                            <path
-                                className="text-slate-100"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                            <path
-                                className={`${score >= 80 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-blue-500'} transition-all duration-1000`}
-                                strokeDasharray={`${score}, 100`}
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                        </svg>
-                        <span className="text-xs font-bold text-slate-700">{score}%</span>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-slate-800">Profile Strength</h4>
-                        <p className="text-xs text-slate-400">
-                            {score < 100 ? 'Add more info to unlock insights.' : 'You are all set!'}
-                        </p>
-                    </div>
-                </div>
+        <div className="max-w-6xl mx-auto pb-20">
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Your Profile</h1>
+                <p className="text-slate-500 mt-2">Manage your account settings and travel preferences.</p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8">
-                {/* Sidebar Tabs */}
-                <div className="w-full md:w-64 space-y-2">
-                    {TABS.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === tab.id
-                                ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                                : 'bg-transparent text-slate-500 hover:bg-slate-100'
-                                }`}
-                        >
-                            <tab.icon size={18} />
-                            {tab.label}
-                        </button>
-                    ))}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Sidebar (Navigation & Score) */}
+                <div className="lg:col-span-4 space-y-6">
 
-                    <div className="pt-6 mt-6 border-t border-slate-100 space-y-4">
+                    {/* Profile Score Card */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                        <div className="relative z-10 flex items-center gap-4">
+                            <div className="relative w-16 h-16 flex items-center justify-center">
+                                <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                    <path className="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                                    <path className={`${score >= 80 ? 'text-emerald-500' : score >= 40 ? 'text-amber-500' : 'text-blue-500'} transition-all duration-1000`} strokeDasharray={`${score}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                                </svg>
+                                <span className="text-sm font-bold text-slate-800">{score}%</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">Profile Strength</h3>
+                                <p className="text-xs text-slate-500 mt-1 leading-snug">
+                                    {score < 100 ? 'Complete your profile to get better recommendations.' : 'Your profile is rock solid!'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <nav className="space-y-2">
+                        {TABS.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`group relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left outline-none ${activeTab === tab.id ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800 hover:bg-white'}`}
+                            >
+                                {activeTab === tab.id && (
+                                    <motion.div
+                                        layoutId="activeTabBg"
+                                        className="absolute inset-0 bg-white rounded-2xl border border-blue-100 shadow-sm"
+                                        initial={false}
+                                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                    />
+                                )}
+                                <div className={`relative z-10 p-2 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'}`}>
+                                    <tab.icon size={20} />
+                                </div>
+                                <div className="relative z-10 flex-1">
+                                    <span className="block font-bold text-sm tracking-wide">{tab.label}</span>
+                                    <span className="block text-xs opacity-70 font-medium">{tab.desc}</span>
+                                </div>
+                                {activeTab === tab.id && <ChevronRight size={16} className="relative z-10" />}
+                            </button>
+                        ))}
+                    </nav>
+
+                    {/* Actions */}
+                    <div className="pt-6 border-t border-slate-200/60">
                         <button
                             onClick={onLogout}
-                            className="w-full flex md:hidden items-center gap-3 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+                            className="w-full flex items-center justify-between p-4 rounded-2xl font-bold text-red-500 hover:bg-red-50 transition-all group"
                         >
-                            <LogOut size={18} />
-                            Sign Out
+                            <span className="flex items-center gap-3">
+                                <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                                Sign Out
+                            </span>
                         </button>
 
-                        <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex gap-3 text-blue-700">
-                            <Shield size={20} className="shrink-0" />
-                            <p className="text-xs font-medium leading-relaxed">
-                                Your data is private and only used to personalize your trip planning experience.
+                        <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex gap-3 text-indigo-800">
+                            <Shield size={20} className="shrink-0 mt-0.5" />
+                            <p className="text-xs font-medium leading-relaxed opacity-80">
+                                Your data is private. We only use it to personalize your experience.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="flex-1 min-h-[400px] bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 p-8 relative overflow-hidden">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
-                            className="relative z-10"
-                        >
-                            {activeTab === 'identity' && <ProfileIdentity />}
-                            {activeTab === 'preferences' && <ProfilePreferences />}
-                            {activeTab === 'settings' && <ProfileSettings />}
-                        </motion.div>
-                    </AnimatePresence>
+                {/* Main Content Area */}
+                <div className="lg:col-span-8">
+                    <motion.div
+                        layout
+                        className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-6 md:p-10 min-h-[600px] relative overflow-hidden"
+                    >
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.25, ease: "easeInOut" }}
+                            >
+                                {activeTab === 'identity' && <ProfileIdentity />}
+                                {activeTab === 'preferences' && <ProfilePreferences />}
+                                {activeTab === 'settings' && <ProfileSettings />}
+                            </motion.div>
+                        </AnimatePresence>
+                    </motion.div>
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
