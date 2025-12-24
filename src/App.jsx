@@ -20,6 +20,7 @@ import GlobalExpenses from './components/GlobalExpenses';
 
 import AuthActionHandler from './components/AuthActionHandler';
 import ConfirmationModal from './components/ConfirmationModal';
+import { AppLoadingSkeleton } from './components/common/LoadingSkeleton';
 
 export default function App() {
   // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
@@ -74,13 +75,17 @@ export default function App() {
 
   const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
+  const [tripLoading, setTripLoading] = useState(true);
 
   // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
     if (!user || !isProfileComplete) {
       setTripsList([]);
+      setTripLoading(false);
       return;
     }
+
+    setTripLoading(true);
 
     // New shared query: Find trips where I am a collaborator
     const q = query(
@@ -95,8 +100,10 @@ export default function App() {
         ...doc.data()
       }));
       setTripsList(tripsData);
+      setTripLoading(false);
     }, (error) => {
       console.error("Error fetching trips:", error);
+      setTripLoading(false);
     });
 
     return () => unsubscribe();
@@ -185,8 +192,10 @@ export default function App() {
     setDeleteModalInfo({ isOpen: true, tripId, tripName });
   };
 
+
+
   if (loading) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+    return <AppLoadingSkeleton />;
   }
 
   if (!user) {

@@ -14,8 +14,21 @@ export const calculateGlobalStats = (trips = []) => {
         // Budget
         if (trip.budget) totalBudget += Number(trip.budget);
 
-        // Expenses form Days -> Items
-        if (trip.days && Array.isArray(trip.days)) {
+        // Expenses: Check for efficient flat list first (from GlobalExpenses/PDF), else fall back to nested days (legacy/planner)
+        if (trip.expenses && Array.isArray(trip.expenses)) {
+            trip.expenses.forEach(item => {
+                const amount = Number(item.cost || item.amount) || 0; // handle both cost (PDF) and amount (original)
+                totalSpent += amount;
+
+                const cat = item.category || 'Misc';
+                if (categoryTotals[cat] !== undefined) {
+                    categoryTotals[cat] += amount;
+                } else {
+                    if (!categoryTotals['Misc']) categoryTotals['Misc'] = 0;
+                    categoryTotals['Misc'] += amount;
+                }
+            });
+        } else if (trip.days && Array.isArray(trip.days)) {
             trip.days.forEach(day => {
                 if (day.items && Array.isArray(day.items)) {
                     day.items.forEach(item => {

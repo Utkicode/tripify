@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { ExpenseService } from '../services/ExpenseService';
 import AddExpenseModal from './AddExpenseModal';
+import ConfirmModal from './common/ConfirmModal';
 import { calculateTripBalances, calculateSettlements } from '../utils/expenseUtils';
 
 const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [] }) => {
@@ -46,13 +47,18 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
         return day ? `Day ${days.indexOf(day) + 1}` : 'Extra Day';
     };
 
-    const handleDelete = async (expenseId) => {
-        if (!confirm('Delete this expense?')) return;
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+    const openDeleteModal = (id) => setConfirmDeleteId(id);
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDeleteId) return;
         try {
-            await ExpenseService.deleteExpense(user.uid, tripId, expenseId);
+            await ExpenseService.deleteExpense(user.uid, tripId, confirmDeleteId);
         } catch (error) {
-            alert('Failed to delete expense');
+            console.error('Failed to delete expense', error);
         }
+        setConfirmDeleteId(null);
     };
 
     const handleSaveBudget = () => {
@@ -278,7 +284,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                                     </td>
                                                     <td className="px-2 py-4 text-right">
                                                         <button
-                                                            onClick={() => handleDelete(expense.id)}
+                                                            onClick={() => openDeleteModal(expense.id)}
                                                             className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                             title="Delete"
                                                         >
@@ -323,7 +329,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                                             <CategoryBadge category={expense.category} />
                                             <button
-                                                onClick={() => handleDelete(expense.id)}
+                                                onClick={() => openDeleteModal(expense.id)}
                                                 className="p-1.5 text-slate-300 hover:text-red-500 bg-slate-50 rounded-lg"
                                             >
                                                 <Trash2 size={14} />
@@ -442,6 +448,15 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                onClose={() => setConfirmDeleteId(null)}
+                onConfirm={handleConfirmDelete}
+                title="Delete Expense?"
+                message="Are you sure you want to remove this expense? This will affect trip totals and splits."
+            />
         </div>
     );
 };

@@ -4,10 +4,14 @@ import App from './App.jsx'
 import './index.css'
 import { ProfileProvider } from './context/ProfileContext'
 
+import ErrorBoundary from './components/common/ErrorBoundary'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ProfileProvider>
-      <App />
-    </ProfileProvider>
+    <ErrorBoundary>
+      <ProfileProvider>
+        <App />
+      </ProfileProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

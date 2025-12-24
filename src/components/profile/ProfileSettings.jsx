@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, Wallet, AlertCircle, Save, Loader, DollarSign, FileText, Bell, Download, UserMinus, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../../context/ProfileContext';
-import { generatePDFReport } from '../../utils/exportUtils';
-import { auth } from '../../firebase';
+import { generateExpenseReport } from '../../utils/pdfGenerator'; // Use new generator
+import { auth, db } from '../../firebase'; // Need db for fetching trips
+import { collection, query, where, getDocs } from 'firebase/firestore'; // Firestore imports
+import { appId } from '../../constants';
 import { deleteUser } from 'firebase/auth';
+import ConfirmModal from '../common/ConfirmModal';
 
 const CURRENCIES = [
     { value: 'USD', label: 'USD - US Dollar' },
@@ -97,7 +100,18 @@ const ProfileSettings = () => {
     const handleExport = async () => {
         setExportLoading(true);
         try {
-            await generatePDFReport(user, profile);
+            // 1. Fetch User's Trips (Metadata Only)
+            // We need this list to pass to the generator, which then fetches details.
+            const tripsQuery = query(
+                collection(db, 'artifacts', appId, 'trips'),
+                where('collaborators', 'array-contains', user.uid)
+            );
+            const snapshot = await getDocs(tripsQuery);
+            const tripsList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // 2. Generate Report
+            await generateExpenseReport(user, profile, tripsList);
+
             setMessage('Report generated successfully!');
             setTimeout(() => setMessage(''), 3000);
         } catch (error) {
@@ -108,12 +122,13 @@ const ProfileSettings = () => {
         }
     };
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
     const handleDeleteAccount = () => {
-        if (confirm("Are you ABSOLUTELY sure? This will delete your account and all data. This action cannot be undone.")) {
-            alert("For safety in this demo, account deletion is simulated. In production, this would wipe your data.");
-            // Actual delete logic:
-            // await deleteUser(auth.currentUser);
-        }
+        alert("For safety in this demo, account deletion is simulated. In production, this would wipe your data.");
+        setShowDeleteModal(false);
+        // Actual delete logic:
+        // await deleteUser(auth.currentUser);
     };
 
     return (
@@ -295,7 +310,7 @@ const ProfileSettings = () => {
                     <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={handleDeleteAccount}
+                        onClick={() => setShowDeleteModal(true)}
                         className="flex flex-col items-start p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-lg hover:border-red-200 transition-all text-left group"
                     >
                         <div className="p-3 bg-red-50 text-red-500 rounded-xl mb-4 group-hover:bg-red-100 transition-colors">
@@ -321,6 +336,16 @@ const ProfileSettings = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteAccount}
+                title="Delete Account?"
+                message="Are you ABSOLUTELY sure? This will delete your account and all data. This action cannot be undone."
+                confirmLabel="Yes, Delete My Account"
+                isDestructive={true}
+            />
         </motion.div>
     );
 };

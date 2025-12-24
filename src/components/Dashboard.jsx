@@ -12,8 +12,14 @@ import TripStoryCard from './dashboard/TripStoryCard';
 import SmartTipWidget from './dashboard/SmartTipWidget';
 import { calculateGlobalStats, calculateTripStats } from '../utils/analytics';
 
-const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView, setTargetTab }) => {
+import { DashboardSkeleton } from './common/LoadingSkeleton';
+
+// ... existing imports ...
+
+const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView, setTargetTab, isLoading }) => {
     const { profile, user } = useProfile();
+
+    if (isLoading) return <DashboardSkeleton />;
 
     // safe fallbacks
     const currencyCode = profile?.behavior?.defaultCurrency || 'USD';

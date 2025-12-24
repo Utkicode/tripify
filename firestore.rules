@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    
+    // Check if user is signed in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user is the owner of the resource (by ID matching UID)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is listed in the 'collaborators' array of the document
+    function isCollaborator(resourceData) {
+      return isAuthenticated() && (request.auth.uid in resourceData.collaborators);
+    }
+
+    // Check if the user is a collaborator on the PARENT trip
+    // Note: This requires a get() call which costs 1 read. 
+    function isParentTripCollaborator(appId, tripId) {
+      let tripData = get(/databases/$(database)/documents/artifacts/$(appId)/trips/$(tripId)).data;
+      return isAuthenticated() && (request.auth.uid in tripData.collaborators);
+    }
+
+    // --- Rules ---
+
+    // 1. User Profiles
+    // Path: artifacts/{appId}/users/{userId}
+    match /artifacts/{appId}/users/{userId} {
+      // Read: Authenticated users can read profiles (to find people to invite)
+      // We might want to restrict this further later (e.g. strict ID lookup only), 
+      // but for "Searching" users, open read for auth users is common.
+      allow read: if isAuthenticated();
+      
+      // Write: Only the owner can edit their profile
+      allow write: if isOwner(userId);
+      
+      // Sub-collections (notifications, etc)
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // 2. Trips
+    // Path: artifacts/{appId}/trips/{tripId}
+    match /artifacts/{appId}/trips/{tripId} {
+      // Create: Authenticated users can create trips
+      // Validation: Must set themselves as owner and distinct in collaborators
+      allow create: if isAuthenticated() 
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.collaborators.hasAll([request.auth.uid]);
+
+      // Read/Update/Delete: Must be a collaborator
+      allow read, update, delete: if isCollaborator(resource.data);
+      
+      // 3. Trip Sub-collections (Days, Activities)
+      // Path: artifacts/{appId}/trips/{tripId}/days/{dayId}
+      match /days/{dayId} {
+        // Inherit access from parent Trip
+        allow read, write: if isParentTripCollaborator(appId, tripId);
+      }
+      
+      // Path: artifacts/{appId}/trips/{tripId}/activities/{activityId}
+      match /activities/{activityId} {
+         allow read, write: if isParentTripCollaborator(appId, tripId);
+      }
+
+      // Path: artifacts/{appId}/trips/{tripId}/expenses/{expenseId}
+      match /expenses/{expenseId} {
+         allow read, write: if isParentTripCollaborator(appId, tripId);
+      }
+    }
+  }
+}

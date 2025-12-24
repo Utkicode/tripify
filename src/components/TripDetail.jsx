@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Calendar, Settings, Share2, Plus, MapPin } from 'lucide-react';
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId, createInitialDays, createInitialTravelers } from '../constants';
 import Planner from './Planner';
@@ -26,22 +26,49 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const [detailLoading, setDetailLoading] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const hasUnsavedChanges = React.useRef(false);
+    const [daysLoading, setDaysLoading] = useState(true); // Track sub-collection load
 
     // --- Data Sync: Fetch Detail ---
+    // --- Data Sync: Fetch Detail & Days ---
     useEffect(() => {
         if (!user || !tripId) return;
         setDetailLoading(true);
+        setDaysLoading(true); // Reset on ID change
 
-        const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        const tripRef = doc(db, 'artifacts', appId, 'trips', tripId);
+
+        // 1. Metadata Listener
+        const unsubscribeTrip = onSnapshot(tripRef, async (docSnap) => {
             // Ignore updates if we have unsaved local changes to prevent reversion
             if (hasUnsavedChanges.current) return;
 
-            setDetailLoading(false);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // Direct state updates from server do NOT mark as unsaved
-                if (JSON.stringify(data.days) !== JSON.stringify(days)) setDays(data.days || createInitialDays());
+                setDetailLoading(false);
+
+                // --- Lazy Migration Check ---
+                if (data.days && Array.isArray(data.days) && data.days.length > 0) {
+                    console.log("Migrating legacy days to sub-collections...");
+                    try {
+                        const batch = writeBatch(db);
+                        const daysCollectionRef = collection(db, 'artifacts', appId, 'trips', tripId, 'days');
+
+                        data.days.forEach(day => {
+                            const newDayRef = doc(daysCollectionRef, String(day.id));
+                            batch.set(newDayRef, day);
+                        });
+
+                        // Remove 'days' from main doc
+                        batch.update(tripRef, { days: deleteField() });
+                        await batch.commit();
+                        console.log("Migration successful.");
+                    } catch (err) {
+                        console.error("Migration failed:", err);
+                    }
+                    return; // Stop here, let the listeners pick up the new state
+                }
+
+                // Normal Metadata Update
                 if (JSON.stringify(data.travelers) !== JSON.stringify(travelers)) setTravelers(data.travelers || createInitialTravelers());
                 if (data.tripName && data.tripName !== tripName) setTripName(data.tripName);
                 if (data.destination && data.destination !== destination) setDestination(data.destination || '');
@@ -52,7 +79,28 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             console.error("Error fetching trip details:", error);
             setDetailLoading(false);
         });
-        return () => unsubscribe();
+
+        // 2. Days Sub-collection Listener
+        const daysQuery = query(
+            collection(db, 'artifacts', appId, 'trips', tripId, 'days'),
+            orderBy('id', 'asc') // Ensure consistent order
+        );
+
+        const unsubscribeDays = onSnapshot(daysQuery, (snapshot) => {
+            const daysData = snapshot.docs.map(doc => doc.data());
+            // Update days from sub-collection. 
+            // Note: We do NOT set hasUnsavedChanges here, as this is the source of truth.
+            if (JSON.stringify(daysData) !== JSON.stringify(days)) {
+                setDays(daysData.length > 0 ? daysData : createInitialDays()); // Fallback if truly empty? Should be handled by migration or creation.
+                // For now, let's just display.
+            }
+            setDaysLoading(false); // Data loaded (or empty confirmed)
+        });
+
+        return () => {
+            unsubscribeTrip();
+            unsubscribeDays();
+        };
     }, [user, tripId]); // Removed dependencies to prevent listener recreation
 
     // Wrappers to track USER changes
@@ -73,7 +121,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         if (field === 'budget') setBudget(Number(value));
     };
 
-    // --- Data Sync: Save Changes ---
+    // --- Data Sync: Save Changes (Metadata Only) ---
     useEffect(() => {
         // Only save if explicitly marked as unsaved (user action)
         if (!user || !tripId || detailLoading || !hasUnsavedChanges.current) return;
@@ -82,10 +130,11 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             setSyncStatus('saving');
             try {
                 const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+                // Total Cost Calculation: Still needs days, but we read from state 'days' which is synced from sub-col
                 const totalCost = days ? days.reduce((total, day) => total + day.items.reduce((dTotal, item) => dTotal + Number(item.amount), 0), 0) : 0;
 
                 await updateDoc(docRef, {
-                    days,
+                    // days, // REMOVED: Days are now in sub-collection
                     travelers,
                     tripName,
                     destination,
@@ -104,7 +153,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
         const timer = setTimeout(saveData, 1000);
         return () => clearTimeout(timer);
-    }, [days, travelers, tripName, destination, budget, user, tripId]);
+    }, [travelers, tripName, destination, budget, user, tripId, days]); // We keep 'days' in dependency to update totalCost if days change, but we don't save 'days' field.
 
     // --- Deep Link Handling ---
     useEffect(() => {
@@ -226,7 +275,16 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeTab === 'itinerary' && <Planner days={days} setDays={handleSetDays} user={user} tripId={tripId} collaborators={collaborators} />}
+                                {activeTab === 'itinerary' && (
+                                    <Planner
+                                        days={days}
+                                        setDays={handleSetDays}
+                                        user={user}
+                                        tripId={tripId}
+                                        collaborators={collaborators}
+                                        isLoading={detailLoading || daysLoading}
+                                    />
+                                )}
                                 {activeTab === 'travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
                                 {activeTab === 'expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} />}
                                 {activeTab === 'map' && <TripMap days={days} />}

@@ -89,6 +89,47 @@ export const ProfileProvider = ({ children }) => {
                 try {
                     // Ensure profile exists (migration/init)
                     let userProfile = await profileService.ensureProfileExists(currentUser.uid, currentUser);
+
+                    // --- Auto-Heal Legacy Profiles (Missing Score or Structure) ---
+                    if (userProfile && (userProfile.metadata?.completenessScore === undefined || !userProfile.identity)) {
+                        console.log("Legacy profile detected. Auto-migrating structure & score...");
+
+                        // 1. Structure Migration (Flat -> Nested)
+                        const migratedProfile = { ...userProfile };
+
+                        // Ensure sections exist
+                        if (!migratedProfile.identity) migratedProfile.identity = {};
+                        if (!migratedProfile.preferences) migratedProfile.preferences = {};
+                        if (!migratedProfile.behavior) migratedProfile.behavior = {};
+                        if (!migratedProfile.metadata) migratedProfile.metadata = {};
+
+                        // Move flat fields if they exist and target is empty
+                        if (migratedProfile.displayName && !migratedProfile.identity.displayName) {
+                            migratedProfile.identity.displayName = migratedProfile.displayName;
+                        }
+                        if (migratedProfile.email && !migratedProfile.identity.email) {
+                            migratedProfile.identity.email = migratedProfile.email;
+                        }
+                        if (migratedProfile.photoURL && !migratedProfile.identity.photoURL) {
+                            migratedProfile.identity.photoURL = migratedProfile.photoURL;
+                        }
+                        // Default preferences for legacy
+                        if (!migratedProfile.preferences.travelPace) migratedProfile.preferences.travelPace = 'MODERATE';
+                        if (!migratedProfile.behavior.defaultCurrency) migratedProfile.behavior.defaultCurrency = 'USD';
+
+                        // 2. Calculate New Score
+                        const score = calculateCompleteness(migratedProfile);
+                        migratedProfile.metadata.completenessScore = score;
+
+                        // 3. Update local object immediately to unblock UI
+                        userProfile = migratedProfile;
+
+                        // 4. Persist to Firestore in background
+                        // We set the whole object to ensure structure is saved, not just score
+                        profileService.setUserProfile(currentUser.uid, migratedProfile)
+                            .catch(e => console.error("Failed to persist legacy migration:", e));
+                    }
+
                     setProfile(userProfile);
                 } catch (err) {
                     console.error("Profile init error:", err);

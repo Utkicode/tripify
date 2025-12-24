@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { useProfile } from '../context/ProfileContext';
 
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, setDoc, deleteDoc, doc } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId } from '../constants';
 import AddExpenseModal from './AddExpenseModal';
+import ConfirmModal from './common/ConfirmModal';
 
-const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
+const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = false }) => {
     const { profile } = useProfile();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
     const [expenseModalInfo, setExpenseModalInfo] = useState({ isOpen: false, data: {} });
@@ -71,35 +72,87 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
         setSearchResults([]);
     };
 
-    const addDay = () => {
+    const addDay = async () => {
         const newDay = {
             id: Date.now(),
             date: '',
             dayName: `Day ${days.length + 1}`,
             items: []
         };
-        setDays([...days, newDay]);
-        setExpandedDay(newDay.id);
-        logActivity(`added a new day: ${newDay.dayName}`, 'add');
+        try {
+            await setDoc(doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(newDay.id)), newDay);
+            setExpandedDay(newDay.id);
+            logActivity(`added a new day: ${newDay.dayName}`, 'add');
+        } catch (error) {
+            console.error("Error adding day:", error);
+        }
     };
 
-    const deleteDay = (dayId) => {
-        if (!confirm('Delete this day?')) return;
-        setDays(days.filter(d => d.id !== dayId));
-        if (expandedDay === dayId) setExpandedDay(days[0]?.id || null);
-        logActivity(`deleted a day`, 'delete');
+    // --- Delete Confirmation State ---
+    const [confirmInfo, setConfirmInfo] = useState({
+        isOpen: false,
+        type: null, // 'day' or 'item'
+        id: null,
+        secondaryId: null // for item deletion (dayId)
+    });
+
+    const openDeleteDayModal = (dayId) => {
+        setConfirmInfo({
+            isOpen: true,
+            type: 'day',
+            id: dayId,
+            secondaryId: null
+        });
+    };
+
+    const openDeleteItemModal = (dayId, itemId) => {
+        setConfirmInfo({
+            isOpen: true,
+            type: 'item',
+            id: itemId,
+            secondaryId: dayId
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (confirmInfo.type === 'day') {
+            const dayId = confirmInfo.id;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(dayId)));
+                if (expandedDay === dayId) setExpandedDay(days[0]?.id || null);
+                logActivity(`deleted a day`, 'delete');
+            } catch (error) {
+                console.error("Error deleting day:", error);
+            }
+        } else if (confirmInfo.type === 'item') {
+            const itemId = confirmInfo.id;
+            const dayId = confirmInfo.secondaryId;
+            const day = days.find(d => d.id === dayId);
+            if (day) {
+                const updatedItems = day.items.filter(item => item.id !== itemId);
+                try {
+                    const dayRef = doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(dayId));
+                    await updateDoc(dayRef, { items: updatedItems });
+                    logActivity(`removed an activity`, 'delete');
+                } catch (error) {
+                    console.error("Error deleting item:", error);
+                }
+            }
+        }
+        setConfirmInfo({ isOpen: false, type: null, id: null, secondaryId: null });
     };
 
     const sortItems = (items) => {
         return [...items].sort((a, b) => a.time.localeCompare(b.time));
     };
 
-    const addItem = (dayId) => {
+    const addItem = async (dayId) => {
         const day = days.find(d => d.id === dayId);
-        let newItemTime;
+        if (!day) return;
 
+        let newItemTime;
         // Use Profile Preference for Day Start Time if it's the first item
-        if (day && day.items.length === 0 && profile?.preferences?.dayStartTime) {
+        if (day.items.length === 0 && profile?.preferences?.dayStartTime) {
             newItemTime = profile.preferences.dayStartTime;
         } else {
             const now = new Date();
@@ -115,46 +168,64 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
             notes: '',
             location: null
         };
-        const updatedDays = days.map(day => {
-            if (day.id === dayId) {
-                // Add new item and Sort
-                return { ...day, items: sortItems([...day.items, newItem]) };
-            }
-            return day;
-        });
-        setDays(updatedDays);
-        logActivity(`added an activity`, 'add');
+
+        const updatedItems = sortItems([...day.items, newItem]);
+
+        try {
+            const dayRef = doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(dayId));
+            await updateDoc(dayRef, { items: updatedItems });
+            logActivity(`added an activity`, 'add');
+        } catch (error) {
+            console.error("Error adding item:", error);
+        }
     };
 
-    const updateItem = (dayId, itemId, field, value) => {
-        const updatedDays = days.map(day => {
-            if (day.id === dayId) {
-                const updatedItems = day.items.map(item => {
-                    if (item.id === itemId) return { ...item, [field]: value };
-                    return item;
-                });
-                // Sort if time was changed
-                return { ...day, items: field === 'time' ? sortItems(updatedItems) : updatedItems };
-            }
-            return day;
+    const updateItem = async (dayId, itemId, field, value) => {
+        const day = days.find(d => d.id === dayId);
+        if (!day) return;
+
+        const updatedItems = day.items.map(item => {
+            if (item.id === itemId) return { ...item, [field]: value };
+            return item;
         });
-        setDays(updatedDays);
+
+        const finalItems = field === 'time' ? sortItems(updatedItems) : updatedItems;
+
+        try {
+            const dayRef = doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(dayId));
+            await updateDoc(dayRef, { items: finalItems });
+        } catch (error) {
+            console.error("Error updating item:", error);
+        }
     };
 
-    const deleteItem = (dayId, itemId) => {
-        const updatedDays = days.map(day => {
-            if (day.id === dayId) {
-                return { ...day, items: day.items.filter(item => item.id !== itemId) };
-            }
-            return day;
-        });
-        setDays(updatedDays);
-        logActivity(`removed an activity`, 'delete');
+    // deleteItem function replaced by openDeleteItemModal + handleConfirmDelete logic above
+
+    const updateDay = async (dayId, field, value) => {
+        try {
+            const dayRef = doc(db, 'artifacts', appId, 'trips', tripId, 'days', String(dayId));
+            await updateDoc(dayRef, { [field]: value });
+        } catch (error) {
+            console.error("Error updating day:", error);
+        }
     };
 
-    const updateDay = (dayId, field, value) => {
-        setDays(days.map(d => d.id === dayId ? { ...d, [field]: value } : d));
-    };
+    if (isLoading) {
+        return (
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="flex gap-8">
+                    <div className="w-64 hidden lg:block space-y-2">
+                        {[1, 2, 3].map(i => <div key={i} className="h-12 bg-slate-200 rounded-xl animate-pulse" />)}
+                    </div>
+                    <div className="flex-1 space-y-4">
+                        <div className="h-32 bg-slate-200 rounded-3xl animate-pulse" />
+                        <div className="h-20 bg-slate-200 rounded-3xl animate-pulse" />
+                        <div className="h-20 bg-slate-200 rounded-3xl animate-pulse" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -234,7 +305,7 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
                                                 />
                                             </div>
                                             <button
-                                                onClick={() => deleteDay(day.id)}
+                                                onClick={() => openDeleteDayModal(day.id)}
                                                 className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                                             >
                                                 <Trash2 size={20} />
@@ -353,7 +424,7 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
                                                                                 <IndianRupee size={18} />
                                                                             </button>
                                                                             <button
-                                                                                onClick={() => deleteItem(day.id, item.id)}
+                                                                                onClick={() => openDeleteItemModal(day.id, item.id)}
                                                                                 className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"
                                                                             >
                                                                                 <Trash2 size={18} />
@@ -493,6 +564,17 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [] }) => {
                     </div>
                 )}
             </AnimatePresence>
+            {/* Confirmation Modal */}
+            <ConfirmModal
+                isOpen={confirmInfo.isOpen}
+                onClose={() => setConfirmInfo({ ...confirmInfo, isOpen: false })}
+                onConfirm={handleConfirmDelete}
+                title={confirmInfo.type === 'day' ? "Delete Day?" : "Delete Activity?"}
+                message={confirmInfo.type === 'day'
+                    ? "Are you sure you want to delete this day? All activities within it will be lost."
+                    : "Are you sure you want to delete this activity?"
+                }
+            />
         </div>
     );
 };

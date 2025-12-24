@@ -36,14 +36,20 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
                 limit(50)
             );
         } else {
-            // Global (all shared trips) - Requires 'collaborators' array in activity doc
-            // NOTE: This requires a Firestore Composite Index: activities (collaborators: arrays, timestamp: desc)
+            // Global (all shared trips)
+            // DISABLED: Requires complex Collection Group Index + Security Rules for 'groups'.
+            // Re-enabling this requires updating logic to mirror 'collaborators' onto activity docs.
+            // setActivities([]);
+            return;
+
+            /*
             q = query(
                 collectionGroup(db, 'activities'),
                 where('collaborators', 'array-contains', user.uid),
                 orderBy('timestamp', 'desc'),
                 limit(20)
             );
+            */
         }
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
