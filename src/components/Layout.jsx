@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Menu, Search, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import NotificationBell from './NotificationBell';
 import MobileBottomNav from './MobileBottomNav';
+import Footer from './Footer';
+import FeedbackModal from './FeedbackModal';
 
 const Layout = ({ children, user, handleLogout, currentView, setCurrentView, setCurrentTripId, tripsList = [] }) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Mobile search state
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     // Filtering logic
     React.useEffect(() => {
@@ -31,6 +35,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
         setCurrentTripId(tripId);
         setSearchQuery('');
         setSearchResults([]);
+        setIsMobileSearchOpen(false); // Close mobile search on selection
     };
 
     return (
@@ -67,7 +72,6 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search trips..."
                                     className="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-slate-400 outline-none"
                                 />
                                 {searchQuery && (
@@ -76,6 +80,43 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                     </button>
                                 )}
                             </div>
+
+                            {/* Mobile Search Toggle */}
+                            <button
+                                onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+                                className="sm:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-full"
+                            >
+                                <Search size={20} />
+                            </button>
+
+                            {/* Mobile Search Overlay */}
+                            <AnimatePresence>
+                                {isMobileSearchOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="sm:hidden absolute top-14 right-0 w-[calc(100vw-32px)] bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50 mr-[-50px]"
+                                    >
+                                        <div className="flex items-center bg-slate-50 rounded-lg px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                            <Search size={16} className="text-slate-400 shrink-0" />
+                                            <input
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                placeholder="Search trips..."
+                                                autoFocus
+                                                className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400 outline-none ml-2"
+                                            />
+                                            {searchQuery && (
+                                                <button onClick={() => setSearchQuery('')} className="p-0.5 hover:bg-slate-200 rounded-full text-slate-400 shrink-0">
+                                                    <X size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* Search Results Dropdown */}
                             {searchQuery && (
@@ -121,8 +162,19 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                     <div className="max-w-7xl mx-auto">
                         {children}
                     </div>
+                    {/* Integrated Footer */}
+                    <div className="mt-auto">
+                        <Footer setCurrentView={setCurrentView} onOpenFeedback={() => setIsFeedbackOpen(true)} />
+                    </div>
                 </main>
             </div>
+
+            {/* Global Modals */}
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                user={user}
+            />
 
             {/* Mobile Bottom Navigation */}
             <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} />

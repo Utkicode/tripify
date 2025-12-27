@@ -62,7 +62,7 @@ const Profile = ({ user, onLogout }) => {
                     </div>
 
                     {/* Navigation Tabs */}
-                    <nav className="space-y-2">
+                    <nav className="space-y-2 sticky top-20 z-10 bg-slate-50/95 backdrop-blur-sm p-2 -mx-2 rounded-2xl border border-slate-100/50 lg:static lg:bg-transparent lg:p-0 lg:border-none">
                         {TABS.map(tab => (
                             <button
                                 key={tab.id}

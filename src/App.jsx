@@ -17,6 +17,8 @@ import ProfileCompletion from './components/ProfileCompletion';
 import Profile from './components/Profile';
 import ProTips from './components/ProTips';
 import GlobalExpenses from './components/GlobalExpenses';
+import AppPrivacy from './components/AppPrivacy';
+import TermsOfService from './components/TermsOfService';
 
 import AuthActionHandler from './components/AuthActionHandler';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -261,6 +263,8 @@ export default function App() {
         {currentView === 'about' && <About />}
         {currentView === 'profile' && <Profile user={user} onLogout={handleLogout} />}
         {currentView === 'protips' && <ProTips />}
+        {currentView === 'privacy' && <AppPrivacy />}
+        {currentView === 'terms' && <TermsOfService />}
 
         {/* Placeholders for upcoming sections */}
         {currentView === 'expenses' && (

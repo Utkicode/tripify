@@ -75,5 +75,15 @@ service cloud.firestore {
          allow read, write: if isParentTripCollaborator(appId, tripId);
       }
     }
+    // 4. Feedback
+    // Path: feedback/{feedbackId}
+    match /feedback/{feedbackId} {
+      // Allow anyone (even unauthenticated, if needed, or just auth) to create feedback
+      // Since our app supports anonymous feedback via "Report a Bug", let's be permissive strictly for creation.
+      allow create: if true; 
+      
+      // Only admins/devs should read/delete (restricted for now, or open if you want to build an admin panel later)
+      allow read, update, delete: if false; 
+    }
   }
 }

@@ -1,0 +1,26 @@
+[
+    {
+        "origin": [
+            "http://localhost:5173",
+            "https://tripify-c49b6.web.app",
+            "https://tripify-c49b6.firebaseapp.com"
+        ],
+        "method": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+        ],
+        "responseHeader": [
+            "Authorization",
+            "Content-Type",
+            "Content-Length",
+            "User-Agent",
+            "x-goog-resumable",
+            "x-firebase-storage-version"
+        ],
+        "maxAgeSeconds": 3600
+    }
+]

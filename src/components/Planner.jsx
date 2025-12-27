@@ -400,13 +400,13 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                                 className="bg-transparent border-none w-20 text-sm font-semibold text-slate-700 p-0 focus:ring-0 text-right"
                                                                             />
                                                                         </div>
-                                                                        <div className="flex items-center gap-1">
+                                                                        <div className="flex items-center gap-1 sm:gap-2">
                                                                             <button
                                                                                 onClick={() => setLocationSearch({ isOpen: true, dayId: day.id, itemId: item.id })}
-                                                                                className={`text-slate-300 hover:text-blue-600 p-2 hover:bg-blue-50 rounded-lg transition-colors ${item.location ? 'text-blue-500' : ''}`}
+                                                                                className={`p-3 rounded-xl transition-colors ${item.location ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
                                                                                 title="Set Location"
                                                                             >
-                                                                                <MapPin size={18} />
+                                                                                <MapPin size={20} />
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => setExpenseModalInfo({
@@ -418,16 +418,16 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                                         date: day.date
                                                                                     }
                                                                                 })}
-                                                                                className="text-slate-300 hover:text-green-600 p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                                                                className="text-slate-400 hover:text-green-600 p-3 hover:bg-green-50 rounded-xl transition-colors"
                                                                                 title="Log as Expense"
                                                                             >
-                                                                                <IndianRupee size={18} />
+                                                                                <IndianRupee size={20} />
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => openDeleteItemModal(day.id, item.id)}
-                                                                                className="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                                                className="text-slate-400 hover:text-red-500 p-3 hover:bg-red-50 rounded-xl transition-colors"
                                                                             >
-                                                                                <Trash2 size={18} />
+                                                                                <Trash2 size={20} />
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -461,16 +461,16 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                 <button
                                     key={day.id}
                                     onClick={() => setExpandedDay(day.id)}
-                                    className={`px-4 py-2 rounded-xl whitespace-nowrap text-sm font-medium border ${expandedDay === day.id
-                                        ? 'bg-slate-900 text-white border-slate-900'
+                                    className={`px-5 py-3 rounded-xl whitespace-nowrap text-sm font-bold border flex-shrink-0 snap-center transition-all ${expandedDay === day.id
+                                        ? 'bg-slate-900 text-white border-slate-900 shadow-md'
                                         : 'bg-white text-slate-600 border-slate-200'
                                         }`}
                                 >
                                     Day {index + 1}
                                 </button>
                             ))}
-                            <button onClick={addDay} className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-500 font-medium whitespace-nowrap">
-                                + Add
+                            <button onClick={addDay} className="px-5 py-3 rounded-xl border border-dashed border-slate-300 bg-white text-slate-500 font-bold whitespace-nowrap flex-shrink-0 snap-center">
+                                + Add Day
                             </button>
                         </div>
                     </div>

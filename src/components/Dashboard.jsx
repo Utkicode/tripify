@@ -182,13 +182,14 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     </motion.div>
                 ) : (
                     // Story Grid
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-3 md:overflow-visible md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
                         {upcomingTrips.map(trip => (
-                            <TripStoryCard
-                                key={trip.id}
-                                trip={trip}
-                                onClick={setCurrentTripId}
-                            />
+                            <div key={trip.id} className="min-w-[85vw] md:min-w-0 snap-center">
+                                <TripStoryCard
+                                    trip={trip}
+                                    onClick={setCurrentTripId}
+                                />
+                            </div>
                         ))}
                     </div>
                 )}
