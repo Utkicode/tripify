@@ -76,8 +76,10 @@ const TripMap = ({ days = [] }) => {
     };
 
     return (
-        <div className="relative w-full h-[600px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 z-0">
-            <MapContainer center={LONDON_COORDS} zoom={13} scrollWheelZoom={true} className="h-full w-full">
+        <div className="relative w-full h-[600px] bg-slate-100 rounded-[3rem] overflow-hidden border border-white/60 shadow-xl shadow-slate-200/50 z-0">
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] z-[500] rounded-[3rem]"></div>
+
+            <MapContainer center={LONDON_COORDS} zoom={13} scrollWheelZoom={true} className="h-full w-full z-0">
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -86,11 +88,11 @@ const TripMap = ({ days = [] }) => {
                 {/* Render Planner Markers */}
                 {plannerLocations.map((loc) => (
                     <Marker key={loc.id} position={[loc.lat, loc.lon]}>
-                        <Popup>
-                            <div className="p-1 min-w-[150px]">
-                                <p className="font-bold text-slate-800 text-sm">{loc.itemName || 'Activity'}</p>
-                                <p className="text-xs text-slate-500 mb-1">{loc.dayName} • {loc.time}</p>
-                                <p className="text-xs text-blue-600 font-medium truncate">{loc.name}</p>
+                        <Popup className="oneui-popup">
+                            <div className="p-2 min-w-[160px] text-center">
+                                <p className="font-black text-slate-800 text-sm mb-1">{loc.itemName || 'Activity'}</p>
+                                <div className="text-[10px] font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full inline-block mb-1">{loc.dayName}</div>
+                                <p className="text-xs text-blue-600 font-bold truncate">{loc.name}</p>
                             </div>
                         </Popup>
                     </Marker>
@@ -99,8 +101,8 @@ const TripMap = ({ days = [] }) => {
                 {/* Render Search Marker if active */}
                 {selectedLocation && (
                     <Marker position={[selectedLocation.lat, selectedLocation.lon]}>
-                        <Popup offset={[0, -20]}>
-                            <div className="text-center font-bold">Search Result</div>
+                        <Popup offset={[0, -20]} className="oneui-popup">
+                            <div className="text-center font-bold px-2 py-1">📍 Search Result</div>
                         </Popup>
                     </Marker>
                 )}
@@ -109,21 +111,21 @@ const TripMap = ({ days = [] }) => {
             </MapContainer>
 
             {/* Search Overlay */}
-            <div className="absolute top-4 right-4 z-[1000] w-full max-w-xs">
-                <form onSubmit={handleSearch} className="bg-white p-2 rounded-xl shadow-lg border border-slate-200 flex gap-2">
+            <div className="absolute top-6 right-6 z-[800] w-full max-w-sm">
+                <form onSubmit={handleSearch} className="bg-white/90 backdrop-blur-xl p-2 rounded-[2rem] shadow-xl border border-white/60 flex gap-2">
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search places..."
-                        className="flex-1 bg-transparent border-none text-sm focus:ring-0 p-1"
+                        placeholder="Search for places..."
+                        className="flex-1 bg-transparent border-none text-sm font-bold text-slate-800 focus:ring-0 px-4 placeholder:font-normal placeholder:text-slate-400"
                     />
-                    <button type="submit" disabled={isSearching} className="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-lg transition-colors">
-                        {isSearching ? <span className="animate-spin block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span> : <MapPin size={16} />}
+                    <button type="submit" disabled={isSearching} className="bg-slate-900 hover:bg-blue-600 text-white p-3 rounded-full transition-all shadow-lg shadow-slate-900/20">
+                        {isSearching ? <span className="animate-spin block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></span> : <MapPin size={18} />}
                     </button>
                 </form>
-                <div className="mt-2 bg-white/90 backdrop-blur p-2 rounded-lg shadow-sm border border-slate-200 text-xs text-slate-500">
-                    Showing {plannerLocations.length} activities from itinerary.
+                <div className="mt-3 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/50 text-[11px] font-bold text-slate-500 uppercase tracking-wide text-center w-fit ml-auto">
+                    {plannerLocations.length} Locations Pinned
                 </div>
             </div>
         </div>

@@ -60,7 +60,7 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
     // --- Header ---
     doc.setFontSize(18);
     doc.setTextColor(33, 37, 41); // Slate 900
-    doc.text("Tripify - Consolidated Travel Expense Report", 14, 20);
+    doc.text("TravelCFO - Consolidated Travel Expense Report", 14, 20);
 
     // Metadata
     doc.setFontSize(10);
@@ -265,5 +265,5 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
     doc.text("This report is for informational purposes and does not include pending or unlogged expenses.", 14, yPos + 5);
 
     // Save
-    doc.save(`Tripify_Global_Report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    doc.save(`TravelCFO_Global_Report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 };

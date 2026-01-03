@@ -40,24 +40,24 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className={`p-6 rounded-2xl border shadow-sm relative overflow-hidden ${currentStyle}`}
+                className={`p-6 md:p-8 rounded-[2rem] border shadow-sm relative overflow-hidden backdrop-blur-xl ${currentStyle}`}
             >
                 {/* Background Decor (Only for Primary) */}
                 {isPrimary && (
-                    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none" />
                 )}
 
-                <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="flex items-start gap-4 flex-1">
-                        <div className={`p-3 rounded-xl shrink-0 ${isPrimary ? 'bg-white/20' : 'bg-white shadow-sm'}`}>
-                            <Icon size={24} className={isPrimary ? 'text-white' : 'text-blue-600'} />
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-start gap-5 flex-1">
+                        <div className={`p-4 rounded-[1.5rem] shrink-0 ${isPrimary ? 'bg-white/20' : 'bg-white shadow-sm'}`}>
+                            <Icon size={28} className={isPrimary ? 'text-white' : 'text-blue-600'} />
                         </div>
                         <div>
-                            <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isPrimary ? 'text-blue-100' : 'text-slate-500 opacity-70'}`}>
+                            <div className={`text-xs font-extrabold uppercase tracking-widest mb-1.5 ${isPrimary ? 'text-blue-100' : 'text-slate-500 opacity-70'}`}>
                                 Recommended for you
                             </div>
-                            <h2 className="text-xl font-bold mb-1 leading-tight">{topAction.title}</h2>
-                            <p className={`text-sm leading-relaxed ${isPrimary ? 'text-blue-50' : 'opacity-80'}`}>
+                            <h2 className="text-2xl font-black mb-2 leading-tight tracking-tight">{topAction.title}</h2>
+                            <p className={`text-base leading-relaxed ${isPrimary ? 'text-blue-50' : 'opacity-80'}`}>
                                 {topAction.message}
                             </p>
                         </div>
@@ -67,12 +67,12 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onActionClick(topAction)}
-                        className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-all w-full sm:w-auto ${isPrimary
+                        className={`px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-all w-full md:w-auto ${isPrimary
                             ? 'bg-white text-blue-600 hover:bg-blue-50'
                             : 'bg-blue-600 text-white hover:bg-blue-700'
                             }`}
                     >
-                        {topAction.cta} <ArrowRight size={16} />
+                        {topAction.cta} <ArrowRight size={18} />
                     </motion.button>
                 </div>
             </motion.div>

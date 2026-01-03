@@ -3,11 +3,11 @@ import { useProfile } from '../context/ProfileContext';
 import { getCurrencySymbol } from '../utils/currency';
 import { calculateGlobalStats, prepareChartData } from '../utils/analytics';
 import ExpenseAnalytics from './dashboard/ExpenseAnalytics';
-import { FileDown, Loader2 } from 'lucide-react';
+import { FileDown, Loader2, Wallet } from 'lucide-react';
 import { generateExpenseReport, fetchAllExpenses } from '../utils/pdfGenerator';
 import { LoadingSkeleton } from './common/LoadingSkeleton';
 
-const GlobalExpenses = ({ tripsList, setCurrentView }) => {
+const GlobalExpenses = ({ tripsList }) => {
     const { profile, user } = useProfile();
     const [isGenerating, setIsGenerating] = useState(false);
     const [enrichedTrips, setEnrichedTrips] = useState([]);
@@ -46,7 +46,6 @@ const GlobalExpenses = ({ tripsList, setCurrentView }) => {
     const handleExport = async () => {
         setIsGenerating(true);
         try {
-            // Use enrichedTrips directly to save a re-fetch, causing less reads
             await generateExpenseReport(user, profile, tripsList);
         } catch (error) {
             console.error("Export failed:", error);
@@ -58,40 +57,63 @@ const GlobalExpenses = ({ tripsList, setCurrentView }) => {
 
     if (isLoadingData) {
         return (
-            <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="w-full">
                 <LoadingSkeleton count={3} height="h-32" />
             </div>
         );
     }
 
+    if (!tripsList || tripsList.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                    <Wallet size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">No Expenses Yet</h3>
+                <p className="text-slate-500 max-w-sm">
+                    Create a trip and log some expenses to see your global financial overview here.
+                </p>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 md:px-8 h-16 flex items-center justify-between gap-4">
-                <h1 className="text-xl font-bold text-slate-800">Global Expenses</h1>
-                <button
-                    onClick={handleExport}
-                    disabled={isGenerating || tripsList.length === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-                >
-                    {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
-                    {isGenerating ? 'Generating...' : 'Export PDF'}
-                </button>
+        <div className="w-full max-w-7xl mx-auto space-y-12">
+            {/* 1. Header with Atmospheric Blob */}
+            <div className="relative mb-12 text-center md:text-left">
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full -z-10 pointer-events-none"></div>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                    <div>
+                        <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter mb-4">
+                            Global <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Expenses</span>
+                        </h1>
+                        <p className="text-xl text-slate-500 font-bold tracking-tight max-w-2xl">
+                            A unified view of your financial footprint across all <span className="text-slate-900 mx-1">{tripsList.length}</span> active trips.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleExport}
+                        disabled={isGenerating}
+                        className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-[2rem] hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl shadow-slate-900/20 hover:scale-105 active:scale-95 text-lg font-bold group"
+                    >
+                        {isGenerating ? <Loader2 size={24} className="animate-spin" /> : <FileDown size={24} className="group-hover:translate-y-1 transition-transform" />}
+                        {isGenerating ? 'Generating...' : 'Export Global Report'}
+                    </button>
+                </div>
             </div>
 
-            <div className="max-w-5xl mx-auto p-4 md:p-8">
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Financial Overview</h2>
-                    <p className="text-slate-500">
-                        Aggregate spending across all your {tripsList.length} trips.
-                    </p>
-                </div>
+            {/* Analytics Dashboard - Styled via Child or Wrapper */}
+            <div className="bg-white/40 backdrop-blur-3xl rounded-[3.5rem] p-8 md:p-12 border border-white/50 shadow-2xl shadow-indigo-100/50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/50 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
 
                 <ExpenseAnalytics
                     totalBudget={totalBudget}
                     totalSpent={totalSpent}
                     chartData={chartData}
                     currencySymbol={currencySymbol}
+                    oneUi={true}
                 />
             </div>
         </div>

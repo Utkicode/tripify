@@ -153,10 +153,10 @@ const Files = ({ user, tripId }) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto pb-12">
+        <div className="max-w-5xl mx-auto pb-12">
             {/* Upload Zone */}
             <div
-                className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer mb-8 group relative ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:bg-slate-50'
+                className={`border-3 border-dashed rounded-[3rem] p-12 text-center transition-all cursor-pointer mb-10 group relative overflow-hidden ${dragActive ? 'border-blue-500 bg-blue-50/50 scale-[1.02]' : 'border-slate-200/60 bg-white/40 hover:bg-white/60 hover:border-slate-300'
                     }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -164,6 +164,8 @@ const Files = ({ user, tripId }) => {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
             >
+                <div className="absolute inset-0 bg-white/40 backdrop-blur-sm -z-10"></div>
+
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -172,81 +174,83 @@ const Files = ({ user, tripId }) => {
                 />
 
                 {uploading ? (
-                    <div className="flex flex-col items-center">
-                        <Loader className="animate-spin text-blue-500 mb-4" size={32} />
-                        <p className="text-slate-600 font-medium">Uploading... {Math.round(uploadProgress)}%</p>
-                        <div className="w-64 h-2 bg-slate-200 rounded-full mt-3 overflow-hidden">
+                    <div className="flex flex-col items-center py-4">
+                        <Loader className="animate-spin text-blue-600 mb-6" size={40} />
+                        <p className="text-slate-800 font-bold text-lg">Uploading your files...</p>
+                        <p className="text-slate-500 text-sm font-medium mb-6">{Math.round(uploadProgress)}% Complete</p>
+                        <div className="w-80 h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
                             <div
-                                className="h-full bg-blue-500 transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 rounded-full"
                                 style={{ width: `${uploadProgress}%` }}
                             />
                         </div>
                     </div>
                 ) : (
-                    <>
-                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                            <UploadCloud size={32} />
+                    <div className="py-4">
+                        <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
+                            <UploadCloud size={40} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800">Upload Documents</h3>
-                        <p className="text-slate-500 text-sm mb-4">Drag & drop files here, or click to select</p>
-                        <button className="btn-secondary mx-auto text-sm py-2 px-4 shadow-none pointer-events-none">
-                            Browse Files
+                        <h3 className="text-2xl font-black text-slate-800 mb-2">Upload Trip Documents</h3>
+                        <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">Drag & drop your tickets, bookings, and IDs here, or click to browse.</p>
+                        <button className="bg-slate-900 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-slate-900/20 group-hover:bg-blue-600 group-hover:shadow-blue-500/30 transition-all pointer-events-none">
+                            Select Files
                         </button>
-                    </>
+                    </div>
                 )}
             </div>
 
             {/* File List */}
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Attached Files ({files.length})</h3>
+            <div className="flex items-center justify-between mb-6 px-2">
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                    Attached Files <span className="text-sm bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">{files.length}</span>
+                </h3>
+            </div>
 
             {files.length === 0 && !uploading && (
-                <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-slate-400">No files uploaded yet.</p>
+                <div className="text-center py-20 bg-white/30 backdrop-blur-sm rounded-[2.5rem] border border-dashed border-slate-200">
+                    <p className="text-slate-400 font-medium">No documents attached yet.</p>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <AnimatePresence>
                     {files.map((file) => (
                         <motion.div
                             key={file.id}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             layout
-                            className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group relative"
+                            className="bg-white/90 backdrop-blur-xl p-5 rounded-[2rem] border border-white/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-blue-200/20 hover:-translate-y-1 transition-all group relative overflow-hidden"
                         >
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-slate-50 rounded-lg shrink-0">
+                            <div className="flex items-start gap-4 z-10 relative">
+                                <div className="p-4 bg-slate-50 rounded-[1.2rem] shrink-0 shadow-sm group-hover:bg-blue-50 transition-colors">
                                     {getIcon(file.type)}
                                 </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                    <p className="font-semibold text-slate-800 truncate" title={file.name}>{file.name}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{file.size} • {file.date}</p>
+                                <div className="min-w-0 flex-1 text-left pt-1">
+                                    <p className="font-bold text-slate-900 truncate text-lg leading-tight mb-1" title={file.name}>{file.name}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{file.size} • {file.date}</p>
                                 </div>
-                                <button className="text-slate-300 hover:text-slate-600">
-                                    <MoreVertical size={18} />
-                                </button>
                             </div>
 
-                            {/* Hover Actions */}
-                            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {/* Actions Overlay */}
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-md flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                                 <a
                                     href={file.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                    className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/30 hover:scale-110 transition-transform"
                                     title="Download"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Download size={20} />
+                                    <Download size={22} />
                                 </a>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleDelete(file); }}
-                                    className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                    className="p-3 bg-white text-red-500 border-2 border-red-50 rounded-2xl hover:bg-red-50 hover:border-red-100 transition-colors"
                                     title="Delete"
                                 >
-                                    <Trash2 size={20} />
+                                    <Trash2 size={22} />
                                 </button>
                             </div>
                         </motion.div>

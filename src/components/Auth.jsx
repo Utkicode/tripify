@@ -68,46 +68,65 @@ const Auth = () => {
             </div>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full max-w-[420px] bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl shadow-slate-200/50 rounded-3xl p-8 relative z-10"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="w-full max-w-[420px] bg-white rounded-[2.5rem] p-8 md:p-10 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50"
             >
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-block p-3 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 mb-6 shadow-inner">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
-                            T
-                        </div>
+                {/* Brand Logo Area */}
+                <div className="flex flex-col items-center mb-10 gap-5">
+                    {/* One UI 8 Squircle Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-b from-blue-500 to-blue-600 rounded-[1.6rem] flex items-center justify-center text-white shadow-2xl shadow-blue-500/30">
+                        <span className="text-4xl font-black tracking-tighter">T</span>
                     </div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 mb-2">
+
+                    <div className="text-center space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="font-black text-3xl tracking-tighter text-slate-900">
+                                TravelCFO
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[10px] font-black tracking-wider border border-blue-100">
+                                BETA
+                            </span>
+                        </div>
+                        <p className="text-slate-400 font-bold text-[10px] tracking-[0.2em] uppercase">
+                            Plan smarter. Spend in control.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Form Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight mb-2">
                         {isSignUp ? 'Create Account' : 'Welcome Back'}
                     </h1>
-                    <p className="text-slate-500 text-sm font-medium">
-                        {isSignUp ? 'Start your journey with Tripify' : 'Enter your details to access your account'}
+                    <p className="text-slate-500 font-medium text-sm">
+                        {isSignUp ? 'Start your journey with us today' : 'Enter your details to access your account'}
                     </p>
                 </div>
 
                 {/* Forms */}
-                <form onSubmit={handleEmailAuth} className="space-y-5">
+                <form onSubmit={handleEmailAuth} className="space-y-6">
 
                     <AnimatePresence mode="popLayout">
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="space-y-5"
-                            key="email-form"
+                            className="space-y-6"
+                            key="auth-fields"
                         >
                             {isSignUp && (
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">FULL NAME</label>
                                     <div className="relative group">
-                                        <User className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                            <User size={20} strokeWidth={2.5} />
+                                        </div>
                                         <input
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none font-medium text-slate-700"
+                                            className="w-full pl-14 pr-5 py-4 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-slate-900 font-bold transition-all outline-none placeholder:text-slate-300 placeholder:font-medium"
                                             placeholder="John Doe"
                                             required={isSignUp}
                                         />
@@ -115,49 +134,53 @@ const Auth = () => {
                                 </div>
                             )}
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Email</label>
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">EMAIL</label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                        <Mail size={20} strokeWidth={2.5} />
+                                    </div>
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none font-medium text-slate-700"
+                                        className="w-full pl-14 pr-5 py-4 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-slate-900 font-bold transition-all outline-none placeholder:text-slate-300 placeholder:font-medium"
                                         placeholder="name@example.com"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Password</label>
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">PASSWORD</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                        <Lock size={20} strokeWidth={2.5} />
+                                    </div>
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={handlePasswordChange}
-                                        className="w-full pl-11 pr-12 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none font-medium text-slate-700"
+                                        className="w-full pl-14 pr-12 py-4 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-slate-900 font-bold transition-all outline-none placeholder:text-slate-300 placeholder:font-medium"
                                         placeholder="••••••••"
                                         required
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-2 rounded-xl hover:bg-white transition-all"
                                     >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                                     </button>
                                 </div>
                                 {isSignUp && password.length > 0 && (
-                                    <div className="flex gap-1.5 mt-2 ml-1 h-1">
+                                    <div className="flex gap-2 mt-3 px-1">
                                         {[1, 2, 3, 4].map((i) => (
                                             <div
                                                 key={i}
-                                                className={`h-full flex-1 rounded-full transition-all duration-300 ${passStrength >= i
+                                                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${passStrength >= i
                                                     ? (passStrength < 3 ? 'bg-amber-400' : 'bg-emerald-500')
-                                                    : 'bg-slate-200'
+                                                    : 'bg-slate-100'
                                                     }`}
                                             />
                                         ))}
@@ -171,35 +194,35 @@ const Auth = () => {
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm font-medium flex items-center gap-2"
+                            className="p-4 rounded-2xl bg-red-50 text-red-600 text-sm font-bold flex items-center gap-3"
                         >
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> {error}
+                            <span className="w-2 h-2 rounded-full bg-red-600 shrink-0" /> {error}
                         </motion.div>
                     )}
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-center transition-all transform active:scale-[0.98] shadow-lg shadow-slate-900/20 hover:shadow-slate-900/30 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full py-4 px-6 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-lg transition-all transform active:scale-[0.98] shadow-xl shadow-slate-900/20 hover:shadow-slate-900/40 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed mt-4"
                     >
                         {loading ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
                                 {isSignUp ? 'Create Account' : 'Sign In'}
-                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform stroke-[3px]" />
                             </>
                         )}
                     </button>
                 </form>
 
                 {/* Footer Toggle */}
-                <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p className="text-slate-500 text-sm">
+                <div className="mt-8 text-center">
+                    <p className="text-slate-500 font-medium text-sm">
                         {isSignUp ? 'Already have an account?' : "Don't have an account?"}
                         <button
                             onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-                            className="ml-2 font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                            className="ml-2 font-black text-blue-600 hover:text-blue-700 transition-colors"
                         >
                             {isSignUp ? 'Log in' : 'Sign up'}
                         </button>

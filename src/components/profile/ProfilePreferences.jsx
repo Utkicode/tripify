@@ -93,7 +93,7 @@ const ProfilePreferences = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-6">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800">Travel Preferences</h2>
-                    <p className="text-slate-500 mt-1">Customize how Tripify plans your days.</p>
+                    <p className="text-slate-500 mt-1">Customize how TravelCFO plans your days.</p>
                 </div>
                 <button
                     onClick={handleSubmit}

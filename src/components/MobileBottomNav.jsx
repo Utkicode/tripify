@@ -12,26 +12,31 @@ const MobileBottomNav = ({ currentView, setCurrentView }) => {
     ];
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 px-6 py-2 z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe-area-inset-bottom">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[2.5rem] px-6 py-4 z-50 flex justify-between items-center shadow-2xl shadow-slate-900/10">
             {navItems.map((item) => {
                 const isActive = currentView === item.id;
                 return (
                     <button
                         key={item.id}
                         onClick={() => setCurrentView(item.id)}
-                        className={`flex flex-col items-center gap-1 p-2 transition-colors relative ${isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
-                            }`}
+                        className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all ${isActive ? '-translate-y-4' : 'hover:bg-white/50'}`}
                     >
-                        <div className="relative">
-                            <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                            {isActive && (
-                                <motion.div
-                                    layoutId="bottomNavActive"
-                                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"
-                                />
-                            )}
+                        <div className={`relative z-10 p-3 rounded-full transition-all duration-300 ${isActive ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-110' : 'text-slate-400'}`}>
+                            <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                         </div>
-                        <span className="text-[10px] font-medium">{item.label}</span>
+
+                        {isActive && (
+                            <motion.span
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute -bottom-6 text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white/80 backdrop-blur px-2 py-0.5 rounded-full shadow-sm border border-white/50"
+                            >
+                                {item.label}
+                            </motion.span>
+                        )}
+                        {!isActive && (
+                            <span className="hidden"></span>
+                        )}
                     </button>
                 );
             })}

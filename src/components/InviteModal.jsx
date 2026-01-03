@@ -19,20 +19,7 @@ const InviteModal = ({ isOpen, onClose, tripId, currentUser, currentCollaborator
 
         try {
             // 1. Find user by email
-            // Note: In a real app, this requires an index on 'email'.
-            // For this demo, we assume the 'users' collection is searchable or we use a dedicated lookup function.
-            // Since we stored users in 'artifacts/appId/users' but maybe didn't index email, let's check.
-            // Actually, we haven't strictly enforced storing users. 
-            // BUT, Authentication creates users. We should ideally have a 'users' collection synced from Auth.
-            // Blocked: If we don't have a users collection with emails, we can't find them by email.
-            // Solution: We'll assume the user enters the EXACT email used in some other user's profile which we saved on their login.
-            // Let's query the 'users' collection we (hopefully) created in Auth.jsx or ProfileService.
-
             const usersRef = collection(db, 'artifacts', appId, 'users');
-            // Assuming we stored profile data there.
-            // If not, we can't find them. Let's assume ProfileService saves a doc in 'users/{uid}' with 'email' field.
-
-            // NOTE: Firestore requires an index for this. If it fails, check console.
             const q = query(usersRef, where('email', '==', email));
             const querySnapshot = await getDocs(q);
 
@@ -89,75 +76,78 @@ const InviteModal = ({ isOpen, onClose, tripId, currentUser, currentCollaborator
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
                     />
                     <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.95, opacity: 0 }}
-                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative z-10"
+                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/40 w-full max-w-md overflow-hidden relative z-10 border border-white/50"
                     >
-                        <div className="p-6">
+                        <div className="p-8">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                    <UserPlus size={24} className="text-blue-600" />
-                                    Invite Friends
-                                </h2>
-                                <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2 mb-1">
+                                        <UserPlus size={24} className="text-blue-600" />
+                                        Invite Friends
+                                    </h2>
+                                    <p className="text-sm font-medium text-slate-500">Trip planning is better together.</p>
+                                </div>
+                                <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <p className="text-slate-500 mb-6 text-sm">
-                                Enter the email address of the person you want to travel with. They must have a Tripify account.
-                            </p>
-
-                            <form onSubmit={handleInvite}>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                            <input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                                placeholder="friend@example.com"
-                                                required
-                                            />
+                            <form onSubmit={handleInvite} className="space-y-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Email Address</label>
+                                    <div className="relative group">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                            <Mail size={20} strokeWidth={2.5} />
                                         </div>
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full pl-14 pr-5 py-4 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-slate-900 font-bold transition-all outline-none placeholder:text-slate-300 placeholder:font-medium"
+                                            placeholder="friend@example.com"
+                                            required
+                                        />
                                     </div>
+                                    <p className="text-xs text-slate-400 mt-2 pl-1 font-medium">Make sure they have a TravelCFO account.</p>
+                                </div>
 
+                                <AnimatePresence mode="wait">
                                     {status === 'error' && (
-                                        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-                                            <AlertCircle size={16} />
+                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-red-600 text-sm font-bold bg-red-50 p-4 rounded-2xl border border-red-100">
+                                            <AlertCircle size={20} className="shrink-0" />
                                             {message}
-                                        </div>
+                                        </motion.div>
                                     )}
 
                                     {status === 'success' && (
-                                        <div className="flex items-center gap-2 text-emerald-600 text-sm bg-emerald-50 p-3 rounded-lg">
-                                            <CheckCircle size={16} />
+                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-emerald-700 text-sm font-bold bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                                            <CheckCircle size={20} className="shrink-0" />
                                             Invitation sent successfully!
-                                        </div>
+                                        </motion.div>
                                     )}
+                                </AnimatePresence>
 
-                                    <button
-                                        type="submit"
-                                        disabled={status === 'searching' || status === 'inviting' || status === 'success'}
-                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                    >
-                                        {(status === 'searching' || status === 'inviting') ? (
-                                            <>
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Sending...
-                                            </>
-                                        ) : (
-                                            <>Send Invite</>
-                                        )}
-                                    </button>
-                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={status === 'searching' || status === 'inviting' || status === 'success'}
+                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-[1.5rem] shadow-xl shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                                >
+                                    {(status === 'searching' || status === 'inviting') ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            sending...
+                                        </>
+                                    ) : (
+                                        <>Send Invite <UserPlus size={20} strokeWidth={2.5} /></>
+                                    )}
+                                </button>
                             </form>
                         </div>
                     </motion.div>

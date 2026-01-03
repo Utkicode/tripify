@@ -23,6 +23,7 @@ import TermsOfService from './components/TermsOfService';
 import AuthActionHandler from './components/AuthActionHandler';
 import ConfirmationModal from './components/ConfirmationModal';
 import { AppLoadingSkeleton } from './components/common/LoadingSkeleton';
+import SEO from './components/common/SEO';
 
 export default function App() {
   // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
@@ -239,6 +240,17 @@ export default function App() {
         setCurrentTripId={setCurrentTripId}
         tripsList={tripsList}
       >
+        {/* --- Global SEO & View-Specific SEO --- */}
+        <SEO
+          title={currentView === 'dashboard' ? 'Dashboard' :
+            currentView === 'about' ? 'About Us' :
+              currentView === 'profile' ? 'My Profile' :
+                currentView === 'protips' ? 'Pro Tips' :
+                  'Trip Planner'}
+          description="TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
+          canonical={`https://tripify-c49b6.web.app/?view=${currentView}`}
+        />
+
         {currentView === 'dashboard' && (
           <Dashboard
             user={user}
@@ -260,7 +272,7 @@ export default function App() {
           />
         )}
 
-        {currentView === 'about' && <About />}
+        {currentView === 'about' && <About setCurrentView={setCurrentView} />}
         {currentView === 'profile' && <Profile user={user} onLogout={handleLogout} />}
         {currentView === 'protips' && <ProTips />}
         {currentView === 'privacy' && <AppPrivacy />}

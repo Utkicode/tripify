@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IndianRupee, Tag, TrendingUp, Filter, AlertCircle, ArrowUpRight, Plus, Trash2, Edit2, PieChart, Users, CheckCircle, X, ArrowRight } from 'lucide-react';
+import { IndianRupee, Tag, TrendingUp, Filter, AlertCircle, ArrowUpRight, Plus, Trash2, Edit2, PieChart, Users, CheckCircle, X, ArrowRight, Utensils } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { ExpenseService } from '../services/ExpenseService';
@@ -108,56 +108,56 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
     return (
         <div className="space-y-8 relative">
             {/* Header Actions */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Trip Wallet</h2>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Trip Wallet</h2>
                     {isBudgetSet ? (
-                        <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
-                            <span>Budget: ₹{budget.toLocaleString()}</span>
-                            <button onClick={() => setIsEditingBudget(true)} className="p-1 hover:bg-slate-100 rounded text-blue-600"><Edit2 size={12} /></button>
+                        <div className="flex items-center gap-3 mt-2 text-sm font-semibold text-slate-600 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/50 shadow-sm">
+                            <span>Budget: <span className="text-slate-900">₹{budget.toLocaleString()}</span></span>
+                            <button onClick={() => setIsEditingBudget(true)} className="p-1 hover:bg-slate-200 rounded-full text-blue-600 transition-colors"><Edit2 size={14} /></button>
                         </div>
                     ) : (
-                        <button onClick={() => setIsEditingBudget(true)} className="text-sm text-blue-600 font-medium hover:underline mt-1">
-                            + Set a Budget
+                        <button onClick={() => setIsEditingBudget(true)} className="text-sm text-blue-600 font-bold hover:underline mt-2 flex items-center gap-1">
+                            <Plus size={14} /> Set a Budget
                         </button>
                     )}
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-4 items-center">
                     {/* View Toggles */}
-                    <div className="bg-white border border-slate-200 p-1 rounded-lg flex">
+                    <div className="bg-white/40 backdrop-blur-md border border-white/50 p-1.5 rounded-[1.2rem] flex shadow-inner">
                         <button
                             onClick={() => setViewMode('transactions')}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'transactions' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === 'transactions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
                         >
                             Transactions
                         </button>
                         <button
                             onClick={() => setViewMode('balances')}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'balances' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === 'balances' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
                         >
                             Balances
                         </button>
                     </div>
 
                     {isEditingBudget && (
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 bg-white p-1 rounded-lg border border-blue-200">
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-blue-200 shadow-xl absolute top-16 right-0 md:static md:shadow-none z-20">
                             <input
                                 type="number"
                                 value={tempBudget}
                                 onChange={(e) => setTempBudget(e.target.value)}
-                                className="w-24 px-2 py-1 text-sm border-none outline-none font-bold text-slate-700"
+                                className="w-28 px-3 py-1 text-sm border-none outline-none font-bold text-slate-900 bg-slate-50 rounded-xl"
                                 placeholder="Amount"
                                 autoFocus
                             />
-                            <button onClick={handleSaveBudget} className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded">Save</button>
+                            <button onClick={handleSaveBudget} className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors">Save</button>
                         </motion.div>
                     )}
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[1.2rem] shadow-lg shadow-blue-500/30 active:scale-95 transition-all flex items-center gap-2"
                     >
-                        <Plus size={20} /> Add
+                        <Plus size={22} /> <span className="hidden md:inline">Log Expense</span>
                     </button>
                 </div>
             </div>
@@ -168,12 +168,12 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     icon={IndianRupee} iconColor="text-blue-600" bgColor="bg-blue-50"
                     label="Total Spending"
                     value={`₹${totalCost.toLocaleString()}`}
-                    subElement={totalCost > 0 && <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-bold flex items-center">+<ArrowUpRight size={12} /></span>}
+                    subElement={totalCost > 0 && <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-bold flex items-center shadow-sm">+<ArrowUpRight size={12} strokeWidth={3} /></span>}
                 />
 
                 {travelers.length > 1 ? (
                     <StatsCard
-                        icon={Users} iconColor={myBalance >= 0 ? "text-emerald-600" : "text-red-600"} bgColor={myBalance >= 0 ? "bg-emerald-50" : "bg-red-50"}
+                        icon={Users} iconColor={myBalance >= 0 ? "text-emerald-600" : "text-rose-600"} bgColor={myBalance >= 0 ? "bg-emerald-50" : "bg-rose-50"}
                         label="My Position"
                         value={myBalance === 0 ? "Settled" : `₹${Math.abs(myBalance).toLocaleString()}`}
                         subValue={myBalance > 0 ? "You are owed" : myBalance < 0 ? "You owe" : "All squared up"}
@@ -184,7 +184,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                         icon={TrendingUp} iconColor="text-purple-600" bgColor="bg-purple-50"
                         label="Average / Day"
                         value={`₹${avgDaily.toLocaleString()}`}
-                        subElement={<span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold">Daily Avg</span>}
+                        subElement={<span className="text-[10px] uppercase font-bold tracking-wider bg-slate-100/80 text-slate-500 px-3 py-1 rounded-full border border-slate-200">Daily Avg</span>}
                         delay={0.1}
                     />
                 )}
@@ -192,29 +192,35 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                 {/* Budget Stat */}
                 <div className="md:col-span-1">
                     {isBudgetSet ? (
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col justify-center">
-                            <div className="flex justify-between items-end mb-2">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Budget Status</p>
-                                <p className={`text-lg font-black ${budgetStats.remaining < 0 ? 'text-red-600' : 'text-slate-800'}`}>
+                        <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/60 shadow-lg shadow-slate-200/50 h-full flex flex-col justify-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-[4rem] z-0 pointer-events-none"></div>
+                            <div className="flex justify-between items-end mb-4 relative z-10">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Budget Status</p>
+                                <p className={`text-2xl font-black ${budgetStats.remaining < 0 ? 'text-red-500' : 'text-slate-900'}`}>
                                     {Math.round(budgetStats.percentageUsed)}%
                                 </p>
                             </div>
-                            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-5 w-full bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/50 relative z-10">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min(budgetStats.percentageUsed, 100)}%` }}
-                                    className={`h-full rounded-full ${budgetStats.percentageUsed > 100 ? 'bg-red-500' : budgetStats.percentageUsed > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                    className={`h-full rounded-full shadow-sm ${budgetStats.percentageUsed > 100 ? 'bg-red-500' : budgetStats.percentageUsed > 80 ? 'bg-amber-400' : 'bg-gradient-to-r from-emerald-400 to-emerald-500'}`}
                                 />
                             </div>
-                            <p className="text-xs text-slate-400 mt-2 text-right">
-                                {budgetStats.remaining >= 0 ? `₹${budgetStats.remaining.toLocaleString()} Left` : `Over by ₹${Math.abs(budgetStats.remaining).toLocaleString()}`}
+                            <p className="text-xs text-slate-500 text-right font-bold relative z-10">
+                                {budgetStats.remaining >= 0 ? <span className="text-emerald-600">₹{budgetStats.remaining.toLocaleString()} Left</span> : <span className="text-red-500">Over by ₹{Math.abs(budgetStats.remaining).toLocaleString()}</span>}
                             </p>
                         </div>
                     ) : (
-                        <div onClick={() => setIsEditingBudget(true)} className="bg-slate-50 border-2 border-dashed border-slate-200 p-6 rounded-2xl h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-500 transition-colors cursor-pointer">
-                            <Plus size={24} className="mb-2" />
-                            <span className="font-semibold text-sm">Set a Budget</span>
-                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setIsEditingBudget(true)}
+                            className="w-full bg-white/60 backdrop-blur-md border-2 border-dashed border-slate-300 p-6 rounded-[2.5rem] h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-600 transition-all cursor-pointer group"
+                        >
+                            <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all text-blue-500"><Plus size={28} /></div>
+                            <span className="font-bold text-sm tracking-wide">Set a Budget</span>
+                        </motion.button>
                     )}
                 </div>
             </div>
@@ -222,7 +228,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
             {viewMode === 'transactions' ? (
                 <>
                     {/* Filters */}
-                    <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide pt-2">
                         <FilterButton active={filterCategory === 'All'} onClick={() => setFilterCategory('All')} label="All Expenses" />
                         {CATEGORIES.map(cat => (
                             <FilterButton
@@ -236,107 +242,72 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                         ))}
                     </div>
 
-                    {/* Desktop Expense Table */}
-                    <div className="hidden md:block bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-[300px]">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Detail</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Paid By</th>
-                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
-                                        <th className="w-10"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {filteredExpenses.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5" className="px-6 py-12 text-center text-slate-400">
-                                                {filterCategory === 'All'
-                                                    ? <div className="flex flex-col items-center gap-2">
-                                                        <span>No expenses logged yet.</span>
-                                                        <button onClick={() => setIsAddModalOpen(true)} className="text-blue-600 font-medium hover:underline">Add your first expense</button>
-                                                    </div>
-                                                    : 'No expenses found for this category.'}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        filteredExpenses.map((expense) => {
-                                            const payer = travelers.find(t => t.id === expense.paidBy)?.name || 'Someone';
-                                            const isMultiSplit = expense.splitDetails && Object.keys(expense.splitDetails).length > 1;
-
-                                            return (
-                                                <tr key={expense.id} className="hover:bg-slate-50 transition-colors group">
-                                                    <td className="px-6 py-4">
-                                                        <div className="font-semibold text-slate-800">{expense.description || 'Untitled Expense'}</div>
-                                                        <div className="text-xs text-slate-400">{expense.dayName} • {expense.date}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <CategoryBadge category={expense.category} />
-                                                    </td>
-                                                    <td className="px-6 py-4 text-sm text-slate-600">
-                                                        {expense.paidBy === user.uid ? 'You' : payer}
-                                                        {isMultiSplit && <span className="text-xs text-slate-400 block">Split with group</span>}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                                                        ₹{Number(expense.amount).toLocaleString()}
-                                                    </td>
-                                                    <td className="px-2 py-4 text-right">
-                                                        <button
-                                                            onClick={() => openDeleteModal(expense.id)}
-                                                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* Mobile Expense List */}
-                    <div className="md:hidden space-y-3">
+                    {/* Modern List View (Unified for Desktop/Mobile) */}
+                    <div className="space-y-3">
                         {filteredExpenses.length === 0 ? (
-                            <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                            <div className="text-center py-20 border-2 border-dashed border-slate-200/60 rounded-[2.5rem] bg-white/50 backdrop-blur-sm">
                                 {filterCategory === 'All' ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <span>No expenses yet.</span>
-                                        <button onClick={() => setIsAddModalOpen(true)} className="text-blue-600 font-medium">Add Expense</button>
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-500">
+                                            <IndianRupee size={32} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800">No expenses yet</h3>
+                                            <p className="text-slate-500 font-medium">Start adding expenses to track your spending.</p>
+                                        </div>
+                                        <button onClick={() => setIsAddModalOpen(true)} className="mt-2 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Add First Expense</button>
                                     </div>
                                 ) : 'No expenses in this category.'}
                             </div>
                         ) : (
                             filteredExpenses.map((expense) => {
                                 const payer = travelers.find(t => t.id === expense.paidBy)?.name || 'Someone';
+                                const isMultiSplit = expense.splitDetails && Object.keys(expense.splitDetails).length > 1;
+
                                 return (
-                                    <div key={expense.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <div className="font-bold text-slate-800 text-[15px]">{expense.description || 'Untitled'}</div>
-                                                <div className="text-xs text-slate-400 mt-0.5">{expense.dayName} • {expense.date}</div>
+                                    <motion.div
+                                        layout
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        key={expense.id}
+                                        className="bg-white/80 backdrop-blur-xl p-5 md:p-6 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 group"
+                                    >
+                                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                                            <div className="flex items-start gap-5 w-full md:w-auto">
+                                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-200" style={{ backgroundColor: CATEGORIES.find(c => c.name === expense.category)?.color || '#94a3b8' }}>
+                                                    {expense.category === 'Food' ? <Utensils size={24} /> : <Tag size={24} />}
+                                                </div>
+                                                <div>
+                                                    <div className="font-extrabold text-slate-900 text-lg leading-tight mb-1">{expense.description || 'Untitled Expense'}</div>
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-2">
+                                                        <span>{expense.dayName}</span>
+                                                        <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                                        <span>{expense.date}</span>
+                                                    </div>
+                                                    <div className="mt-2 text-sm font-medium text-slate-600 flex items-center gap-2">
+                                                        <span className="bg-slate-100 px-2 py-0.5 rounded-lg text-xs">Paid by <span className="text-slate-900 font-bold">{expense.paidBy === user.uid ? 'You' : payer}</span></span>
+                                                        {isMultiSplit && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg font-bold">Split group</span>}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-slate-900">₹{Number(expense.amount).toLocaleString()}</div>
-                                                <div className="text-xs text-slate-500 mt-0.5">Paid by {expense.paidBy === user.uid ? 'You' : payer}</div>
+
+                                            <div className="flex items-center justify-between w-full md:w-auto md:justify-end gap-6 pl-[4.5rem] md:pl-0">
+                                                <div className="text-right">
+                                                    <div className="font-black text-2xl text-slate-900">₹{Number(expense.amount).toLocaleString()}</div>
+                                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{expense.category}</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => openDeleteModal(expense.id)}
+                                                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                                            <CategoryBadge category={expense.category} />
-                                            <button
-                                                onClick={() => openDeleteModal(expense.id)}
-                                                className="p-1.5 text-slate-300 hover:text-red-500 bg-slate-50 rounded-lg"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
+                                    </motion.div>
+                                )
                             })
                         )}
                     </div>
@@ -464,15 +435,20 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
 // --- Subcomponents for cleanliness ---
 
 const StatsCard = ({ icon: Icon, iconColor, bgColor, label, value, subValue, subElement, delay = 0 }) => (
-    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay }} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-        <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 ${bgColor} ${iconColor} rounded-xl`}><Icon size={20} /></div>
+    <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay }}
+        className="bg-white/80 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/60 shadow-lg shadow-slate-200/50 relative overflow-hidden h-full flex flex-col justify-between"
+    >
+        <div className="relative z-10 w-full">
+            <div className="flex justify-between items-start mb-6">
+                <div className={`p-4 ${bgColor} ${iconColor} rounded-[1.2rem] shadow-sm`}><Icon size={22} className="stroke-[2.5px]" /></div>
                 {subElement}
             </div>
-            <p className="text-slate-500 text-sm font-medium">{label}</p>
-            <p className="text-2xl font-black text-slate-800 truncate" title={value}>{value}</p>
-            {subValue && <p className="text-sm text-slate-400">{subValue}</p>}
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{label}</p>
+            <p className="text-3xl font-black text-slate-900 truncate tracking-tight text-shadow-sm" title={value}>{value}</p>
+            {subValue && <p className="text-xs font-bold text-slate-400 mt-1">{subValue}</p>}
         </div>
     </motion.div>
 );
@@ -480,17 +456,18 @@ const StatsCard = ({ icon: Icon, iconColor, bgColor, label, value, subValue, sub
 const FilterButton = ({ active, onClick, label, color, hasDot }) => (
     <button
         onClick={onClick}
-        className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${active
-            ? (color ? 'ring-2 ring-offset-1 text-white' : 'bg-slate-900 text-white')
-            : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+        className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${active
+            ? (color ? 'ring-4 ring-opacity-20 text-white shadow-lg scale-105' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-105')
+            : 'bg-white/70 backdrop-blur-md text-slate-600 border border-white/50 hover:bg-white hover:shadow-md'
             }`}
-        style={active && color ? { backgroundColor: color, borderColor: color, ringColor: color } : {}}
+        style={active && color ? { backgroundColor: color, borderColor: color, '--tw-ring-color': color } : {}}
     >
         {hasDot && <span className={`w-2 h-2 rounded-full ${active ? 'bg-white' : ''}`} style={!active ? { backgroundColor: color } : {}} />}
         {label}
     </button>
 );
 
+// Helper Components
 const CategoryBadge = ({ category }) => {
     const cat = CATEGORIES.find(c => c.name === category) || { color: '#94a3b8' };
     return (

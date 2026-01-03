@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Disallow firebase defaults if any, mostly api
+Disallow: /api/
+
+Sitemap: https://tripify-c49b6.web.app/sitemap.xml

@@ -166,52 +166,58 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
             {/* Top Navigation Bar (Workspace Header) */}
-            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-3 md:px-6 h-14 md:h-16 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+            <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 px-4 md:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 md:gap-6 flex-1 min-w-0">
                     <button
                         onClick={() => setCurrentTripId(null)}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors shrink-0"
+                        className="p-2.5 hover:bg-slate-100 rounded-full text-slate-500 transition-colors shrink-0"
                         title="Back to Dashboard"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={22} className="stroke-[2.5]" />
                     </button>
-                    <div className="h-6 w-px bg-slate-200 shrink-0"></div>
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="text-sm font-semibold text-slate-500 hidden md:inline shrink-0">Trips /</span>
+                    <div className="h-8 w-px bg-slate-200 shrink-0 hidden md:block"></div>
+                    <div className="flex flex-col justify-center flex-1 min-w-0">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:block text-left">Trip Workspace</span>
                         <input
                             type="text"
                             value={tripName}
                             onChange={(e) => handleUpdateTripInfo('tripName', e.target.value)}
-                            className="text-base font-bold text-slate-800 border-none bg-transparent focus:ring-2 focus:ring-blue-100 p-1 hover:bg-slate-50 rounded transition-colors cursor-text w-full min-w-[100px] text-ellipsis"
-                            placeholder="Trip Name"
+                            className="text-lg md:text-xl font-black text-slate-800 border-none bg-transparent focus:ring-0 p-0 hover:text-blue-600 transition-colors cursor-text w-full min-w-[100px] text-ellipsis placeholder:text-slate-300 text-left"
+                            placeholder="Untitled Trip"
                         />
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                    <div className="hidden sm:flex -space-x-2 mr-2">
+                <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                    {/* Share Button One UI */}
+                    <button
+                        onClick={() => setIsInviteOpen(true)}
+                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full transition-all active:scale-95"
+                    >
+                        <Share2 size={18} className="stroke-[2.5]" />
+                        <span>Share</span>
+                    </button>
+
+                    <div className="hidden sm:flex -space-x-3 mr-2">
                         {travelers.slice(0, 3).map((t, i) => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
+                            <div key={i} className="w-10 h-10 rounded-full border-[3px] border-white bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm relative z-0 hover:z-10 hover:scale-110 transition-transform cursor-context-menu">
                                 {t.name?.[0] || 'T'}
                             </div>
                         ))}
                         <button
                             onClick={() => setIsInviteOpen(true)}
-                            className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs text-slate-500 hover:bg-slate-200 transition-colors"
+                            className="w-10 h-10 rounded-full border-[3px] border-white bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-blue-500 transition-all z-0 shadow-sm"
                         >
-                            <Plus size={14} />
+                            <Plus size={18} />
                         </button>
                     </div>
-                    <button
-                        onClick={() => setIsInviteOpen(true)}
-                        className="p-2 md:px-3 md:py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <Share2 size={18} /> <span className="hidden md:inline">Share</span>
-                    </button>
+
+                    <div className="w-px h-8 bg-slate-200 hidden sm:block mx-1"></div>
+
                     <NotificationBell user={user} tripId={tripId} />
 
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full transition-colors hidden sm:inline-block ${syncStatus === 'synced' ? 'text-slate-400' : 'text-amber-500'}`}>
-                        {syncStatus === 'saving' ? 'Saving...' : 'Saved'}
+                    <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all hidden sm:inline-block border ${syncStatus === 'synced' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        {syncStatus === 'saving' ? 'SAVING...' : 'SAVED'}
                     </span>
                 </div>
             </div>
@@ -241,8 +247,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 </div>
 
                 {/* Tabs */}
-                <div className="border-b border-slate-200 bg-white px-4 md:px-6">
-                    <div className="flex gap-6 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-14 md:top-16">
+                    <div className="flex gap-8 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         {[
                             { id: 'itinerary', label: 'Itinerary' },
                             { id: 'expenses', label: 'Expenses' },
@@ -253,9 +259,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`py-4 text-sm font-medium border-b-2 transition-colors relative ${activeTab === tab.id
+                                className={`py-4 text-sm font-bold border-b-[3px] transition-all relative whitespace-nowrap px-1 ${activeTab === tab.id
                                     ? 'border-blue-600 text-blue-600'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                     }`}
                             >
                                 {tab.label}

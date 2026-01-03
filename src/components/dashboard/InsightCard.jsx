@@ -20,24 +20,26 @@ const InsightCard = ({ label, value, subtext, trend, trendLabel, icon: Icon, col
 
     return (
         <motion.div
-            whileHover={{ y: -4 }}
-            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-full"
+            whileHover={{ y: -4, boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.1)' }}
+            className="bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/60 shadow-lg transition-all flex flex-col justify-between h-full relative overflow-hidden group"
         >
-            <div className="flex justify-between items-start mb-2">
-                <div className={`p-2.5 rounded-xl ${color} bg-opacity-10 text-opacity-100`}>
-                    <Icon size={20} className={color.replace('bg-', 'text-')} />
+            <div className={`absolute top-0 right-0 w-32 h-32 ${color.replace('bg-', 'bg-')} bg-opacity-10 rounded-full blur-[40px] -mr-10 -mt-10 transition-transform group-hover:scale-150`}></div>
+
+            <div className="flex justify-between items-start mb-6 relative z-10">
+                <div className={`p-4 rounded-[1.5rem] ${color.replace('bg-', 'bg-opacity-10 text-')} bg-opacity-10 text-opacity-100 shadow-sm border border-white/50 backdrop-blur-md`}>
+                    <Icon size={28} className={color.replace('bg-', 'text-')} strokeWidth={2} />
                 </div>
                 {trend && (
-                    <span className={`flex items-center text-xs font-semibold px-2 py-1 rounded-full ${trendColor} ${trendBg}`}>
-                        {trendLabel} <TrendIcon size={12} className="ml-1" />
+                    <span className={`flex items-center text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-full ${trendColor} ${trendBg} border border-current border-opacity-10`}>
+                        {trendLabel} <TrendIcon size={14} className="ml-1" />
                     </span>
                 )}
             </div>
 
-            <div>
-                <h3 className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">{label}</h3>
-                <p className="text-2xl font-bold text-slate-800 tracking-tight">{value}</p>
-                {subtext && <p className="text-xs text-slate-400 mt-1 font-medium">{subtext}</p>}
+            <div className="relative z-10">
+                <h3 className="text-slate-500 text-xs uppercase font-black tracking-widest mb-2 opacity-90">{label}</h3>
+                <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>
+                {subtext && <p className="text-sm text-slate-400 mt-2 font-bold group-hover:text-slate-500 transition-colors">{subtext}</p>}
             </div>
         </motion.div>
     );

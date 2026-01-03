@@ -228,133 +228,155 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto relative">
+            {/* Ambient Background Glows */}
+            <div className="fixed top-32 left-0 w-96 h-96 bg-blue-400/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+            <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-purple-400/20 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
+
             {days.length === 0 ? (
-                <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-2xl bg-white">
-                    <Calendar className="mx-auto h-16 w-16 text-blue-100 mb-4" />
-                    <h3 className="text-xl font-bold text-slate-800">Your itinerary is empty</h3>
-                    <p className="text-slate-500 mb-6">Start planning your days.</p>
-                    <button onClick={addDay} className="btn-primary mx-auto">
-                        <Plus size={18} /> Add First Day
+                <div className="text-center py-24 border border-white/60 rounded-[3rem] bg-white/40 backdrop-blur-xl shadow-xl shadow-slate-200/40 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
+                    <div className="bg-gradient-to-br from-blue-100 to-white w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 text-blue-600 shadow-sm border border-white/50 relative z-10">
+                        <Calendar size={40} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter mb-4 relative z-10">Your itinerary is empty</h3>
+                    <p className="text-slate-500 mb-10 font-medium text-lg relative z-10">Start planning your adventure by adding days.</p>
+                    <button onClick={addDay} className="relative z-10 bg-slate-900 text-white px-10 py-4 rounded-full font-bold shadow-xl shadow-slate-900/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 mx-auto">
+                        <Plus size={22} /> <span className="text-lg">Add First Day</span>
                     </button>
                 </div>
             ) : (
-                <div className="flex gap-8 items-start">
+                <div className="flex gap-8 items-start relative z-10">
                     {/* Sidebar / Timeline Nav */}
-                    <div className="w-64 shrink-0 hidden lg:block sticky top-24">
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-2">
-                            {days.map((day, index) => (
-                                <button
-                                    key={day.id}
-                                    onClick={() => setExpandedDay(day.id)}
-                                    className={`w-full text-left px-4 py-3 rounded-xl mb-1 flex items-center justify-between group transition-all ${expandedDay === day.id
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'hover:bg-slate-50 text-slate-600'
-                                        }`}
-                                >
-                                    <div>
-                                        <p className={`text-xs font-semibold uppercase tracking-wider ${expandedDay === day.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                            Day {index + 1}
-                                        </p>
-                                        <p className="font-bold truncate">{day.dayName}</p>
-                                    </div>
-                                    {expandedDay === day.id && <ChevronRight size={16} />}
-                                </button>
-                            ))}
+                    <div className="w-72 shrink-0 hidden lg:block sticky top-28 h-fit">
+                        <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-xl shadow-slate-200/50 p-5">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-4 mb-4 flex items-center gap-2">
+                                <Calendar size={14} /> Itinerary
+                            </h3>
+                            <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                                {days.map((day, index) => (
+                                    <button
+                                        key={day.id}
+                                        onClick={() => setExpandedDay(day.id)}
+                                        className={`w-full text-left px-5 py-4 rounded-[1.8rem] flex items-center justify-between group transition-all duration-300 relative overflow-hidden ${expandedDay === day.id
+                                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-105 z-10'
+                                            : 'hover:bg-white/60 text-slate-500 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        <div className="relative z-10">
+                                            <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${expandedDay === day.id ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                Day {index + 1}
+                                            </p>
+                                            <p className="font-bold truncate text-sm tracking-tight">{day.dayName}</p>
+                                        </div>
+
+                                        {expandedDay === day.id ? (
+                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 shadow-inner">
+                                                <ChevronRight size={16} strokeWidth={3} />
+                                            </div>
+                                        ) : (
+                                            <div className="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors"></div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
                             <button
                                 onClick={addDay}
-                                className="w-full mt-2 py-3 border border-dashed border-slate-200 rounded-xl text-slate-400 font-medium hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-4 py-4 border-2 border-dashed border-slate-300 hover:border-blue-400 bg-transparent hover:bg-blue-50 rounded-[1.8rem] text-slate-400 hover:text-blue-600 font-bold transition-all flex items-center justify-center gap-2 text-sm"
                             >
-                                <Plus size={16} /> Add Day
+                                <Plus size={18} strokeWidth={2.5} /> Add Day
                             </button>
                         </div>
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 space-y-6">
+                    <div className="flex-1 space-y-6 min-w-0">
                         <AnimatePresence mode="wait">
                             {days.map((day, index) => (
                                 (expandedDay === day.id) && (
                                     <motion.div
                                         key={day.id}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
+                                        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -20, scale: 0.98 }}
+                                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                                        className="bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 overflow-hidden relative"
                                     >
                                         {/* Day Header */}
-                                        <div className="p-4 md:p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+                                        <div className="p-6 md:p-10 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50 flex justify-between items-start">
                                             <div>
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <span className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-blue-500/20 shadow-lg">
                                                         Day {index + 1}
                                                     </span>
                                                     <input
                                                         type="date"
                                                         value={day.date}
                                                         onChange={(e) => updateDay(day.id, 'date', e.target.value)}
-                                                        className="bg-transparent border-none text-sm text-slate-500 p-0 focus:ring-0"
+                                                        className="bg-transparent border-none text-sm font-semibold text-slate-500 p-0 focus:ring-0 cursor-pointer hover:text-blue-600 transition-colors"
                                                     />
                                                 </div>
                                                 <input
                                                     type="text"
                                                     value={day.dayName}
                                                     onChange={(e) => updateDay(day.id, 'dayName', e.target.value)}
-                                                    className="text-2xl md:text-3xl font-black text-slate-800 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full"
+                                                    className="text-3xl md:text-4xl font-black text-slate-900 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full tracking-tight"
                                                     placeholder="Day Title"
                                                 />
                                             </div>
                                             <button
                                                 onClick={() => openDeleteDayModal(day.id)}
-                                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                                                title="Delete Day"
                                             >
                                                 <Trash2 size={20} />
                                             </button>
                                         </div>
 
                                         {/* Timeline */}
-                                        <div className="p-4 md:p-8 relative">
+                                        <div className="p-6 md:p-10 relative">
                                             {/* Vertical Line */}
-                                            <div className="absolute left-[38px] md:left-[54px] top-8 bottom-8 w-0.5 bg-slate-100 z-0"></div>
+                                            <div className="absolute left-[54px] md:left-[85px] top-12 bottom-12 w-0.5 bg-gradient-to-b from-blue-100 via-indigo-100 to-slate-100 z-0"></div>
 
-                                            <div className="space-y-6 relative z-10">
+                                            <div className="space-y-8 relative z-10">
                                                 <AnimatePresence initial={false}>
                                                     {day.items.map((item) => (
                                                         <motion.div
                                                             key={item.id}
                                                             layout
-                                                            initial={{ opacity: 0, y: 10 }}
+                                                            initial={{ opacity: 0, y: 20 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             exit={{ opacity: 0, scale: 0.9 }}
-                                                            className="flex gap-3 md:gap-6 group"
+                                                            className="flex gap-4 md:gap-8 group"
                                                         >
                                                             {/* Time & Icon */}
-                                                            <div className="flex flex-col items-center gap-3 pt-1 shrink-0 w-12 md:w-20">
-                                                                <div className="flex items-center justify-center">
+                                                            <div className="flex flex-col items-center gap-4 pt-2 shrink-0 w-16 md:w-24">
+                                                                <div className="flex items-center justify-center w-full">
                                                                     <input
                                                                         type="time"
                                                                         value={item.time}
                                                                         onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
-                                                                        className="text-xs md:text-sm font-bold text-slate-700 bg-white/50 border border-slate-200 rounded-md px-1 py-0.5 w-full text-center focus:text-blue-600 focus:ring-2 focus:ring-blue-100 cursor-pointer shadow-sm"
+                                                                        className="text-xs md:text-sm font-bold text-slate-500 bg-white/50 hover:bg-white border border-transparent hover:border-blue-200 rounded-xl px-2 py-1.5 w-full text-center focus:text-blue-600 focus:ring-0 transition-all cursor-pointer shadow-sm"
                                                                     />
                                                                 </div>
                                                                 <div
-                                                                    className="w-10 h-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center text-white z-10 transition-transform group-hover:scale-110"
+                                                                    className="w-14 h-14 rounded-[1.2rem] shadow-lg flex items-center justify-center text-white z-10 transition-transform duration-300 group-hover:scale-110 border-[3px] border-white ring-1 ring-slate-100"
                                                                     style={{ backgroundColor: CATEGORIES.find(c => c.name === item.category)?.color || '#94a3b8' }}
                                                                 >
-                                                                    <Tag size={16} />
+                                                                    <Tag size={20} strokeWidth={2.5} />
                                                                 </div>
                                                             </div>
 
                                                             {/* Card */}
-                                                            <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm group-hover:shadow-md group-hover:border-blue-200 transition-all min-w-0">
-                                                                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                                                                    <div className="flex-1 w-full space-y-2 min-w-0">
+                                                            <div className="flex-1 bg-white/50 hover:bg-white/80 backdrop-blur-sm border border-white/60 rounded-[2.2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-blue-200/20 hover:-translate-y-1 transition-all duration-300 min-w-0 relative overflow-hidden group/card">
+
+                                                                <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center relative z-10">
+                                                                    <div className="flex-1 w-full space-y-3 min-w-0">
                                                                         <div className="flex items-center gap-2">
                                                                             <select
                                                                                 value={item.category}
                                                                                 onChange={(e) => updateItem(day.id, item.id, 'category', e.target.value)}
-                                                                                className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-50 rounded-md border-none py-1 pl-2 pr-6 focus:ring-0 cursor-pointer"
+                                                                                className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:border-blue-200 rounded-full py-1.5 pl-3 pr-8 focus:ring-0 cursor-pointer transition-colors shadow-sm"
                                                                             >
                                                                                 {CATEGORIES.map(cat => (
                                                                                     <option key={cat.name} value={cat.name}>{cat.name}</option>
@@ -366,16 +388,16 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                             value={item.name}
                                                                             onChange={(e) => updateItem(day.id, item.id, 'name', e.target.value)}
                                                                             placeholder="Activity name..."
-                                                                            className="w-full font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 text-lg placeholder:text-slate-300"
+                                                                            className="w-full font-black text-slate-900 bg-transparent border-none p-0 focus:ring-0 text-xl md:text-2xl placeholder:text-slate-300/80 tracking-tight"
                                                                         />
 
                                                                         {/* Location & Notes */}
-                                                                        <div className="space-y-1">
+                                                                        <div className="space-y-3">
                                                                             {item.location && (
-                                                                                <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit max-w-full">
-                                                                                    <MapPin size={12} className="shrink-0" />
+                                                                                <div className="flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50/80 border border-blue-100 px-3 py-1.5 rounded-xl w-fit max-w-full backdrop-blur-md">
+                                                                                    <MapPin size={14} className="shrink-0" />
                                                                                     <span className="truncate">{item.location.name}</span>
-                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-blue-800 shrink-0"><X size={12} /></button>
+                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-blue-900 shrink-0"><X size={14} /></button>
                                                                                 </div>
                                                                             )}
 
@@ -383,27 +405,27 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                                 type="text"
                                                                                 value={item.notes}
                                                                                 onChange={(e) => updateItem(day.id, item.id, 'notes', e.target.value)}
-                                                                                placeholder="Add notes, e.g. tickets..."
-                                                                                className="w-full text-sm text-slate-500 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300"
+                                                                                placeholder="Add details, tickets, or notes..."
+                                                                                className="w-full text-sm font-semibold text-slate-500 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-400"
                                                                             />
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                                                                        <div className="bg-slate-50 rounded-xl px-3 py-2 flex items-center gap-2 border border-slate-100">
-                                                                            <IndianRupee size={14} className="text-slate-400" />
+                                                                    <div className="flex items-center gap-2 w-full xl:w-auto justify-between xl:justify-end border-t xl:border-none border-slate-100 pt-4 xl:pt-0">
+                                                                        <div className="bg-white rounded-2xl px-4 py-3 flex items-center gap-2 border border-slate-200/50 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                                                            <IndianRupee size={16} className="text-slate-400" />
                                                                             <input
                                                                                 type="number"
                                                                                 value={item.amount}
                                                                                 onChange={(e) => updateItem(day.id, item.id, 'amount', e.target.value)}
                                                                                 placeholder="0"
-                                                                                className="bg-transparent border-none w-20 text-sm font-semibold text-slate-700 p-0 focus:ring-0 text-right"
+                                                                                className="bg-transparent border-none w-16 md:w-20 text-sm font-bold text-slate-800 p-0 focus:ring-0 text-right"
                                                                             />
                                                                         </div>
-                                                                        <div className="flex items-center gap-1 sm:gap-2">
+                                                                        <div className="flex items-center">
                                                                             <button
                                                                                 onClick={() => setLocationSearch({ isOpen: true, dayId: day.id, itemId: item.id })}
-                                                                                className={`p-3 rounded-xl transition-colors ${item.location ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                                                className={`p-3 rounded-2xl transition-all hover:scale-110 active:scale-95 ${item.location ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-blue-600 hover:bg-white'}`}
                                                                                 title="Set Location"
                                                                             >
                                                                                 <MapPin size={20} />
@@ -418,14 +440,14 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                                         date: day.date
                                                                                     }
                                                                                 })}
-                                                                                className="text-slate-400 hover:text-green-600 p-3 hover:bg-green-50 rounded-xl transition-colors"
+                                                                                className="text-slate-400 hover:text-emerald-600 p-3 hover:bg-white rounded-2xl transition-all hover:scale-110 active:scale-95"
                                                                                 title="Log as Expense"
                                                                             >
                                                                                 <IndianRupee size={20} />
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => openDeleteItemModal(day.id, item.id)}
-                                                                                className="text-slate-400 hover:text-red-500 p-3 hover:bg-red-50 rounded-xl transition-colors"
+                                                                                className="text-slate-400 hover:text-red-500 p-3 hover:bg-white rounded-2xl transition-all hover:scale-110 active:scale-95"
                                                                             >
                                                                                 <Trash2 size={20} />
                                                                             </button>
@@ -440,13 +462,13 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                 <motion.button
                                                     layout
                                                     onClick={() => addItem(day.id)}
-                                                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50/50 transition-all font-bold flex items-center justify-center gap-2 group md:ml-20 ml-12"
-                                                    style={{ width: 'auto', flex: 1 }} // Reset fixed width calc
+                                                    className="w-full py-6 border border-white/60 bg-white/40 backdrop-blur rounded-[2.5rem] text-slate-400 hover:text-slate-600 hover:bg-white/60 transition-all font-bold flex items-center justify-center gap-3 group md:ml-32 ml-20 text-sm shadow-sm hover:shadow-md"
+                                                    style={{ width: 'auto', flex: 1 }}
                                                 >
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
-                                                        <Plus size={16} />
+                                                    <div className="w-10 h-10 rounded-full bg-white group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-all shadow-sm">
+                                                        <Plus size={20} />
                                                     </div>
-                                                    Add Activity
+                                                    <span className="group-hover:translate-x-1 transition-transform">Add New Activity</span>
                                                 </motion.button>
                                             </div>
                                         </div>
@@ -456,21 +478,22 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                         </AnimatePresence>
 
                         {/* Mobile Day Nav */}
-                        <div className="lg:hidden flex overflow-x-auto gap-2 pb-4 scrollbar-hide">
+                        <div className="lg:hidden flex overflow-x-auto gap-3 pb-6 pt-2 scrollbar-hide px-1 sticky top-16 z-20 -mx-4 px-4 bg-gradient-to-b from-slate-50/90 to-slate-50/0 backdrop-blur-[2px]">
                             {days.map((day, index) => (
                                 <button
                                     key={day.id}
                                     onClick={() => setExpandedDay(day.id)}
-                                    className={`px-5 py-3 rounded-xl whitespace-nowrap text-sm font-bold border flex-shrink-0 snap-center transition-all ${expandedDay === day.id
-                                        ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                                        : 'bg-white text-slate-600 border-slate-200'
+                                    className={`px-5 py-2.5 rounded-[1rem] whitespace-nowrap text-xs font-bold border flex-shrink-0 snap-center transition-all shadow-sm ${expandedDay === day.id
+                                        ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 scale-105'
+                                        : 'bg-white/80 backdrop-blur-md text-slate-600 border-white/50 hover:bg-white'
                                         }`}
                                 >
-                                    Day {index + 1}
+                                    <span className="opacity-60 text-[10px] uppercase mr-1.5">Day {index + 1}</span>
+                                    {day.dayName}
                                 </button>
                             ))}
-                            <button onClick={addDay} className="px-5 py-3 rounded-xl border border-dashed border-slate-300 bg-white text-slate-500 font-bold whitespace-nowrap flex-shrink-0 snap-center">
-                                + Add Day
+                            <button onClick={addDay} className="px-5 py-2.5 rounded-[1rem] border-2 border-dashed border-slate-300 bg-white/40 text-slate-500 font-bold whitespace-nowrap flex-shrink-0 snap-center hover:bg-white/80 transition-all text-xs flex items-center gap-1">
+                                <Plus size={14} /> Add
                             </button>
                         </div>
                     </div>

@@ -26,44 +26,50 @@ const ExpenseAnalytics = ({ totalBudget, totalSpent, chartData, currencySymbol }
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* 1. Overall Health Card */}
-            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white text-white shadow-lg lg:col-span-1 flex flex-col justify-between relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 1. Overall Health Card - Massive Glass Pill */}
+            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[3rem] p-10 text-white shadow-2xl lg:col-span-1 flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
                 {/* Decorative Circles */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/30 rounded-full blur-2xl"></div>
+                <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-colors"></div>
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/40 rounded-full blur-3xl"></div>
 
-                <div>
-                    <div className="flex items-center gap-2 mb-4 opacity-90">
-                        <Wallet size={20} />
-                        <span className="font-medium tracking-wide text-sm uppercase">Total Spend</span>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-6 opacity-90">
+                        <div className="p-2 bg-white/20 backdrop-blur rounded-xl">
+                            <Wallet size={24} className="text-white" />
+                        </div>
+                        <span className="font-bold tracking-widest text-sm uppercase text-indigo-100">Total Spend</span>
                     </div>
-                    <h3 className="text-4xl font-extrabold mb-1">
+                    <h3 className="text-6xl font-black mb-2 tracking-tighter">
                         {currencySymbol}{totalSpent.toLocaleString()}
                     </h3>
-                    <p className="text-indigo-100 text-sm mb-6">
-                        of {currencySymbol}{totalBudget.toLocaleString()} budget
+                    <p className="text-indigo-200 text-lg font-medium mb-8">
+                        of {currencySymbol}{totalBudget.toLocaleString()} total budget
                     </p>
                 </div>
 
-                <div className="relative z-10">
-                    <div className="flex justify-between text-xs font-medium mb-2 opacity-90">
-                        <span>{Math.min(budgetUtilized, 100).toFixed(0)}% Used</span>
-                        {isOverBudget && <span className="flex items-center gap-1 text-red-200"><AlertCircle size={12} /> Over Budget</span>}
+                <div className="relative z-10 bg-black/20 backdrop-blur-md p-6 rounded-[2rem] border border-white/10">
+                    <div className="flex justify-between text-sm font-bold mb-3 opacity-100 text-white">
+                        <span>{Math.min(budgetUtilized, 100).toFixed(0)}% Utilized</span>
+                        {isOverBudget && <span className="flex items-center gap-1 text-red-300 animate-pulse"><AlertCircle size={16} /> Over Budget</span>}
                     </div>
                     {/* Progress Bar */}
-                    <div className="h-3 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+                    <div className="h-4 bg-white/10 rounded-full overflow-hidden shadow-inner">
                         <div
-                            className={`h-full rounded-full transition-all duration-1000 ${isOverBudget ? 'bg-red-400' : 'bg-emerald-400'}`}
+                            className={`h-full rounded-full transition-all duration-1000 ease-out ${isOverBudget ? 'bg-gradient-to-r from-red-400 to-pink-500' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}
                             style={{ width: `${Math.min(budgetUtilized, 100)}%` }}
                         />
                     </div>
                 </div>
             </div>
 
-            {/* 2. Category Breakdown Chart */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm lg:col-span-2 flex flex-col sm:flex-row items-center gap-8">
-                <div className="flex-1 w-full h-64 min-h-[250px]">
+            {/* 2. Category Breakdown Chart - Floating Glass Card */}
+            <div className="bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 p-8 shadow-xl lg:col-span-2 flex flex-col sm:flex-row items-center gap-10 relative">
+                <div className="absolute top-6 left-8 bg-blue-50/80 backdrop-blur px-3 py-1 rounded-full text-blue-600 font-bold text-xs uppercase tracking-wider border border-blue-100/50">
+                    Spending by Category
+                </div>
+
+                <div className="flex-1 w-full h-72 min-h-[280px]">
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -71,48 +77,49 @@ const ExpenseAnalytics = ({ totalBudget, totalSpent, chartData, currencySymbol }
                                     data={chartData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
+                                    innerRadius={70}
+                                    outerRadius={100}
+                                    paddingAngle={6}
                                     dataKey="value"
+                                    cornerRadius={8}
                                 >
                                     {chartData.map((entry, index) => {
                                         const catColor = CATEGORIES.find(c => c.name === entry.name)?.color || '#94a3b8';
                                         return <Cell key={`cell-${index}`} fill={catColor} stroke="none" />;
                                     })}
                                 </Pie>
-                                <Tooltip content={<CustomTooltip />} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-2">
-                                <TrendingUp size={24} />
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+                            <div className="w-20 h-20 bg-slate-100 rounded-[2rem] flex items-center justify-center shadow-inner">
+                                <TrendingUp size={32} />
                             </div>
-                            <p className="text-sm">No expenses logged yet</p>
+                            <p className="text-lg font-bold">No expenses logged yet</p>
                         </div>
                     )}
                 </div>
 
                 {/* Legend */}
-                <div className="w-full sm:w-64 space-y-3">
-                    <h4 className="font-bold text-slate-700 mb-2">Top Categories</h4>
+                <div className="w-full sm:w-72 space-y-4 pr-4">
+                    <h4 className="font-extrabold text-slate-800 mb-4 text-xl">Top Categories</h4>
                     {chartData.slice(0, 4).map((entry, index) => {
                         const catColor = CATEGORIES.find(c => c.name === entry.name)?.color || '#94a3b8';
                         return (
-                            <div key={index} className="flex items-center justify-between group">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: catColor }}></div>
-                                    <span className="text-sm font-medium text-slate-600">{entry.name}</span>
+                            <div key={index} className="flex items-center justify-between group p-3 rounded-2xl hover:bg-white/50 transition-colors border border-transparent hover:border-white/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-4 h-4 rounded-full shadow-sm ring-2 ring-white" style={{ backgroundColor: catColor }}></div>
+                                    <span className="text-sm font-bold text-slate-600">{entry.name}</span>
                                 </div>
-                                <span className="text-sm font-bold text-slate-800">
+                                <span className="text-sm font-black text-slate-900">
                                     {currencySymbol}{entry.value.toLocaleString()}
                                 </span>
                             </div>
                         );
                     })}
                     {chartData.length > 4 && (
-                        <p className="text-xs text-slate-400 pt-2 border-t border-slate-100 text-center">
+                        <p className="text-xs font-bold text-slate-400 pt-3 border-t border-slate-200/50 text-center uppercase tracking-wider">
                             + {chartData.length - 4} more categories
                         </p>
                     )}

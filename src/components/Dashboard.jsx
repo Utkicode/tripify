@@ -82,34 +82,49 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     };
 
     return (
-        <div className="space-y-6 md:space-y-8 pb-20">
-            {/* 1. Header & Welcome */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                        {(() => {
-                            const hours = new Date().getHours();
-                            if (hours < 12) return 'Good Morning';
-                            if (hours < 18) return 'Good Afternoon';
-                            return 'Good Evening';
-                        })()}, {firstName}
-                    </h1>
-                    <p className="text-slate-500 mt-1">
-                        Here is your daily travel briefing.
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <button
+        <div className="space-y-12 pb-24">
+            {/* 1. Immersive Header */}
+            <header className="relative py-8 md:py-12 px-4 md:px-0">
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-400/20 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
+
+                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+                    <div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-blue-600 font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
+                        >
+                            {(() => {
+                                const hours = new Date().getHours();
+                                if (hours < 12) return 'Good Morning';
+                                if (hours < 18) return 'Good Afternoon';
+                                return 'Good Evening';
+                            })()}
+                        </motion.div>
+                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 tracking-tighter mb-4">
+                            Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{firstName}</span>.
+                        </h1>
+                        <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl leading-relaxed">
+                            Your financial compass for every journey. Ready to plan?
+                        </p>
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={createNewTrip}
-                        className="btn-primary flex items-center gap-2 shadow-lg shadow-blue-200"
+                        className="bg-slate-900 text-white pl-6 pr-8 py-4 md:py-5 rounded-[2.5rem] font-bold shadow-2xl shadow-slate-900/30 flex items-center gap-4 group transition-all w-fit"
                     >
-                        <Plus size={20} /> New Trip
-                    </button>
+                        <div className="bg-white/20 p-2 rounded-full group-hover:rotate-90 transition-transform duration-500">
+                            <Plus size={24} />
+                        </div>
+                        <span className="text-lg">New Trip</span>
+                    </motion.button>
                 </div>
             </header>
 
-            {/* 2. Next Best Action (Hero) */}
-            <section>
+            {/* 2. Next Best Action (Hero) - Updated in separate file, but container is here */}
+            <section className="relative z-10">
                 <NBAWidget
                     trips={enrichedTrips}
                     user={user}
@@ -117,8 +132,8 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                 />
             </section>
 
-            {/* 4. Insight Grid (Metrics) */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* 3. Insight Grid (Metrics) */}
+            <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 relative z-10">
                 <InsightCard
                     label="Active Trips"
                     value={totalTrips}
@@ -145,51 +160,60 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     trendLabel={totalSpent > totalBudget ? 'Over Budget' : 'On Track'}
                 />
 
-                <SmartTipWidget
-                    onViewTip={handleTipAction}
-                />
+                {/* Smart Tips often span full width or fit alongside */}
+                <div className="md:col-span-2 lg:col-span-3">
+                    <SmartTipWidget onViewTip={handleTipAction} />
+                </div>
             </section>
 
             {/* 4. Active Trips (Story Cards) */}
-            <section className="space-y-4">
-                <div className="flex justify-between items-center px-1">
-                    <h3 className="text-xl font-bold text-slate-800">Your Adventures</h3>
+            <section className="space-y-8 relative z-10">
+                <div className="flex justify-between items-end px-2">
+                    <div>
+                        <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Your Adventures</h3>
+                        <p className="text-slate-500 font-medium">Continue where you left off</p>
+                    </div>
                     {tripsList.length > 3 && (
                         <button
                             onClick={() => setCurrentView('trips')}
-                            className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 group"
+                            className="px-6 py-2 bg-white rounded-full font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm border border-slate-200 flex items-center gap-2 group"
                         >
-                            View All <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                            View All <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                     )}
                 </div>
 
                 {upcomingTrips.length === 0 ? (
-                    // Empty State
+                    // Empty State - Glassmorphism
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-2xl border border-dashed border-slate-300 p-6 md:p-12 text-center"
+                        className="bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/50 shadow-xl p-12 md:p-20 text-center relative overflow-hidden"
                     >
-                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Map size={32} />
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
+                        <div className="relative z-10">
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/60">
+                                <Map size={48} className="text-blue-500" strokeWidth={1.5} />
+                            </div>
+                            <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">{EMPTY_STATE_MESSAGES.no_trips.headline}</h3>
+                            <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>
+                            <button
+                                onClick={createNewTrip}
+                                className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 hover:scale-105 active:scale-95 text-lg"
+                            >
+                                {EMPTY_STATE_MESSAGES.no_trips.cta}
+                            </button>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">{EMPTY_STATE_MESSAGES.no_trips.headline}</h3>
-                        <p className="text-slate-500 max-w-sm mx-auto mb-6">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>
-                        <button onClick={createNewTrip} className="text-blue-600 font-bold hover:text-blue-700">
-                            {EMPTY_STATE_MESSAGES.no_trips.cta}
-                        </button>
                     </motion.div>
                 ) : (
                     // Story Grid
-                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 md:grid md:grid-cols-2 md:gap-6 lg:grid-cols-3 md:overflow-visible md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                         {upcomingTrips.map(trip => (
-                            <div key={trip.id} className="min-w-[85vw] md:min-w-0 snap-center">
-                                <TripStoryCard
-                                    trip={trip}
-                                    onClick={setCurrentTripId}
-                                />
-                            </div>
+                            <TripStoryCard
+                                key={trip.id}
+                                trip={trip}
+                                onClick={setCurrentTripId}
+                            />
                         ))}
                     </div>
                 )}
@@ -197,5 +221,4 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
         </div>
     );
 };
-
 export default Dashboard;

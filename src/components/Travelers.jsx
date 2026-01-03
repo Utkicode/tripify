@@ -38,76 +38,98 @@ const Travelers = ({ travelers, setTravelers }) => {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <AnimatePresence>
                 {travelers.map((t, idx) => (
                     <motion.div
                         key={t.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                         layout
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative group"
+                        className="bg-white/80 backdrop-blur-xl p-8 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-white/60 relative group hover:shadow-2xl hover:shadow-blue-200/20 transition-all duration-300 overflow-hidden"
                     >
+                        {/* Decorative Gradient Blob */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-[4rem] z-0 pointer-events-none"></div>
+
                         <button
                             onClick={() => confirmDelete(idx)}
-                            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            className="absolute top-8 right-8 p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover:opacity-100 z-10"
                         >
-                            <Trash2 size={18} />
+                            <Trash2 size={20} />
                         </button>
 
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-xl shadow-inner">
-                                {t.name ? t.name[0].toUpperCase() : <UserIcon size={24} />}
+                        <div className="flex items-center gap-6 mb-8 relative z-10">
+                            <div className="w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-blue-600 font-extrabold text-3xl shadow-sm border border-white">
+                                {t.name ? t.name[0].toUpperCase() : <UserIcon size={32} strokeWidth={2.5} />}
                             </div>
                             <div>
-                                <h3 className="font-bold text-slate-800 text-lg">Traveler {idx + 1}</h3>
-                                <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Personal Details</p>
+                                <h3 className="font-black text-slate-900 text-2xl tracking-tight">Traveler {idx + 1}</h3>
+                                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-1 bg-slate-100/50 px-2 py-1 rounded-md w-fit">Personal Details</p>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <Input
-                                label="Full Name"
-                                icon={UserIcon}
-                                value={t.name}
-                                onChange={(e) => handleTravelerChange(idx, 'name', e.target.value)}
-                                placeholder="Enter name"
-                            />
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-6 relative z-10">
+                            <div className="bg-white/50 p-1 rounded-[1.5rem] border border-white/40 shadow-inner">
                                 <Input
-                                    label="Age"
-                                    type="number"
-                                    value={t.age}
-                                    onChange={(e) => handleTravelerChange(idx, 'age', e.target.value)}
-                                    placeholder="Age"
-                                />
-                                <Select
-                                    label="Gender"
-                                    value={t.gender}
-                                    onChange={(e) => handleTravelerChange(idx, 'gender', e.target.value)}
-                                    options={[
-                                        { value: "", label: "Select..." },
-                                        { value: "Male", label: "Male" },
-                                        { value: "Female", label: "Female" },
-                                        { value: "Other", label: "Other" }
-                                    ]}
+                                    label="Full Name"
+                                    icon={UserIcon}
+                                    value={t.name}
+                                    onChange={(e) => handleTravelerChange(idx, 'name', e.target.value)}
+                                    placeholder="Enter full name"
+                                    className="bg-transparent border-none focus:ring-0 text-lg font-bold placeholder:font-normal"
                                 />
                             </div>
-                            <Input
-                                label="Dietary Preferences"
-                                icon={Utensils}
-                                value={t.dietaryPreferences}
-                                onChange={(e) => handleTravelerChange(idx, 'dietaryPreferences', e.target.value)}
-                                placeholder="Vegetarian, Vegan, Nut allergy..."
-                            />
-                            <Input
-                                label="Special Needs"
-                                icon={Heart}
-                                value={t.specialNeeds}
-                                onChange={(e) => handleTravelerChange(idx, 'specialNeeds', e.target.value)}
-                                placeholder="Medical info, accessibility..."
-                            />
+
+                            <div className="grid grid-cols-2 gap-5">
+                                <div className="bg-white/50 p-1 rounded-[1.5rem] border border-white/40 shadow-inner">
+                                    <Input
+                                        label="Age"
+                                        type="number"
+                                        value={t.age}
+                                        onChange={(e) => handleTravelerChange(idx, 'age', e.target.value)}
+                                        placeholder="Age"
+                                        className="bg-transparent border-none focus:ring-0 font-bold"
+                                    />
+                                </div>
+                                <div className="bg-white/50 p-1 rounded-[1.5rem] border border-white/40 shadow-inner">
+                                    <Select
+                                        label="Gender"
+                                        value={t.gender}
+                                        onChange={(e) => handleTravelerChange(idx, 'gender', e.target.value)}
+                                        options={[
+                                            { value: "", label: "Select..." },
+                                            { value: "Male", label: "Male" },
+                                            { value: "Female", label: "Female" },
+                                            { value: "Other", label: "Other" }
+                                        ]}
+                                        className="bg-transparent border-none focus:ring-0 font-bold"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-2">
+                                <div className="bg-orange-50/50 p-1 pl-2 rounded-[1.5rem] border border-orange-100/50 flex items-center gap-2">
+                                    <Utensils size={18} className="text-orange-400 ml-3" />
+                                    <input
+                                        type="text"
+                                        value={t.dietaryPreferences}
+                                        onChange={(e) => handleTravelerChange(idx, 'dietaryPreferences', e.target.value)}
+                                        placeholder="Dietary Preferences..."
+                                        className="w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400"
+                                    />
+                                </div>
+                                <div className="bg-rose-50/50 p-1 pl-2 rounded-[1.5rem] border border-rose-100/50 flex items-center gap-2">
+                                    <Heart size={18} className="text-rose-400 ml-3" />
+                                    <input
+                                        type="text"
+                                        value={t.specialNeeds}
+                                        onChange={(e) => handleTravelerChange(idx, 'specialNeeds', e.target.value)}
+                                        placeholder="Medical / Special Needs..."
+                                        className="w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 ))}
@@ -115,16 +137,16 @@ const Travelers = ({ travelers, setTravelers }) => {
 
             <motion.button
                 layout
-                whileHover={{ scale: 1.02, backgroundColor: '#f8fafc', borderColor: '#60a5fa' }}
+                whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.6)' }}
                 whileTap={{ scale: 0.98 }}
                 onClick={addTraveler}
-                className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:text-blue-500 transition-all min-h-[300px] group"
+                className="bg-white/30 backdrop-blur-md border-2 border-dashed border-slate-300 rounded-[3rem] p-6 flex flex-col items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-400 transition-all min-h-[400px] group shadow-sm hover:shadow-xl"
             >
-                <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:shadow-md transition-shadow">
-                    <UserPlus size={32} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                <div className="w-24 h-24 rounded-[2rem] bg-white shadow-sm flex items-center justify-center mb-6 group-hover:shadow-lg transition-all group-hover:scale-110 group-hover:-rotate-3">
+                    <UserPlus size={40} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                 </div>
-                <span className="font-bold text-lg">Add New Traveler</span>
-                <span className="text-sm opacity-70">Track details for another person</span>
+                <span className="font-extrabold text-xl text-slate-600 tracking-tight">Add New Traveler</span>
+                <span className="text-sm opacity-60 font-bold mt-2">Track details for another person</span>
             </motion.button>
 
             <ConfirmationModal
@@ -132,7 +154,7 @@ const Travelers = ({ travelers, setTravelers }) => {
                 onClose={() => setDeleteModal({ isOpen: false, idx: null })}
                 onConfirm={handleDeleteTraveler}
                 title="Delete Traveler?"
-                message="Are you sure you want to remove this traveler? This action cannot be undone."
+                message="Are you sure you want to remove this traveler from the trip? This cannot be undone."
                 confirmText="Delete Traveler"
             />
         </div>

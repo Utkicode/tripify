@@ -177,7 +177,7 @@ export default function AuthActionHandler({ onComplete }) {
                         : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                         }`}
                 >
-                    {status === 'success' ? (mode === 'resetPassword' ? 'Go to Login' : 'Continue to Tripify') : 'Back to Home'}
+                    {status === 'success' ? (mode === 'resetPassword' ? 'Go to Login' : 'Continue to TravelCFO') : 'Back to Home'}
                     <ArrowRight size={18} />
                 </button>
             </div>
