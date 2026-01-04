@@ -8,6 +8,7 @@ import {
     sendEmailVerification
 } from "firebase/auth";
 import { auth } from '../firebase.js';
+import SEO from './common/SEO';
 
 const Auth = () => {
     // Mode State
@@ -61,6 +62,11 @@ const Auth = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+            <SEO
+                title="TravelCFO - Trip Planner & Expense Tracker"
+                description="TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
+                canonical="https://tripify-c49b6.web.app/"
+            />
             {/* Background Decor */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px]" />
