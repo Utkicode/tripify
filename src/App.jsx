@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { signOut } from "firebase/auth";
 import { collection, query, onSnapshot, addDoc, deleteDoc, doc, where } from "firebase/firestore";
@@ -6,19 +6,23 @@ import { auth, db } from './firebase.js';
 import { appId } from './constants.js';
 import { useProfile } from './context/ProfileContext';
 
-import Auth from './components/Auth';
-import TripList from './components/TripList';
-import TripDetail from './components/TripDetail';
-import Dashboard from './components/Dashboard';
-import Layout from './components/Layout';
-import About from './components/About';
-import VerifyEmail from './components/VerifyEmail';
-import ProfileCompletion from './components/ProfileCompletion';
-import Profile from './components/Profile';
-import ProTips from './components/ProTips';
-import GlobalExpenses from './components/GlobalExpenses';
-import AppPrivacy from './components/AppPrivacy';
-import TermsOfService from './components/TermsOfService';
+// --- Lazy Load Components for Performance ---
+const Auth = lazy(() => import('./components/Auth'));
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const TripList = lazy(() => import('./components/TripList'));
+const TripDetail = lazy(() => import('./components/TripDetail'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Layout = lazy(() => import('./components/Layout'));
+const PublicLayout = lazy(() => import('./components/common/PublicLayout'));
+const Features = lazy(() => import('./components/Features'));
+const About = lazy(() => import('./components/About'));
+const VerifyEmail = lazy(() => import('./components/VerifyEmail'));
+const ProfileCompletion = lazy(() => import('./components/ProfileCompletion'));
+const Profile = lazy(() => import('./components/Profile'));
+const ProTips = lazy(() => import('./components/ProTips'));
+const GlobalExpenses = lazy(() => import('./components/GlobalExpenses'));
+const AppPrivacy = lazy(() => import('./components/AppPrivacy'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
 
 import AuthActionHandler from './components/AuthActionHandler';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -201,37 +205,71 @@ export default function App() {
     return <AppLoadingSkeleton />;
   }
 
+  // --- UNAUTHENTICATED OR PUBLIC VIEW HANDLER ---
+  // If no user is logged in OR we are explicitly on a public route that we want to show even if logged in 
+  // (though usually we'd redirect logged in users to dash, let's keep it simple: if (!user), show public site).
   if (!user) {
-    return <Auth />;
+    if (currentView === 'dashboard') {
+      return (
+        <Suspense fallback={<AppLoadingSkeleton />}>
+          <LandingPage />
+        </Suspense>
+      );
+    }
+
+    // For other public views (features, about, etc.), use the PublicLayout
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <PublicLayout setCurrentView={setCurrentView} currentView={currentView}>
+          {currentView === 'features' && <Features />}
+          {currentView === 'about' && <About setCurrentView={setCurrentView} />}
+          {currentView === 'protips' && <ProTips />}
+          {currentView === 'privacy' && <AppPrivacy />}
+          {currentView === 'terms' && <TermsOfService />}
+          {/* Fallback to Landing if unknown view or is a SEO landing view */}
+          {['features', 'about', 'protips', 'privacy', 'terms'].indexOf(currentView) === -1 && <LandingPage />}
+        </PublicLayout>
+      </Suspense>
+    );
   }
 
   // 1. Email Verification Check (Skip if no email, e.g. Phone Auth)
   if (user.email && !user.emailVerified) {
-    return <VerifyEmail user={user} />;
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <VerifyEmail user={user} />
+      </Suspense>
+    );
   }
 
   // 2. Profile Completion Check
   if (!isProfileComplete) {
-    return <ProfileCompletion user={user} onComplete={() => refreshProfile(user.uid)} />; // Force refresh on completion
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <ProfileCompletion user={user} onComplete={() => refreshProfile(user.uid)} />
+      </Suspense>
+    ); // Force refresh on completion
   }
 
   // If a specific trip is open, show the editor (Full screen mode)
   // If a specific trip is open, show the editor (Full screen mode)
   if (currentTripId) {
     return (
-      <TripDetail
-        user={user}
-        tripId={currentTripId}
-        setCurrentTripId={setCurrentTripId}
-        initialTab={targetTab}
-        clearInitialTab={() => setTargetTab(null)}
-      />
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <TripDetail
+          user={user}
+          tripId={currentTripId}
+          setCurrentTripId={setCurrentTripId}
+          initialTab={targetTab}
+          clearInitialTab={() => setTargetTab(null)}
+        />
+      </Suspense>
     );
   }
 
   // Default Layout with Sidebar
   return (
-    <>
+    <Suspense fallback={<AppLoadingSkeleton />}>
       <Layout
         user={user}
         handleLogout={handleLogout}
@@ -242,12 +280,31 @@ export default function App() {
       >
         {/* --- Global SEO & View-Specific SEO --- */}
         <SEO
-          title={currentView === 'dashboard' ? 'Dashboard' :
-            currentView === 'about' ? 'About Us' :
-              currentView === 'profile' ? 'My Profile' :
-                currentView === 'protips' ? 'Pro Tips' :
-                  'Trip Planner'}
-          description="TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
+          title={
+            currentView === 'dashboard' ? 'Dashboard' :
+              currentView === 'about' ? 'About Us' :
+                currentView === 'profile' ? 'My Profile' :
+                  currentView === 'protips' ? 'Pro Tips' :
+                    currentView === 'travel-expense-tracker' ? 'Best Travel Expense Tracker & Split Bill App' :
+                      currentView === 'group-trip-planner' ? 'Group Trip Planner & Organizer' :
+                        currentView === 'vacation-budget-app' ? 'Vacation Budget Planner & Calculator' :
+                          currentView === 'itinerary-builder' ? 'Free Travel Itinerary Builder' :
+                            'Trip Planner'
+          }
+          description={
+            currentView === 'travel-expense-tracker' ? 'Track shared travel expenses, split bills instantly, and manage your vacation budget with TravelCFO. The best free app for group travel costs.' :
+              currentView === 'group-trip-planner' ? 'Collaborate on trip itineraries with friends in real-time. Vote on activities, share documents, and plan the perfect group trip together.' :
+                currentView === 'vacation-budget-app' ? 'Calculate your travel costs, set daily limits, and stay on budget. Visual analytics for your flight, hotel, and food expenses.' :
+                  currentView === 'itinerary-builder' ? 'Build detailed day-by-day travel itineraries. Drag and drop activities, add maps, and export your travel plan to PDF.' :
+                    "TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
+          }
+          keywords={
+            currentView === 'travel-expense-tracker' ? 'travel expense tracker, split bills, travel budget, cost sharing, expense manager' :
+              currentView === 'group-trip-planner' ? 'group travel, plan trip with friends, collaborative itinerary, travel organizer' :
+                currentView === 'vacation-budget-app' ? 'vacation cost, holiday budget, travel finance, trip calculator' :
+                  currentView === 'itinerary-builder' ? 'trip itinerary, travel schedule, daily planner, travel map' :
+                    'travel planner, expense tracker, group travel, itinerary builder'
+          }
           canonical={`https://tripify-c49b6.web.app/?view=${currentView}`}
         />
 
@@ -300,6 +357,6 @@ export default function App() {
         message={`Are you sure you want to delete "${deleteModalInfo.tripName}"? This action cannot be undone.`}
         isLoading={isDeleting}
       />
-    </>
+    </Suspense>
   );
 }

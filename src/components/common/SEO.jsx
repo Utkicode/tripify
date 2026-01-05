@@ -1,12 +1,13 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SEO = ({ title, description, name, type, canonical }) => {
+const SEO = ({ title, description, keywords, name, type, canonical }) => {
     return (
         <Helmet>
-            {/* Standard metadata tags */}
-            <title>{title ? `${title} | TravelCFO` : 'TravelCFO'}</title>
+            {/* Standard Metadata */}
+            <title>{title}</title>
             <meta name="description" content={description} />
+            {keywords && <meta name="keywords" content={keywords} />}
             {canonical && <link rel="canonical" href={canonical} />}
 
             {/* Facebook tags */}

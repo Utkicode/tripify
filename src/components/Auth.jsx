@@ -8,9 +8,8 @@ import {
     sendEmailVerification
 } from "firebase/auth";
 import { auth } from '../firebase.js';
-import SEO from './common/SEO';
 
-const Auth = () => {
+const Auth = ({ isModal = false, onClose }) => {
     // Mode State
     const [isSignUp, setIsSignUp] = useState(false);
 
@@ -49,7 +48,7 @@ const Auth = () => {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(userCredential.user, { displayName: name });
                 await sendEmailVerification(userCredential.user);
-                // App.jsx will pick up the user state, check emailVerified (false), and show VerifyEmail
+                // App.jsx will pick up the user state and handle redirect
             } else {
                 await signInWithEmailAndPassword(auth, email, password);
             }
@@ -60,25 +59,44 @@ const Auth = () => {
         }
     };
 
+    // If NOT modal, we use full screen. If modal, we fit content.
+    const containerClasses = isModal
+        ? "w-full bg-white rounded-[2.5rem] p-8 md:p-10 relative z-10 shadow-2xl"
+        : "w-full max-w-[420px] bg-white rounded-[2.5rem] p-8 md:p-10 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50";
+
+    const wrapperClasses = isModal
+        ? "relative w-full"
+        : "min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden";
+
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
-            <SEO
-                title="TravelCFO - Trip Planner & Expense Tracker"
-                description="TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
-                canonical="https://tripify-c49b6.web.app/"
-            />
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/10 rounded-full blur-[100px]" />
-            </div>
+        <div className={wrapperClasses}>
+            {/* SEO is now handled by LandingPage or App, so removed from here to avoid duplication if used as modal */}
+            {/* {!isModal && <SEO ... />} - Removed as per plan to keep LandingPage as primary SEO entry */}
+
+            {/* Background Decor only if NOT modal */}
+            {!isModal && (
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/10 rounded-full blur-[100px]" />
+                </div>
+            )}
 
             <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="w-full max-w-[420px] bg-white rounded-[2.5rem] p-8 md:p-10 relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50"
+                className={containerClasses}
             >
+                {/* Close Button for Modal */}
+                {isModal && onClose && (
+                    <button
+                        onClick={onClose}
+                        className="absolute top-6 right-6 p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                )}
+
                 {/* Brand Logo Area */}
                 <div className="flex flex-col items-center mb-10 gap-5">
                     {/* One UI 8 Squircle Icon */}
