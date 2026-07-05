@@ -1,212 +1,208 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-    Monitor, TrendingUp, Users, Cloud, Tag, Sparkles, Rocket,
-    Target, Briefcase, GraduationCap, Home
-} from 'lucide-react';
 import SEO from './common/SEO';
 
 const About = ({ setCurrentView }) => {
+
     const usps = [
         {
-            icon: <Monitor className="text-blue-500" size={24} />,
-            title: "Ultra-Clean, Modern UI",
-            desc: "Designed with a focus on simplicity and premium usability. No clutter. Just clarity."
+            num: '01',
+            title: "It's clean. No clutter.",
+            desc: "You see your expenses, your balances, your trip. That's it. Nothing else fighting for your attention."
         },
         {
-            icon: <TrendingUp className="text-green-500" size={24} />,
-            title: "Intelligent Insights",
-            desc: "Smart analytics that highlight spending patterns, overspending alerts, and category-based breakdowns."
+            num: '02',
+            title: "Charts that actually tell you something",
+            desc: "Not just a pie chart. Breakdowns by category, by day, by person. You'll know exactly who overspent on food. (It's always food.)"
         },
         {
-            icon: <Users className="text-purple-500" size={24} />,
-            title: "Multi-User Ready",
-            desc: "Perfect for shared flats, couples, or teams. Invite users and track shared expenses transparently."
+            num: '03',
+            title: "Built for groups from the start",
+            desc: "Invite your friends. They log their own stuff. Balances calculate automatically. You don't email anyone a spreadsheet."
         },
         {
-            icon: <Cloud className="text-cyan-500" size={24} />,
-            title: "Cloud-Synced",
-            desc: "Your data is securely synced and available across all your devices. No local storage headaches."
+            num: '04',
+            title: "Phone, laptop — it doesn't matter",
+            desc: "Log from your phone at the restaurant. Check the totals on your laptop later. Always in sync."
         },
         {
-            icon: <Tag className="text-amber-500" size={24} />,
-            title: "Category-Smart",
-            desc: "Granular categorization, tags, and filters to segment your finances precisely."
+            num: '05',
+            title: "Categories that fit actual travel",
+            desc: "Food, transport, stays, activities. Not \"accounts receivable.\" Real categories for real trips."
         },
         {
-            icon: <Sparkles className="text-indigo-500" size={24} />,
-            title: "AI-Driven Recommendations",
-            desc: "Future-ready: Proactive suggestions on optimizing budgeting and spotting financial trends."
+            num: '06',
+            title: "AI recommendations (coming soon)",
+            desc: "We're building smart nudges — like when you're 80% through your food budget on day 3 of a 7-day trip."
         },
         {
-            icon: <Rocket className="text-red-500" size={24} />,
-            title: "Simple Onboarding",
-            desc: "Quick login/signup. No complex setup. Users get to their data instantly."
+            num: '07',
+            title: "First expense in under 30 seconds",
+            desc: "Sign up. Create a trip. Add an expense. There's no onboarding wizard. No tutorial. Just go."
         }
     ];
 
-    const audiences = [
-        { icon: <Briefcase size={20} />, label: "Working professionals tracking monthly budgets" },
-        { icon: <GraduationCap size={20} />, label: "Students managing shared apartment expenses" },
-        { icon: <Monitor size={20} />, label: "Freelancers monitoring project-based spending" },
-        { icon: <Home size={20} />, label: "Families planning households" }
+    const scenarios = [
+        {
+            group: "The friend group",
+            story: "Six people. Four dinners, two Ubers, one Airbnb, and one very expensive boat thing. Nobody can remember who paid for what. TravelCFO does."
+        },
+        {
+            group: "The couple",
+            story: "'Wait, didn't we already go over budget?' Yes. Now you'll know before it happens, not on the flight home."
+        },
+        {
+            group: "The solo traveler",
+            story: "Your Notes app has 31 entries that say '€12.' That's not tracking. That's wishful thinking."
+        },
+        {
+            group: "The family",
+            story: "One villa. Four adults. Two sets of in-laws. Someone's keeping a mental tally. It might as well be TravelCFO."
+        }
     ];
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-7xl mx-auto py-12 px-6"
-        >
+        <div className="bg-[#FAFAF7] min-h-screen">
             <SEO
-                title="About Us - TravelCFO"
-                description="Learn about TravelCFO's mission to simplify personal finance and travel budgeting with a clean, insight-driven dashboard."
+                title="About TravelCFO — why we built it and who it's actually for"
+                description="TravelCFO started as a shared Google Sheet after a Goa trip. Now it's an app. Here's the real story."
                 canonical="https://tripify-c49b6.web.app/?view=about"
             />
-            {/* 1. Header Section */}
-            <div className="text-center mb-24 relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/20 blur-[120px] rounded-full z-0 pointer-events-none"></div>
 
-                <motion.h1
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative z-10 text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter"
-                >
-                    Powering <br /> Smarter <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Spending.</span>
-                </motion.h1>
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="relative z-10 text-2xl md:text-3xl text-slate-500 max-w-4xl mx-auto leading-relaxed font-bold tracking-tight"
-                >
-                    TravelCFO is built for travelers who want absolute clarity over where their money goes.
-                    No clutter. Just clarity.
-                </motion.p>
-            </div>
-
-            {/* 2. Mission & What We Do (Glass Cards) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-32">
+            {/* ── Header ── */}
+            <div className="max-w-6xl mx-auto px-6 md:px-10 pt-14 pb-16">
                 <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white/60 backdrop-blur-xl p-12 rounded-[3.5rem] border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
                 >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100/50 rounded-bl-[10rem] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-
-                    <h2 className="text-4xl font-black text-slate-900 mb-8 flex items-center gap-4 relative z-10">
-                        <div className="p-4 bg-blue-100 rounded-[1.5rem] text-blue-600 shadow-sm"><Target size={32} strokeWidth={2.5} /></div>
-                        Our Mission
-                    </h2>
-                    <p className="text-xl text-slate-600 leading-relaxed font-medium relative z-10">
-                        To make expenditure management effortless, insightful, and truly personal.
-                        Whether you're budgeting monthly or tracking expenses across continents,
-                        TravelCFO empowers you with clean analytics.
-                    </p>
-                </motion.div>
-                <motion.div
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-white/60 backdrop-blur-xl p-12 rounded-[3.5rem] border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
-                >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-100/50 rounded-bl-[10rem] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-
-                    <h2 className="text-4xl font-black text-slate-900 mb-8 flex items-center gap-4 relative z-10">
-                        <div className="p-4 bg-indigo-100 rounded-[1.5rem] text-indigo-600 shadow-sm"><Monitor size={32} strokeWidth={2.5} /></div>
-                        What We Do
-                    </h2>
-                    <p className="text-xl text-slate-600 leading-relaxed font-medium relative z-10">
-                        TravelCFO is a cloud-native expenditure planner that simplifies how you record, monitor, and analyze expenses.
-                        We give users a centralized, intuitive dashboard to manage budgets and categorize spendings wisely.
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-4">The story</p>
+                    <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#1A1A1A] tracking-tighter leading-[0.93] mb-6">
+                        We got tired of<br />post-trip spreadsheet debt.
+                    </h1>
+                    <p className="text-lg text-[#6B7280] font-medium max-w-xl leading-relaxed">
+                        TravelCFO started as a shared Google Sheet after a Goa trip. The settling-up took three days. Now it's a real app. Built by someone who kept losing friends to post-trip money arguments.
                     </p>
                 </motion.div>
             </div>
 
-            {/* 3. USP Grid */}
-            <div className="mb-32">
-                <h2 className="text-5xl font-black text-slate-900 text-center mb-16 tracking-tight">Why TravelCFO Wins</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {usps.map((item, idx) => (
-                        <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 + (idx * 0.1) }}
-                            whileHover={{ y: -8, scale: 1.02 }}
-                            className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:shadow-blue-200/20 transition-all group"
-                        >
-                            <div className="w-16 h-16 rounded-[1.2rem] bg-slate-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                                {React.cloneElement(item.icon, { size: 32, strokeWidth: 2 })}
-                            </div>
-                            <h3 className="font-extrabold text-2xl text-slate-900 mb-3 tracking-tight">{item.title}</h3>
-                            <p className="text-slate-500 leading-relaxed font-medium">{item.desc}</p>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            {/* 4. Who We Built This For */}
-            <div className="mb-32 bg-white/40 backdrop-blur-md rounded-[4rem] p-10 md:p-20 border border-white/50 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
-                <h2 className="text-4xl font-black text-slate-900 text-center mb-16 relative z-10">Who We Built This For</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                    {audiences.map((audience, idx) => (
-                        <motion.div
-                            key={idx}
-                            whileHover={{ y: -5, scale: 1.05 }}
-                            className="bg-white/80 backdrop-blur p-8 rounded-[2.5rem] text-center shadow-lg border border-white/60 flex flex-col items-center justify-center h-full group"
-                        >
-                            <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
-                                {React.cloneElement(audience.icon, { size: 28 })}
-                            </div>
-                            <p className="text-slate-800 font-bold text-lg leading-snug">{audience.label}</p>
-                        </motion.div>
-                    ))}
-                    <div className="col-span-full mt-12 text-center">
-                        <span className="inline-block bg-white/90 backdrop-blur px-8 py-4 rounded-full text-slate-500 font-bold border border-white/60 shadow-md text-lg">
-                            ...and anyone who wants a clean, powerful personal finance tool.
-                        </span>
+            {/* ── Mission + Origin — two honest cards ── */}
+            <div className="border-t border-[#E5E7EB] bg-white">
+                <div className="max-w-6xl mx-auto px-6 md:px-10 py-14 md:py-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="border border-[#E5E7EB] rounded-xl p-8 md:p-10">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-5">Mission</p>
+                            <h2 className="text-2xl font-black text-[#1A1A1A] tracking-tight mb-4">
+                                Make the money part disappear.
+                            </h2>
+                            <p className="text-[#6B7280] font-medium leading-relaxed">
+                                Whether it's a two-week Europe trip or splitting one dinner bill — TravelCFO should handle the math so thoroughly that you forget there is any math.
+                            </p>
+                        </div>
+                        <div className="border border-[#E5E7EB] rounded-xl p-8 md:p-10">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#9CA3AF] mb-5">Origin</p>
+                            <h2 className="text-2xl font-black text-[#1A1A1A] tracking-tight mb-4">
+                                A Goa trip that took 3 days to settle.
+                            </h2>
+                            <p className="text-[#6B7280] font-medium leading-relaxed">
+                                After a trip where the post-trip money stuff lasted longer than the trip itself, Utkarsh built the first version in a weekend. It was rough. It worked. Now it doesn't look rough.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 5. Vision & CTA */}
-            <div className="text-center max-w-5xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="mb-20"
-                >
-                    <h3 className="text-sm font-black text-blue-600 uppercase tracking-widest mb-6 bg-blue-50 px-4 py-2 rounded-full w-fit mx-auto">Our Vision</h3>
-                    <p className="text-4xl md:text-5xl font-black text-slate-900 leading-tight tracking-tight">
-                        "To evolve TravelCFO into the smartest personal finance assistant — for travel and beyond."
-                    </p>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-slate-900 rounded-[3rem] p-12 md:p-24 text-white shadow-2xl shadow-slate-900/40 relative overflow-hidden group"
-                >
-                    <div className="relative z-10">
-                        <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter">Take control <br /> of your spending.</h2>
-                        <p className="text-slate-400 text-2xl font-medium mb-12">Start using TravelCFO today.</p>
-                        <button
-                            onClick={() => setCurrentView('dashboard')}
-                            className="bg-white text-slate-900 px-12 py-5 rounded-full font-black hover:bg-blue-50 transition-all shadow-xl text-xl flex items-center gap-3 mx-auto hover:scale-105 active:scale-95"
-                        >
-                            Get Started Now <Rocket size={24} />
-                        </button>
+            {/* ── Why TravelCFO — numbered timeline list ── */}
+            <div className="border-t border-[#E5E7EB]">
+                <div className="max-w-6xl mx-auto px-6 md:px-10 py-14 md:py-20">
+                    <h2 className="text-3xl md:text-4xl font-black text-[#1A1A1A] tracking-tight mb-12">
+                        Why it's worth trying.
+                    </h2>
+                    <div className="divide-y divide-[#E5E7EB]">
+                        {usps.map((usp, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="py-7 flex flex-col md:flex-row gap-4 md:gap-14 md:items-start"
+                            >
+                                <div className="flex items-center gap-4 md:w-56 shrink-0">
+                                    <span className="text-xl font-black text-slate-200 tabular-nums">{usp.num}</span>
+                                    <h3 className="font-black text-[#1A1A1A] text-base">{usp.title}</h3>
+                                </div>
+                                <p className="text-[#6B7280] font-medium leading-relaxed md:max-w-lg">{usp.desc}</p>
+                            </motion.div>
+                        ))}
                     </div>
-                    {/* Background decor */}
-                    <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[500px] h-[500px] bg-blue-600 opacity-20 rounded-full blur-[100px] pointer-events-none group-hover:opacity-30 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-indigo-600 opacity-20 rounded-full blur-[100px] pointer-events-none group-hover:opacity-30 transition-opacity" />
-                </motion.div>
+                </div>
             </div>
-        </motion.div>
+
+            {/* ── Real Scenarios ── */}
+            <div className="border-t border-[#E5E7EB] bg-white">
+                <div className="max-w-6xl mx-auto px-6 md:px-10 py-14 md:py-20">
+                    <h2 className="text-3xl md:text-4xl font-black text-[#1A1A1A] tracking-tight mb-4">
+                        Who we actually built it for.
+                    </h2>
+                    <p className="text-[#6B7280] font-medium mb-12 max-w-xl">
+                        Not "every type of traveler." These four specific types of people.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {scenarios.map((s, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.07 }}
+                                className="border border-[#E5E7EB] rounded-xl p-7"
+                            >
+                                <p className="text-xs font-black uppercase tracking-widest text-[#E8A317] mb-3">{s.group}</p>
+                                <p className="text-[#374151] font-medium leading-relaxed">{s.story}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Founder Dark Section — Signature Moment ── */}
+            <div className="bg-[#1A1A1A]">
+                <div className="max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
+                    <p className="text-[#6B7280] text-xs font-black uppercase tracking-widest mb-8">From the founder</p>
+                    
+                    <div className="flex flex-col md:flex-row gap-10 md:gap-16 items-start">
+                        <div className="flex-1">
+                            <blockquote className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-snug tracking-tight mb-8 max-w-3xl">
+                                "I built TravelCFO after a trip to Japan where 5 friends spent 2 weeks arguing about who paid for what. There had to be a better way.<br /><br />
+                                I wanted to build something that felt fast, human, and completely eliminated the post-trip spreadsheet handoff."
+                            </blockquote>
+                            <div className="flex items-center gap-5 mb-10 md:mb-0">
+                                <div className="w-14 h-14 bg-gradient-to-br from-[#E8A317] to-orange-500 flex items-center justify-center text-white font-black text-2xl rounded-full shadow-[0_0_20px_rgba(232,163,23,0.3)] border border-[#1A1A1A] ring-2 ring-white/10 shrink-0">
+                                    U
+                                </div>
+                                <div>
+                                    <p className="text-white font-extrabold text-lg">Utkarsh</p>
+                                    <p className="text-[#9CA3AF] text-sm font-semibold mt-0.5">
+                                        Founder · <a href="mailto:utkarshgupta9759@gmail.com" className="hover:text-white transition-colors underline underline-offset-4 decoration-white/20">utkarshgupta9759@gmail.com</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="shrink-0 flex items-end h-full mt-4 md:mt-auto">
+                            <button
+                                onClick={() => setCurrentView('dashboard')}
+                                className="px-8 py-4 bg-white text-[#1A1A1A] rounded-xl font-black text-base hover:bg-gray-100 transition-transform hover:scale-105 active:scale-95 shadow-xl"
+                            >
+                                Try it — it's free
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
+
 export default About;

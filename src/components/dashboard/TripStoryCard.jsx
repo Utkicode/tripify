@@ -1,23 +1,17 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, Users, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
-import { calculateTripReadiness } from '../../utils/intelligence';
+import React, { useMemo } from'react';
+import { motion } from'framer-motion';
+import { Calendar, Users, ArrowRight, WarningCircle, CheckCircle } from'@phosphor-icons/react';
+import { calculateTripReadiness } from'../../utils/intelligence';
 
 const TripStoryCard = ({ trip, onClick }) => {
     const readiness = useMemo(() => calculateTripReadiness(trip), [trip]);
 
     // Color coding based on readiness level
-    const statusColor = {
-        'High': 'text-emerald-500',
-        'Medium': 'text-amber-500',
-        'Low': 'text-rose-500'
-    }[readiness.level] || 'text-slate-500';
+    const statusColor = {'High':'text-[#1A1A1A]','Medium':'text-amber-500','Low':'text-[#1A1A1A]'
+    }[readiness.level] ||'text-slate-500';
 
-    const ringColor = {
-        'High': '#10B981',   // emerald-500
-        'Medium': '#F59E0B', // amber-500
-        'Low': '#F43F5E'     // rose-500
-    }[readiness.level] || '#94A3B8';
+    const ringColor = {'High':'#10B981',   // emerald-500'Medium':'#F59E0B', // amber-500'Low':'#F43F5E'     // rose-500
+    }[readiness.level] ||'#94A3B8';
 
     // SVG Circle params
     const radius = 18;
@@ -28,17 +22,17 @@ const TripStoryCard = ({ trip, onClick }) => {
         <motion.div
             layout
             onClick={() => onClick(trip.id)}
-            whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
+            whileHover={{ y: -8, boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
             whileTap={{ scale: 0.98 }}
             className="group relative bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
         >
             {/* Minimal Cover - Focus on content */}
             <div className="h-32 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden group-hover:h-36 transition-all duration-300">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-[50px] group-hover:bg-blue-500/20 transition-colors"></div>
-                <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px]"></div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 0/10 rounded-full blur-[50px] group-hover:0/20 transition-colors"></div>
+                <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 0/10 rounded-full blur-[40px]"></div>
 
                 <div className="absolute bottom-6 left-8 right-8 z-10">
-                    <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-blue-700 transition-colors drop-shadow-sm truncate tracking-tight">
+                    <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-[#1A1A1A] transition-colors drop-shadow-sm truncate tracking-tight">
                         {trip.destination || trip.tripName}
                     </h3>
                 </div>
@@ -85,8 +79,8 @@ const TripStoryCard = ({ trip, onClick }) => {
                         </p>
                         <p className="text-xs text-slate-500 leading-snug font-medium mt-1">
                             {readiness.missing.length > 0
-                                ? `Missing: ${readiness.missing[0]}${readiness.missing.length > 1 ? ` +${readiness.missing.length - 1}` : ''}`
-                                : 'All set! Ready to go.'
+                                ? `Missing: ${readiness.missing[0]}${readiness.missing.length > 1 ? ` +${readiness.missing.length - 1}` :''}`
+                                :'All set! Ready to go.'
                             }
                         </p>
                     </div>
@@ -95,11 +89,11 @@ const TripStoryCard = ({ trip, onClick }) => {
                 {/* Details Footer */}
                 <div className="pt-5 border-t border-slate-200/60 flex justify-between items-center mt-auto">
                     <div className="flex gap-4 text-xs text-slate-500 font-bold uppercase tracking-wide">
-                        <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full"><Calendar size={12} strokeWidth={2.5} /> {trip.days?.length || 0}d</span>
-                        <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full"><Users size={12} strokeWidth={2.5} /> {trip.travelerCount || 1}</span>
+                        <span className="flex items-center gap-1.5  px-3 py-1.5 rounded-full"><Calendar size={12} strokeWidth={2.5} /> {trip.dayCount || 0}d</span>
+                        <span className="flex items-center gap-1.5  px-3 py-1.5 rounded-full"><Users size={12} strokeWidth={2.5} /> {trip.travelerCount || 1}</span>
                     </div>
 
-                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                    <div className="w-10 h-10 rounded-full  flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <ArrowRight size={18} strokeWidth={2.5} />
                     </div>
                 </div>

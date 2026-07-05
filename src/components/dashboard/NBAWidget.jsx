@@ -1,7 +1,7 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowRight, AlertTriangle, Map, Wallet, CheckSquare } from 'lucide-react';
-import { getNextBestActions } from '../../utils/intelligence';
+import React from'react';
+import { motion, AnimatePresence } from'framer-motion';
+import { Sparkle, ArrowRight, Warning, MapTrifold, Wallet, CheckSquare } from'@phosphor-icons/react';
+import { getNextBestActions } from'../../utils/intelligence';
 
 const NBAWidget = ({ trips, user, onActionClick }) => {
     // Get recommendations
@@ -12,26 +12,21 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
 
     // Icon mapping based on action type/ID
     const getIcon = () => {
-        if (topAction.id.includes('dest')) return Map;
+        if (topAction.id.includes('dest')) return MapTrifold;
         if (topAction.id.includes('budget')) return Wallet;
         if (topAction.id.includes('plan')) return CheckSquare;
-        if (topAction.type === 'critical') return AlertTriangle;
-        return Sparkles; // Default
+        if (topAction.type ==='critical') return Warning;
+        return Sparkle; // Default
     };
 
     const Icon = getIcon();
 
     // Style mapping
-    const styleMap = {
-        'critical': 'bg-rose-50 border-rose-100 text-rose-900',
-        'high': 'bg-indigo-50 border-indigo-100 text-indigo-900',
-        'medium': 'bg-blue-50 border-blue-100 text-blue-900',
-        'info': 'bg-slate-50 border-slate-100 text-slate-800',
-        'primary': 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent'
+    const styleMap = {'critical':' border-rose-100 text-rose-900','high':' border-indigo-100 text-indigo-900','medium':' border-blue-100 text-blue-900','info':' border-slate-100 text-slate-800','primary':'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-transparent'
     };
 
     const currentStyle = styleMap[topAction.type] || styleMap['medium'];
-    const isPrimary = topAction.type === 'primary';
+    const isPrimary = topAction.type ==='primary';
 
     return (
         <AnimatePresence mode="wait">
@@ -49,15 +44,15 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
 
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-start gap-5 flex-1">
-                        <div className={`p-4 rounded-[1.5rem] shrink-0 ${isPrimary ? 'bg-white/20' : 'bg-white shadow-sm'}`}>
-                            <Icon size={28} className={isPrimary ? 'text-white' : 'text-blue-600'} />
+                        <div className={`p-4 rounded-[1.5rem] shrink-0 ${isPrimary ?'bg-white/20' :'bg-white shadow-sm'}`}>
+                            <Icon size={28} className={isPrimary ?'text-white' :'text-[#1A1A1A]'} />
                         </div>
                         <div>
-                            <div className={`text-xs font-extrabold uppercase tracking-widest mb-1.5 ${isPrimary ? 'text-blue-100' : 'text-slate-500 opacity-70'}`}>
+                            <div className={`text-xs font-extrabold uppercase tracking-widest mb-1.5 ${isPrimary ?'text-blue-100' :'text-slate-500 opacity-70'}`}>
                                 Recommended for you
                             </div>
                             <h2 className="text-2xl font-black mb-2 leading-tight tracking-tight">{topAction.title}</h2>
-                            <p className={`text-base leading-relaxed ${isPrimary ? 'text-blue-50' : 'opacity-80'}`}>
+                            <p className={`text-base leading-relaxed ${isPrimary ?'text-blue-50' :'opacity-80'}`}>
                                 {topAction.message}
                             </p>
                         </div>
@@ -68,8 +63,8 @@ const NBAWidget = ({ trips, user, onActionClick }) => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => onActionClick(topAction)}
                         className={`px-8 py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap shadow-sm transition-all w-full md:w-auto ${isPrimary
-                            ? 'bg-white text-blue-600 hover:bg-blue-50'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            ?'bg-white text-[#1A1A1A] hover:'
+                            :'bg-blue-600 text-white hover:bg-blue-700'
                             }`}
                     >
                         {topAction.cta} <ArrowRight size={18} />

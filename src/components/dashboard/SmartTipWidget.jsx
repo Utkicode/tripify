@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, X } from 'lucide-react';
-import { SMART_TIPS } from './SmartExamples';
+import React, { useState, useEffect } from'react';
+import { motion, AnimatePresence } from'framer-motion';
+import { Lightbulb, X } from'@phosphor-icons/react';
+import { SMART_TIPS } from'./SmartExamples';
 
 const SmartTipWidget = ({ onViewTip }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -11,7 +11,7 @@ const SmartTipWidget = ({ onViewTip }) => {
     // For demo, we'll just pick random on mount or simple state
     useEffect(() => {
         // Simple random selection for variety
-        // Future: specific tips based on user state (e.g. "Add a budget" if none set)
+        // Future: specific tips based on user state (e.g."Add a budget" if none set)
         const randomStart = Math.floor(Math.random() * SMART_TIPS.length);
         setCurrentIndex(randomStart);
     }, []);
@@ -42,7 +42,7 @@ const SmartTipWidget = ({ onViewTip }) => {
                     <p className="text-sm text-amber-900/80 leading-relaxed mb-3">
                         {tip.text}
                     </p>
-                    {tip.action !== 'none' && (
+                    {tip.action !=='none' && (
                         <button
                             onClick={() => onViewTip(tip.action)}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline decoration-amber-300 underline-offset-2 transition-colors"

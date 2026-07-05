@@ -1,14 +1,14 @@
-import React from 'react';
-import { LayoutDashboard, Map, PieChart, Lightbulb, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from'react';
+import { SquaresFour, MapTrifold, ChartPie, Lightbulb, User } from'@phosphor-icons/react';
+import { motion } from'framer-motion';
 
 const MobileBottomNav = ({ currentView, setCurrentView }) => {
     const navItems = [
-        { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-        { id: 'trips', label: 'Trips', icon: Map },
-        { id: 'expenses', label: 'Spent', icon: PieChart },
-        { id: 'protips', label: 'Tips', icon: Lightbulb },
-        { id: 'profile', label: 'Me', icon: User },
+        { id:'dashboard', label:'Home', icon: SquaresFour },
+        { id:'trips', label:'Trips', icon: MapTrifold },
+        { id:'expenses', label:'Spent', icon: ChartPie },
+        { id:'protips', label:'Tips', icon: Lightbulb },
+        { id:'profile', label:'Me', icon: User },
     ];
 
     return (
@@ -19,9 +19,9 @@ const MobileBottomNav = ({ currentView, setCurrentView }) => {
                     <button
                         key={item.id}
                         onClick={() => setCurrentView(item.id)}
-                        className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all ${isActive ? '-translate-y-4' : 'hover:bg-white/50'}`}
+                        className={`relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all ${isActive ?'-translate-y-4' :'hover:bg-white/50'}`}
                     >
-                        <div className={`relative z-10 p-3 rounded-full transition-all duration-300 ${isActive ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-110' : 'text-slate-400'}`}>
+                        <div className={`relative z-10 p-3 rounded-full transition-all duration-300 ${isActive ?'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-110' :'text-slate-400'}`}>
                             <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                         </div>
 

@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { User, AlignLeft, Phone, ArrowRight, Save } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { updateProfile } from "firebase/auth";
-import { db } from '../firebase';
-import { appId } from '../constants'; // Using the appId from constants
+import React, { useState } from'react';
+import { User, TextAlignLeft, Phone, ArrowRight, FloppyDisk } from'@phosphor-icons/react';
+import { motion } from'framer-motion';
+import { doc, setDoc, getDoc } from"firebase/firestore";
+import { updateProfile } from"firebase/auth";
+import { db } from'../firebase';
+import { appId } from'../constants'; // Using the appId from constants
 
 const ProfileCompletion = ({ user, onComplete }) => {
-    const [name, setName] = useState(user.displayName || '');
+    const [name, setName] = useState(user.displayName ||'');
     const [bio, setBio] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || ''); // Pre-fill if phone auth used
+    const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber ||''); // Pre-fill if phone auth used
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -25,15 +25,15 @@ const ProfileCompletion = ({ user, onComplete }) => {
             }
 
             // 2. Save complete profile to Firestore
-            // We use the 'users' collection scoped by appId if needed, or global.
-            // Based on previous code: collection(db, 'artifacts', appId, 'users', user.uid, 'trips')
+            // We use the'users' collection scoped by appId if needed, or global.
+            // Based on previous code: collection(db,'artifacts', appId,'users', user.uid,'trips')
             // It seems user data might be better at a higher level or within artifacts?
             // Let's store user profile at `artifacts/{appId}/users/{uid}` directly.
 
-            const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
+            const userRef = doc(db,'artifacts', appId,'users', user.uid);
 
             // Check if it exists to preserve creation date if needed (or just merge)
-            // But we are "completing" it now.
+            // But we are"completing" it now.
 
             await setDoc(userRef, {
                 displayName: name,
@@ -55,7 +55,7 @@ const ProfileCompletion = ({ user, onComplete }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen  flex items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decor */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-400/10 rounded-full blur-[100px]" />
@@ -68,7 +68,7 @@ const ProfileCompletion = ({ user, onComplete }) => {
                 className="w-full max-w-lg bg-white/90 backdrop-blur-xl border border-white/60 shadow-2xl shadow-slate-200/50 rounded-3xl p-8 relative z-10"
             >
                 <div className="text-center mb-8">
-                    <div className="inline-block p-3 rounded-2xl bg-slate-100 mb-4">
+                    <div className="inline-block p-3 rounded-2xl  mb-4">
                         <User size={32} className="text-slate-600" />
                     </div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">Complete Your Profile</h1>
@@ -78,13 +78,13 @@ const ProfileCompletion = ({ user, onComplete }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                            <User size={16} /> Full Name <span className="text-red-500">*</span>
+                            <User size={16} /> Full Name <span className="text-[#1A1A1A]">*</span>
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
+                            className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
                             placeholder="John Doe"
                             required
                         />
@@ -98,7 +98,7 @@ const ProfileCompletion = ({ user, onComplete }) => {
                             type="tel"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
+                            className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
                             placeholder="+1 234 567 8900"
                         />
                         <p className="text-xs text-slate-400">Optional, used for trip coordination.</p>
@@ -106,18 +106,18 @@ const ProfileCompletion = ({ user, onComplete }) => {
 
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                            <AlignLeft size={16} /> Bio
+                            <TextAlignLeft size={16} /> Bio
                         </label>
                         <textarea
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none min-h-[100px] resize-none"
+                            className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none min-h-[100px] resize-none"
                             placeholder="I love hiking and exploring new cities..."
                         />
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg font-medium">
+                        <div className="p-3  text-[#1A1A1A] text-sm rounded-lg font-medium">
                             {error}
                         </div>
                     )}

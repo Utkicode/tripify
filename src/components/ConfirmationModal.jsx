@@ -1,18 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+import React from'react';
+import ReactDOM from'react-dom';
+import { motion, AnimatePresence } from'framer-motion';
+import { Warning, Trash, X, SpinnerGap } from'@phosphor-icons/react';
 
 const ConfirmationModal = ({
     isOpen,
     onClose,
     onConfirm,
-    title = "Are you sure?",
-    message = "This action cannot be undone.",
-    confirmText = "Delete",
+    title ="Are you sure?",
+    message ="This action cannot be undone.",
+    confirmText ="Delete",
     isLoading = false
 }) => {
-    if (typeof document === 'undefined') return null;
+    if (typeof document ==='undefined') return null;
 
     return ReactDOM.createPortal(
         <AnimatePresence>
@@ -35,8 +35,8 @@ const ConfirmationModal = ({
                         className="bg-white w-full max-w-sm rounded-2xl p-6 relative z-10 shadow-2xl overflow-hidden"
                     >
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4">
-                                <AlertTriangle size={24} />
+                            <div className="w-12 h-12 rounded-full  text-[#1A1A1A] flex items-center justify-center mb-4">
+                                <Warning size={24} />
                             </div>
 
                             <h3 className="text-lg font-bold text-slate-800 mb-2">{title}</h3>
@@ -46,23 +46,23 @@ const ConfirmationModal = ({
                                 <button
                                     onClick={onClose}
                                     disabled={isLoading}
-                                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                    className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover: transition-colors disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={onConfirm}
                                     disabled={isLoading}
-                                    className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="flex-1 py-2.5 rounded-xl 0 text-white font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {isLoading ? (
                                         <>
-                                            <Loader2 size={18} className="animate-spin" />
+                                            <SpinnerGap size={18} className="animate-spin" />
                                             Deleting...
                                         </>
                                     ) : (
                                         <>
-                                            <Trash2 size={18} />
+                                            <Trash size={18} />
                                             {confirmText}
                                         </>
                                     )}

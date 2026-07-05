@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Sidebar from './Sidebar';
-import NotificationBell from './NotificationBell';
-import MobileBottomNav from './MobileBottomNav';
-import Footer from './Footer';
-import FeedbackModal from './FeedbackModal';
+import React, { useState, useEffect, useRef } from'react';
+import { List, MagnifyingGlass, X } from'@phosphor-icons/react';
+import { motion, AnimatePresence } from'framer-motion';
+import Sidebar from'./Sidebar';
+import NotificationBell from'./NotificationBell';
+import MobileBottomNav from'./MobileBottomNav';
+import Footer from'./Footer';
+import FeedbackModal from'./FeedbackModal';
 
 const Layout = ({ children, user, handleLogout, currentView, setCurrentView, setCurrentTripId, tripsList = [] }) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -18,7 +18,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
     // Scroll to top when view changes
     useEffect(() => {
         if (mainScrollRef.current) {
-            mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+            mainScrollRef.current.scrollTo({ top: 0, behavior:'smooth' });
         }
     }, [currentView]);
 
@@ -32,7 +32,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
         const lowerQuery = searchQuery.toLowerCase();
         const results = tripsList.filter(trip =>
             (trip.tripName && trip.tripName.toLowerCase().includes(lowerQuery)) ||
-            (trip.destination && typeof trip.destination === 'string' && trip.destination.toLowerCase().includes(lowerQuery)) ||
+            (trip.destination && typeof trip.destination ==='string' && trip.destination.toLowerCase().includes(lowerQuery)) ||
             (trip.destination && trip.destination.name && trip.destination.name.toLowerCase().includes(lowerQuery))
         ).slice(0, 5); // Limit to 5 results for quick jump
 
@@ -47,7 +47,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
     };
 
     return (
-        <div className="flex bg-slate-50 min-h-screen">
+        <div className="flex  min-h-screen">
             {/* Desktop Sidebar */}
             <Sidebar
                 currentView={currentView}
@@ -74,19 +74,19 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                             <span className="font-black text-lg tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-slate-800">
                                 TravelCFO
                             </span>
-                            <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[8px] font-bold tracking-wider border border-blue-200 ml-1">
+                            <span className="px-1.5 py-0.5 rounded-md  text-[#1A1A1A] text-[8px] font-bold tracking-wider border border-blue-200 ml-1">
                                 BETA
                             </span>
                         </button>
                         <h1 className="text-xl font-bold text-slate-800 capitalize hidden sm:block">
-                            {currentView === 'dashboard' ? 'Overview' : currentView}
+                            {currentView ==='dashboard' ?'Overview' : currentView}
                         </h1>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <div className="relative z-50">
-                            <div className="hidden sm:flex items-center bg-slate-100/50 backdrop-blur-sm border border-slate-200 rounded-[2rem] px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition-all shadow-sm">
-                                <Search size={18} className="text-slate-400" />
+                            <div className="hidden sm:flex items-center /50 backdrop-blur-sm border border-slate-200 rounded-[2rem] px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition-all shadow-sm">
+                                <MagnifyingGlass size={18} className="text-slate-400" />
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -95,7 +95,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                     placeholder="Search your trips..."
                                 />
                                 {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-slate-200 rounded-full text-slate-400">
+                                    <button onClick={() => setSearchQuery('')} className="p-1 hover: rounded-full text-slate-400">
                                         <X size={14} />
                                     </button>
                                 )}
@@ -104,9 +104,9 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                             {/* Mobile Search Toggle */}
                             <button
                                 onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-                                className="sm:hidden p-3 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
+                                className="sm:hidden p-3 text-slate-500 hover: rounded-full transition-colors"
                             >
-                                <Search size={22} />
+                                <MagnifyingGlass size={22} />
                             </button>
 
                             {/* Mobile Search Overlay */}
@@ -118,8 +118,8 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                         exit={{ opacity: 0, y: -10 }}
                                         className="sm:hidden absolute top-14 right-0 w-[calc(100vw-32px)] bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50 mr-[-50px]"
                                     >
-                                        <div className="flex items-center bg-slate-50 rounded-lg px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                                            <Search size={16} className="text-slate-400 shrink-0" />
+                                        <div className="flex items-center  rounded-lg px-3 py-2 w-full focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                            <MagnifyingGlass size={16} className="text-slate-400 shrink-0" />
                                             <input
                                                 type="text"
                                                 value={searchQuery}
@@ -129,7 +129,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                                 className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400 outline-none ml-2"
                                             />
                                             {searchQuery && (
-                                                <button onClick={() => setSearchQuery('')} className="p-0.5 hover:bg-slate-200 rounded-full text-slate-400 shrink-0">
+                                                <button onClick={() => setSearchQuery('')} className="p-0.5 hover: rounded-full text-slate-400 shrink-0">
                                                     <X size={12} />
                                                 </button>
                                             )}
@@ -148,14 +148,14 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                                                 <button
                                                     key={trip.id}
                                                     onClick={() => handleResultClick(trip.id)}
-                                                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                                                    className="w-full text-left px-4 py-2 hover: flex items-center gap-3 transition-colors"
                                                 >
-                                                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                                        <Search size={14} />
+                                                    <div className="w-8 h-8 rounded-lg  text-[#1A1A1A] flex items-center justify-center shrink-0">
+                                                        <MagnifyingGlass size={14} />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="text-sm font-bold text-slate-700 truncate">{trip.tripName}</p>
-                                                        <p className="text-xs text-slate-400 truncate">{trip.destination?.name || trip.destination || 'No location'}</p>
+                                                        <p className="text-xs text-slate-400 truncate">{trip.destination?.name || trip.destination ||'No location'}</p>
                                                     </div>
                                                 </button>
                                             ))}

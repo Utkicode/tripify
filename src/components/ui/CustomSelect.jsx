@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef, useEffect } from'react';
+import { CaretDown, Check } from'@phosphor-icons/react';
+import { motion, AnimatePresence } from'framer-motion';
 
-const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], className = '', placeholder = "Select...", error }) => {
+const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], className ='', placeholder ="Select...", error }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
 
@@ -33,21 +33,21 @@ const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], classN
                 className={`
           w-full bg-white text-slate-900 
           border-2 rounded-xl py-3
-          ${Icon ? 'pl-10' : 'pl-4'} pr-10
+          ${Icon ?'pl-10' :'pl-4'} pr-10
           text-sm font-medium
           transition-all duration-200 ease-in-out
           outline-none cursor-pointer relative
           flex items-center
           ${error
-                        ? 'border-red-300'
+                        ?'border-red-300'
                         : isOpen
-                            ? 'border-blue-500 ring-4 ring-blue-500/10'
-                            : 'border-slate-200 hover:border-slate-300'
+                            ?'border-blue-500 ring-4 ring-blue-500/10'
+                            :'border-slate-200 hover:border-slate-300'
                     }
         `}
             >
                 {Icon && (
-                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isOpen ? 'text-blue-500' : 'text-slate-400'}`}>
+                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isOpen ?'text-[#1A1A1A]' :'text-slate-400'}`}>
                         <Icon size={18} />
                     </div>
                 )}
@@ -61,12 +61,12 @@ const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], classN
                     <span className="text-slate-400">{placeholder}</span>
                 )}
 
-                <div className={`absolute right-3 top-1/2 -translate-y-1/2 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : 'text-slate-400'}`}>
-                    <ChevronDown size={16} strokeWidth={3} />
+                <div className={`absolute right-3 top-1/2 -translate-y-1/2 transition-transform duration-200 ${isOpen ?'rotate-180 text-[#1A1A1A]' :'text-slate-400'}`}>
+                    <CaretDown size={16} strokeWidth={3} />
                 </div>
             </div>
 
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-[#1A1A1A]">{error}</p>}
 
             {/* Dropdown Menu */}
             <AnimatePresence>
@@ -79,7 +79,7 @@ const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], classN
                         className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        <div className="px-4 py-2  border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-widest">
                             Select your category
                         </div>
 
@@ -93,18 +93,18 @@ const CustomSelect = ({ label, icon: Icon, value, onChange, options = [], classN
                                     }}
                                     className={`
                                 px-4 py-3 cursor-pointer flex items-center justify-between group transition-colors
-                                ${value === opt.value ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50'}
+                                ${value === opt.value ?' text-[#1A1A1A]' :'text-slate-700 hover:'}
                             `}
                                 >
                                     <div className="flex items-center gap-3">
                                         {opt.icon && (
-                                            <div className={`p-1.5 rounded-md ${value === opt.value ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-white'} transition-colors`}>
+                                            <div className={`p-1.5 rounded-md ${value === opt.value ?'' :' group-hover:bg-white'} transition-colors`}>
                                                 <opt.icon size={16} style={{ color: opt.color }} />
                                             </div>
                                         )}
                                         <span className="font-medium">{opt.label}</span>
                                     </div>
-                                    {value === opt.value && <Check size={16} className="text-blue-500" />}
+                                    {value === opt.value && <Check size={16} className="text-[#1A1A1A]" />}
                                 </div>
                             ))}
                         </div>

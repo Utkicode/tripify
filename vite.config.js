@@ -69,7 +69,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          ui: ['framer-motion', 'lucide-react'],
+          ui: ['framer-motion', '@phosphor-icons/react'],
           viz: ['recharts', 'leaflet', 'react-leaflet']
         }
       }

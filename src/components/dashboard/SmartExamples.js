@@ -24,7 +24,7 @@ export const SMART_TIPS = [
         id: 'tip_4',
         category: 'Documents',
         icon: '📄',
-        text: 'Always save offline copies of your tickets and ID in the Files tab.',
+        text: 'Always save offline copies of your tickets and ID on your phone.',
         action: 'view_files'
     },
     {

@@ -1,18 +1,18 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { TrendingUp, Map, IndianRupee, ArrowRight, Plus, DollarSign } from 'lucide-react';
-import { useProfile } from '../context/ProfileContext';
-import { getCurrencySymbol } from '../utils/currency';
-import { EMPTY_STATE_MESSAGES } from './dashboard/SmartExamples';
+import React from'react';
+import { motion } from'framer-motion';
+import { TrendUp, MapTrifold, CurrencyInr, ArrowRight, Plus, CurrencyDollar } from'@phosphor-icons/react';
+import { useProfile } from'../context/ProfileContext';
+import { getCurrencySymbol } from'../utils/currency';
+import { EMPTY_STATE_MESSAGES } from'./dashboard/SmartExamples';
 
 // New Components
-import NBAWidget from './dashboard/NBAWidget';
-import InsightCard from './dashboard/InsightCard';
-import TripStoryCard from './dashboard/TripStoryCard';
-import SmartTipWidget from './dashboard/SmartTipWidget';
-import { calculateGlobalStats, calculateTripStats } from '../utils/analytics';
+import NBAWidget from'./dashboard/NBAWidget';
+import InsightCard from'./dashboard/InsightCard';
+import TripStoryCard from'./dashboard/TripStoryCard';
+import SmartTipWidget from'./dashboard/SmartTipWidget';
+import { calculateGlobalStats, calculateTripStats } from'../utils/analytics';
 
-import { DashboardSkeleton } from './common/LoadingSkeleton';
+import { DashboardSkeleton } from'./common/LoadingSkeleton';
 
 // ... existing imports ...
 
@@ -22,10 +22,10 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     if (isLoading) return <DashboardSkeleton />;
 
     // safe fallbacks
-    const currencyCode = profile?.behavior?.defaultCurrency || 'USD';
+    const currencyCode = profile?.behavior?.defaultCurrency ||'USD';
     const currencySymbol = getCurrencySymbol(currencyCode);
-    const displayName = profile?.identity?.displayName || user?.displayName || 'Traveler';
-    const firstName = displayName.split(' ')[0];
+    const displayName = profile?.identity?.displayName || user?.displayName ||'Traveler';
+    const firstName = displayName.split('')[0];
 
     // --- Metric Calculations ---
     const { totalBudget, totalSpent } = React.useMemo(() => calculateGlobalStats(tripsList), [tripsList]);
@@ -47,11 +47,11 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
 
     // --- Handlers ---
     const handleNBAAction = (action) => {
-        if (action.action === 'create_trip') createNewTrip();
+        if (action.action ==='create_trip') createNewTrip();
         else if (action.tripId) {
             setCurrentTripId(action.tripId);
-            if (action.action === 'view_trip_expenses') setTargetTab('expenses');
-            if (action.action === 'view_trip_itinerary') setTargetTab('itinerary');
+            if (action.action ==='view_trip_expenses') setTargetTab('expenses');
+            if (action.action ==='view_trip_itinerary') setTargetTab('itinerary');
         }
     };
 
@@ -62,13 +62,13 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
         }
 
         const tripId = upcomingTrips[0].id;
-        let tab = 'itinerary';
+        let tab ='itinerary';
 
         switch (action) {
-            case 'view_expenses': tab = 'expenses'; break;
-            case 'view_files': tab = 'files'; break;
-            case 'open_checklist': tab = 'itinerary'; break;
-            case 'view_itinerary': tab = 'itinerary'; break;
+            case'view_expenses': tab ='expenses'; break;
+            case'view_files': tab ='files'; break;
+            case'open_checklist': tab ='itinerary'; break;
+            case'view_itinerary': tab ='itinerary'; break;
             default: return;
         }
 
@@ -92,13 +92,13 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-blue-600 font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
+                            className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-[#1A1A1A] font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
                         >
                             {(() => {
                                 const hours = new Date().getHours();
-                                if (hours < 12) return 'Good Morning';
-                                if (hours < 18) return 'Good Afternoon';
-                                return 'Good Evening';
+                                if (hours < 12) return'Good Morning';
+                                if (hours < 18) return'Good Afternoon';
+                                return'Good Evening';
                             })()}
                         </motion.div>
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 tracking-tighter mb-4">
@@ -138,8 +138,8 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     label="Active Trips"
                     value={totalTrips}
                     subtext="All planned adventures"
-                    icon={Map}
-                    color="bg-blue-500"
+                    icon={MapTrifold}
+                    color="0"
                     trend="up"
                     trendLabel="+1"
                 />
@@ -147,17 +147,17 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     label="Total Budget"
                     value={formatMoney(totalBudget)}
                     subtext="Planned across trips"
-                    icon={currencyCode === 'INR' ? IndianRupee : DollarSign}
-                    color="bg-purple-500"
+                    icon={currencyCode ==='INR' ? CurrencyInr : CurrencyDollar}
+                    color="0"
                 />
                 <InsightCard
                     label="Actual Spent"
                     value={formatMoney(totalSpent)}
                     subtext="Current total spending"
-                    icon={TrendingUp}
-                    color="bg-emerald-500"
-                    trend={totalSpent > totalBudget ? 'down' : 'up'}
-                    trendLabel={totalSpent > totalBudget ? 'Over Budget' : 'On Track'}
+                    icon={TrendUp}
+                    color="0"
+                    trend={totalSpent > totalBudget ?'down' :'up'}
+                    trendLabel={totalSpent > totalBudget ?'Over Budget' :'On Track'}
                 />
 
                 {/* Smart Tips often span full width or fit alongside */}
@@ -176,7 +176,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     {tripsList.length > 3 && (
                         <button
                             onClick={() => setCurrentView('trips')}
-                            className="px-6 py-2 bg-white rounded-full font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm border border-slate-200 flex items-center gap-2 group"
+                            className="px-6 py-2 bg-white rounded-full font-bold text-slate-600 hover:text-[#1A1A1A] hover: transition-all shadow-sm border border-slate-200 flex items-center gap-2 group"
                         >
                             View All <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -193,7 +193,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                         <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
                         <div className="relative z-10">
                             <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/60">
-                                <Map size={48} className="text-blue-500" strokeWidth={1.5} />
+                                <MapTrifold size={48} className="text-[#1A1A1A]" strokeWidth={1.5} />
                             </div>
                             <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">{EMPTY_STATE_MESSAGES.no_trips.headline}</h3>
                             <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>

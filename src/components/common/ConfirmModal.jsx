@@ -1,10 +1,10 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Trash2, X, Info } from 'lucide-react';
-import { createPortal } from 'react-dom';
+import React from'react';
+import { motion, AnimatePresence } from'framer-motion';
+import { Warning, Trash, X, Info } from'@phosphor-icons/react';
+import { createPortal } from'react-dom';
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel = "Delete", isDestructive = true }) => {
-    if (typeof document === 'undefined') return null;
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel ="Delete", isDestructive = true }) => {
+    if (typeof document ==='undefined') return null;
 
     return createPortal(
         <AnimatePresence>
@@ -28,8 +28,8 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
                         exit={{ scale: 0.95, opacity: 0 }}
                         className="bg-white w-full max-w-sm rounded-2xl p-6 relative z-10 shadow-2xl overflow-hidden"
                     >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDestructive ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
-                            {isDestructive ? <AlertTriangle size={24} /> : <Info size={24} />}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDestructive ?' text-[#1A1A1A]' :' text-[#1A1A1A]'}`}>
+                            {isDestructive ? <Warning size={24} /> : <Info size={24} />}
                         </div>
 
                         <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
@@ -40,18 +40,18 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel
                         <div className="flex gap-3">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                                className="flex-1 py-3  hover: text-slate-700 font-bold rounded-xl transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => { onConfirm(); onClose(); }}
                                 className={`flex-1 py-3 text-white font-bold rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${isDestructive
-                                    ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
-                                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
+                                    ?'0 hover:bg-red-600 shadow-red-500/30'
+                                    :'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
                                     }`}
                             >
-                                {isDestructive && <Trash2 size={18} />}
+                                {isDestructive && <Trash size={18} />}
                                 {confirmLabel}
                             </button>
                         </div>

@@ -1,11 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useProfile } from '../context/ProfileContext';
-import { getCurrencySymbol } from '../utils/currency';
-import { calculateGlobalStats, prepareChartData } from '../utils/analytics';
-import ExpenseAnalytics from './dashboard/ExpenseAnalytics';
-import { FileDown, Loader2, Wallet } from 'lucide-react';
-import { generateExpenseReport, fetchAllExpenses } from '../utils/pdfGenerator';
-import { LoadingSkeleton } from './common/LoadingSkeleton';
+import { useMemo, useState, useEffect } from'react';
+import { useProfile } from'../context/ProfileContext';
+import { getCurrencySymbol } from'../utils/currency';
+import { calculateGlobalStats, prepareChartData } from'../utils/analytics';
+import ExpenseAnalytics from'./dashboard/ExpenseAnalytics';
+import { FileArrowDown, SpinnerGap, Wallet } from'@phosphor-icons/react';
+import { generateExpenseReport, fetchAllExpenses } from'../utils/pdfGenerator';
+import { LoadingSkeleton } from'./common/LoadingSkeleton';
 
 const GlobalExpenses = ({ tripsList }) => {
     const { profile, user } = useProfile();
@@ -13,7 +13,7 @@ const GlobalExpenses = ({ tripsList }) => {
     const [enrichedTrips, setEnrichedTrips] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    const currencyCode = profile?.behavior?.defaultCurrency || 'USD';
+    const currencyCode = profile?.behavior?.defaultCurrency ||'USD';
     const currencySymbol = getCurrencySymbol(currencyCode);
 
     // Fetch deep data (expenses) for all trips
@@ -66,7 +66,7 @@ const GlobalExpenses = ({ tripsList }) => {
     if (!tripsList || tripsList.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mt-4">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                <div className="w-16 h-16  rounded-full flex items-center justify-center mb-4 text-slate-400">
                     <Wallet size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 mb-2">No Expenses Yet</h3>
@@ -81,7 +81,7 @@ const GlobalExpenses = ({ tripsList }) => {
         <div className="w-full max-w-7xl mx-auto space-y-12">
             {/* 1. Header with Atmospheric Blob */}
             <div className="relative mb-12 text-center md:text-left">
-                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full -z-10 pointer-events-none"></div>
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 0/20 blur-[80px] rounded-full -z-10 pointer-events-none"></div>
 
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div>
@@ -98,15 +98,15 @@ const GlobalExpenses = ({ tripsList }) => {
                         disabled={isGenerating}
                         className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-[2rem] hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl shadow-slate-900/20 hover:scale-105 active:scale-95 text-lg font-bold group"
                     >
-                        {isGenerating ? <Loader2 size={24} className="animate-spin" /> : <FileDown size={24} className="group-hover:translate-y-1 transition-transform" />}
-                        {isGenerating ? 'Generating...' : 'Export Global Report'}
+                        {isGenerating ? <SpinnerGap size={24} className="animate-spin" /> : <FileArrowDown size={24} className="group-hover:translate-y-1 transition-transform" />}
+                        {isGenerating ?'Generating...' :'Export Global Report'}
                     </button>
                 </div>
             </div>
 
             {/* Analytics Dashboard - Styled via Child or Wrapper */}
             <div className="bg-white/40 backdrop-blur-3xl rounded-[3.5rem] p-8 md:p-12 border border-white/50 shadow-2xl shadow-indigo-100/50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/50 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 /50 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
 
                 <ExpenseAnalytics
                     totalBudget={totalBudget}

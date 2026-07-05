@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Menu, X, Instagram, Twitter, Linkedin } from 'lucide-react';
-import Auth from '../Auth';
+import React, { useState } from'react';
+import { List, X, InstagramLogo, TwitterLogo, LinkedinLogo, ListDashes } from'@phosphor-icons/react';
+import Auth from'../Auth';
 
 const PublicLayout = ({ children, setCurrentView, currentView }) => {
     const [showAuth, setShowAuth] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navLinks = [
-        { id: 'features', label: 'Features' },
-        { id: 'about', label: 'About Us' },
-        { id: 'protips', label: 'Pro Tips' },
+        { id:'features', label:'Features' },
+        { id:'about', label:'About Us' },
+        { id:'protips', label:'Pro Tips' },
     ];
 
     const handleNav = (viewId) => {
@@ -19,12 +19,12 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+        <div className="min-h-screen  font-sans text-slate-900 flex flex-col">
             {/* Navbar */}
             <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
                     {/* Brand */}
-                    <button onClick={() => window.location.href = '/'} className="flex items-center gap-3 group">
+                    <button onClick={() => window.location.href ='/'} className="flex items-center gap-3 group">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
                             <span className="font-black text-xl tracking-tighter">T</span>
                         </div>
@@ -37,7 +37,7 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
                             <button
                                 key={link.id}
                                 onClick={() => handleNav(link.id)}
-                                className={`text-sm font-bold transition-colors ${currentView === link.id ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'
+                                className={`text-sm font-bold transition-colors ${currentView === link.id ?'text-[#1A1A1A]' :'text-slate-500 hover:text-slate-900'
                                     }`}
                             >
                                 {link.label}
@@ -57,7 +57,7 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label="Toggle mobile menu"
                     >
-                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        {mobileMenuOpen ? <X size={24} /> : <ListDashes size={24} />}
                     </button>
                 </div>
 
@@ -105,8 +105,8 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
                             {[Twitter, Instagram, Linkedin].map((Icon, i) => (
                                 <button
                                     key={i}
-                                    aria-label={`Visit our ${i === 0 ? 'Twitter' : i === 1 ? 'Instagram' : 'LinkedIn'} page`}
-                                    className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    aria-label={`Visit our ${i === 0 ?'Twitter' : i === 1 ?'Instagram' :'LinkedIn'} page`}
+                                    className="w-10 h-10 rounded-full  flex items-center justify-center text-slate-400 hover: hover:text-[#1A1A1A] transition-colors"
                                 >
                                     <Icon size={18} />
                                 </button>
@@ -117,25 +117,25 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
                     <div>
                         <h4 className="font-black text-slate-900 mb-6">Product</h4>
                         <ul className="space-y-3 text-sm font-medium text-slate-500">
-                            <li><button onClick={() => handleNav('features')} className="hover:text-blue-600">Features</button></li>
-                            <li><button onClick={() => handleNav('protips')} className="hover:text-blue-600">Pro Tips</button></li>
-                            <li><button onClick={() => setShowAuth(true)} className="hover:text-blue-600">Login</button></li>
+                            <li><button onClick={() => handleNav('features')} className="hover:text-[#1A1A1A]">Features</button></li>
+                            <li><button onClick={() => handleNav('protips')} className="hover:text-[#1A1A1A]">Pro Tips</button></li>
+                            <li><button onClick={() => setShowAuth(true)} className="hover:text-[#1A1A1A]">Login</button></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-black text-slate-900 mb-6">Company</h4>
                         <ul className="space-y-3 text-sm font-medium text-slate-500">
-                            <li><button onClick={() => handleNav('about')} className="hover:text-blue-600">About Us</button></li>
-                            <li><a href="mailto:contact@travelcfo.app" className="hover:text-blue-600">Contact</a></li>
+                            <li><button onClick={() => handleNav('about')} className="hover:text-[#1A1A1A]">About Us</button></li>
+                            <li><a href="mailto:contact@travelcfo.app" className="hover:text-[#1A1A1A]">Contact</a></li>
                         </ul>
                     </div>
 
                     <div>
                         <h4 className="font-black text-slate-900 mb-6">Legal</h4>
                         <ul className="space-y-3 text-sm font-medium text-slate-500">
-                            <li><button onClick={() => handleNav('privacy')} className="hover:text-blue-600">Privacy Policy</button></li>
-                            <li><button onClick={() => handleNav('terms')} className="hover:text-blue-600">Terms of Service</button></li>
+                            <li><button onClick={() => handleNav('privacy')} className="hover:text-[#1A1A1A]">Privacy Policy</button></li>
+                            <li><button onClick={() => handleNav('terms')} className="hover:text-[#1A1A1A]">Terms of Service</button></li>
                         </ul>
                     </div>
                 </div>

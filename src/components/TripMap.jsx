@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { MapPin } from 'lucide-react';
-import L from 'leaflet';
+import React, { useEffect, useState } from'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from'react-leaflet';
+import'leaflet/dist/leaflet.css';
+import { MapPin } from'@phosphor-icons/react';
+import L from'leaflet';
 
 // Fix for default marker icon in Leaflet + React
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import icon from'leaflet/dist/images/marker-icon.png';
+import iconShadow from'leaflet/dist/images/marker-shadow.png';
 
 let DefaultIcon = L.icon({
     iconUrl: icon,
@@ -76,7 +76,7 @@ const TripMap = ({ days = [] }) => {
     };
 
     return (
-        <div className="relative w-full h-[600px] bg-slate-100 rounded-[3rem] overflow-hidden border border-white/60 shadow-xl shadow-slate-200/50 z-0">
+        <div className="relative w-full h-[600px]  rounded-[3rem] overflow-hidden border border-white/60 shadow-xl shadow-slate-200/50 z-0">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none shadow-[inset_0_0_40px_rgba(0,0,0,0.05)] z-[500] rounded-[3rem]"></div>
 
             <MapContainer center={LONDON_COORDS} zoom={13} scrollWheelZoom={true} className="h-full w-full z-0">
@@ -90,9 +90,9 @@ const TripMap = ({ days = [] }) => {
                     <Marker key={loc.id} position={[loc.lat, loc.lon]}>
                         <Popup className="oneui-popup">
                             <div className="p-2 min-w-[160px] text-center">
-                                <p className="font-black text-slate-800 text-sm mb-1">{loc.itemName || 'Activity'}</p>
+                                <p className="font-black text-slate-800 text-sm mb-1">{loc.itemName ||'Activity'}</p>
                                 <div className="text-[10px] font-bold text-white bg-slate-800 px-2 py-0.5 rounded-full inline-block mb-1">{loc.dayName}</div>
-                                <p className="text-xs text-blue-600 font-bold truncate">{loc.name}</p>
+                                <p className="text-xs text-[#1A1A1A] font-bold truncate">{loc.name}</p>
                             </div>
                         </Popup>
                     </Marker>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,15 +6,12 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    color: #1A1A1A;
     font-family: 'Outfit', sans-serif;
-    /* Subtle premium background */
-    background-image:
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.03) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.03) 0px, transparent 50%);
-    background-attachment: fixed;
+    background-color: #FAFAF7;
+    font-feature-settings: 'tnum' 1, 'kern' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1,
@@ -29,6 +26,7 @@
 }
 
 @layer components {
+  /* Kept for app interior use only — not used on public pages */
   .glass-panel {
     @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/50;
   }
@@ -38,19 +36,19 @@
   }
 
   .premium-card {
-    @apply bg-white/80 backdrop-blur-md border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl;
+    @apply bg-white border border-[#E5E7EB] shadow-sm hover:shadow-md transition-all duration-300 rounded-lg;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-700 placeholder:text-slate-400;
+    @apply w-full px-4 py-3 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] focus:outline-none focus:ring-2 focus:ring-[#E8A317]/20 focus:border-[#E8A317] transition-all font-medium text-[#1A1A1A] placeholder:text-[#9CA3AF];
   }
 
   .btn-primary {
-    @apply bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] transition-all shadow-lg shadow-slate-900/10 font-medium px-6 py-3 rounded-xl flex items-center justify-center gap-2;
+    @apply bg-[#1A1A1A] text-white hover:bg-black active:scale-[0.98] transition-all font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all font-medium px-6 py-3 rounded-xl flex items-center justify-center gap-2;
+    @apply bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2;
   }
 
   .shimmer {
@@ -61,6 +59,13 @@
     content: '';
     @apply absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite];
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  }
+
+  /* Public page utility — human accent */
+  .accent-underline {
+    text-decoration: underline;
+    text-decoration-color: #1B4FFF;
+    text-underline-offset: 4px;
   }
 }
 

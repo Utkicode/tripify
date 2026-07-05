@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from "firebase/auth";
-import { auth } from '../firebase';
-import { CheckCircle, XCircle, Loader2, Lock, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from'react';
+import { applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from"firebase/auth";
+import { auth } from'../firebase';
+import { CheckCircle, XCircle, SpinnerGap, LockKey, ArrowRight } from'@phosphor-icons/react';
 
 export default function AuthActionHandler({ onComplete }) {
     // We can't use react-router hooks if this component is rendered conditionally OUTSIDE the router in App.jsx. 
@@ -32,9 +32,9 @@ export default function AuthActionHandler({ onComplete }) {
         setMode(modeParam);
         setActionCode(oobCodeParam);
 
-        if (modeParam === 'verifyEmail') {
+        if (modeParam ==='verifyEmail') {
             handleVerifyEmail(oobCodeParam);
-        } else if (modeParam === 'resetPassword') {
+        } else if (modeParam ==='resetPassword') {
             handleVerifyResetCode(oobCodeParam);
         } else {
             setStatus('error');
@@ -84,13 +84,13 @@ export default function AuthActionHandler({ onComplete }) {
     };
 
     const getErrorMessage = (error) => {
-        if (error.code === 'auth/expired-action-code') {
-            return 'The link has expired. Please request a new one.';
+        if (error.code ==='auth/expired-action-code') {
+            return'The link has expired. Please request a new one.';
         }
-        if (error.code === 'auth/invalid-action-code') {
-            return 'The link is invalid. It may have specifically been used already.';
+        if (error.code ==='auth/invalid-action-code') {
+            return'The link is invalid. It may have specifically been used already.';
         }
-        return error.message || 'An error occurred.';
+        return error.message ||'An error occurred.';
     };
 
     const handleContinue = () => {
@@ -103,22 +103,22 @@ export default function AuthActionHandler({ onComplete }) {
         }
     };
 
-    if (status === 'loading') {
+    if (status ==='loading') {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-                <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
+            <div className="min-h-screen  flex flex-col items-center justify-center p-4">
+                <SpinnerGap className="animate-spin text-[#1A1A1A] mb-4" size={48} />
                 <h2 className="text-xl font-semibold text-slate-700">{message}</h2>
             </div>
         );
     }
 
-    if (status === 'input-password') {
+    if (status ==='input-password') {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="min-h-screen  flex items-center justify-center p-4">
                 <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-slate-100">
                     <div className="text-center mb-6">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                            <Lock size={32} />
+                        <div className="w-16 h-16  rounded-full flex items-center justify-center mx-auto mb-4 text-[#1A1A1A]">
+                            <LockKey size={32} />
                         </div>
                         <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
                         <p className="text-slate-500 mt-2">Enter a new password for {email}</p>
@@ -150,20 +150,20 @@ export default function AuthActionHandler({ onComplete }) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="min-h-screen  flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl border border-slate-100 text-center">
-                {status === 'success' ? (
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                {status ==='success' ? (
+                    <div className="w-16 h-16  rounded-full flex items-center justify-center mx-auto mb-4 text-[#1A1A1A]">
                         <CheckCircle size={32} />
                     </div>
                 ) : (
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                    <div className="w-16 h-16  rounded-full flex items-center justify-center mx-auto mb-4 text-[#1A1A1A]">
                         <XCircle size={32} />
                     </div>
                 )}
 
                 <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                    {status === 'success' ? 'Success!' : 'Something went wrong'}
+                    {status ==='success' ?'Success!' :'Something went wrong'}
                 </h2>
 
                 <p className="text-slate-600 mb-8 leading-relaxed">
@@ -172,12 +172,12 @@ export default function AuthActionHandler({ onComplete }) {
 
                 <button
                     onClick={handleContinue}
-                    className={`w-full py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${status === 'success'
-                        ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/20'
-                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                    className={`w-full py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${status ==='success'
+                        ?'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/20'
+                        :' text-slate-700 hover:bg-slate-300'
                         }`}
                 >
-                    {status === 'success' ? (mode === 'resetPassword' ? 'Go to Login' : 'Continue to TravelCFO') : 'Back to Home'}
+                    {status ==='success' ? (mode ==='resetPassword' ?'Go to Login' :'Continue to TravelCFO') :'Back to Home'}
                     <ArrowRight size={18} />
                 </button>
             </div>

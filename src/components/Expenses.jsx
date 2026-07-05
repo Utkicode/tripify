@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { IndianRupee, Tag, TrendingUp, Filter, AlertCircle, ArrowUpRight, Plus, Trash2, Edit2, PieChart, Users, CheckCircle, X, ArrowRight, Utensils } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES } from '../constants';
-import { ExpenseService } from '../services/ExpenseService';
-import AddExpenseModal from './AddExpenseModal';
-import ConfirmModal from './common/ConfirmModal';
-import { calculateTripBalances, calculateSettlements } from '../utils/expenseUtils';
+import React, { useState, useEffect, useMemo } from'react';
+import { CurrencyInr, Tag, TrendUp, Faders, WarningCircle, ArrowUpRight, Plus, Trash, PencilSimple, ChartPie, Users, CheckCircle, X, ArrowRight, ForkKnife } from'@phosphor-icons/react';
+import { motion, AnimatePresence } from'framer-motion';
+import { CATEGORIES } from'../constants';
+import { ExpenseService } from'../services/ExpenseService';
+import AddExpenseModal from'./AddExpenseModal';
+import ConfirmModal from'./common/ConfirmModal';
+import { calculateTripBalances, calculateSettlements } from'../utils/expenseUtils';
 
 const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [] }) => {
     const [expenses, setExpenses] = useState([]);
@@ -14,7 +14,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditingBudget, setIsEditingBudget] = useState(false);
     const [tempBudget, setTempBudget] = useState(budget);
-    const [viewMode, setViewMode] = useState('transactions'); // 'transactions' or 'balances'
+    const [viewMode, setViewMode] = useState('transactions'); //'transactions' or'balances'
     const [showSettlementModal, setShowSettlementModal] = useState(false);
 
     // --- Data Sync ---
@@ -44,7 +44,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
     // --- Helpers ---
     const getDayName = (dateStr) => {
         const day = days.find(d => d.date === dateStr);
-        return day ? `Day ${days.indexOf(day) + 1}` : 'Extra Day';
+        return day ? `Day ${days.indexOf(day) + 1}` :'Extra Day';
     };
 
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -91,9 +91,9 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
 
     const maxDay = Object.values(expensesByDay).reduce((max, current) => {
         return current.total > max.total ? current : max;
-    }, { name: '-', total: 0 });
+    }, { name:'-', total: 0 });
 
-    const filteredExpenses = filterCategory === 'All'
+    const filteredExpenses = filterCategory ==='All'
         ? enrichedExpenses
         : enrichedExpenses.filter(e => e.category === filterCategory);
 
@@ -114,10 +114,10 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     {isBudgetSet ? (
                         <div className="flex items-center gap-3 mt-2 text-sm font-semibold text-slate-600 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/50 shadow-sm">
                             <span>Budget: <span className="text-slate-900">₹{budget.toLocaleString()}</span></span>
-                            <button onClick={() => setIsEditingBudget(true)} className="p-1 hover:bg-slate-200 rounded-full text-blue-600 transition-colors"><Edit2 size={14} /></button>
+                            <button onClick={() => setIsEditingBudget(true)} className="p-1 hover: rounded-full text-[#1A1A1A] transition-colors"><PencilSimple size={14} /></button>
                         </div>
                     ) : (
-                        <button onClick={() => setIsEditingBudget(true)} className="text-sm text-blue-600 font-bold hover:underline mt-2 flex items-center gap-1">
+                        <button onClick={() => setIsEditingBudget(true)} className="text-sm text-[#1A1A1A] font-bold hover:underline mt-2 flex items-center gap-1">
                             <Plus size={14} /> Set a Budget
                         </button>
                     )}
@@ -128,13 +128,13 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <div className="bg-white/40 backdrop-blur-md border border-white/50 p-1.5 rounded-[1.2rem] flex shadow-inner">
                         <button
                             onClick={() => setViewMode('transactions')}
-                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === 'transactions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
+                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode ==='transactions' ?'bg-slate-900 text-white shadow-lg shadow-slate-900/20' :'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
                         >
                             Transactions
                         </button>
                         <button
                             onClick={() => setViewMode('balances')}
-                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode === 'balances' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
+                            className={`px-5 py-2.5 text-sm font-bold rounded-2xl transition-all ${viewMode ==='balances' ?'bg-slate-900 text-white shadow-lg shadow-slate-900/20' :'text-slate-600 hover:text-slate-900 hover:bg-white/50'}`}
                         >
                             Balances
                         </button>
@@ -146,7 +146,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                 type="number"
                                 value={tempBudget}
                                 onChange={(e) => setTempBudget(e.target.value)}
-                                className="w-28 px-3 py-1 text-sm border-none outline-none font-bold text-slate-900 bg-slate-50 rounded-xl"
+                                className="w-28 px-3 py-1 text-sm border-none outline-none font-bold text-slate-900  rounded-xl"
                                 placeholder="Amount"
                                 autoFocus
                             />
@@ -165,26 +165,26 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatsCard
-                    icon={IndianRupee} iconColor="text-blue-600" bgColor="bg-blue-50"
+                    icon={CurrencyInr} iconColor="text-[#1A1A1A]" bgColor=""
                     label="Total Spending"
                     value={`₹${totalCost.toLocaleString()}`}
-                    subElement={totalCost > 0 && <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-bold flex items-center shadow-sm">+<ArrowUpRight size={12} strokeWidth={3} /></span>}
+                    subElement={totalCost > 0 && <span className="text-xs  text-[#1A1A1A] px-2.5 py-1 rounded-full font-bold flex items-center shadow-sm">+<ArrowUpRight size={12} strokeWidth={3} /></span>}
                 />
 
                 {travelers.length > 1 ? (
                     <StatsCard
-                        icon={Users} iconColor={myBalance >= 0 ? "text-emerald-600" : "text-rose-600"} bgColor={myBalance >= 0 ? "bg-emerald-50" : "bg-rose-50"}
+                        icon={Users} iconColor={myBalance >= 0 ?"text-[#1A1A1A]" :"text-[#1A1A1A]"} bgColor={myBalance >= 0 ?"" :""}
                         label="My Position"
-                        value={myBalance === 0 ? "Settled" : `₹${Math.abs(myBalance).toLocaleString()}`}
-                        subValue={myBalance > 0 ? "You are owed" : myBalance < 0 ? "You owe" : "All squared up"}
+                        value={myBalance === 0 ?"Settled" : `₹${Math.abs(myBalance).toLocaleString()}`}
+                        subValue={myBalance > 0 ?"You are owed" : myBalance < 0 ?"You owe" :"All squared up"}
                         delay={0.1}
                     />
                 ) : (
                     <StatsCard
-                        icon={TrendingUp} iconColor="text-purple-600" bgColor="bg-purple-50"
+                        icon={TrendUp} iconColor="text-[#1A1A1A]" bgColor=""
                         label="Average / Day"
                         value={`₹${avgDaily.toLocaleString()}`}
-                        subElement={<span className="text-[10px] uppercase font-bold tracking-wider bg-slate-100/80 text-slate-500 px-3 py-1 rounded-full border border-slate-200">Daily Avg</span>}
+                        subElement={<span className="text-[10px] uppercase font-bold tracking-wider /80 text-slate-500 px-3 py-1 rounded-full border border-slate-200">Daily Avg</span>}
                         delay={0.1}
                     />
                 )}
@@ -196,19 +196,19 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-[4rem] z-0 pointer-events-none"></div>
                             <div className="flex justify-between items-end mb-4 relative z-10">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Budget Status</p>
-                                <p className={`text-2xl font-black ${budgetStats.remaining < 0 ? 'text-red-500' : 'text-slate-900'}`}>
+                                <p className={`text-2xl font-black ${budgetStats.remaining < 0 ?'text-[#1A1A1A]' :'text-slate-900'}`}>
                                     {Math.round(budgetStats.percentageUsed)}%
                                 </p>
                             </div>
-                            <div className="h-5 w-full bg-slate-100 rounded-full overflow-hidden mb-3 border border-slate-200/50 relative z-10">
+                            <div className="h-5 w-full  rounded-full overflow-hidden mb-3 border border-slate-200/50 relative z-10">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min(budgetStats.percentageUsed, 100)}%` }}
-                                    className={`h-full rounded-full shadow-sm ${budgetStats.percentageUsed > 100 ? 'bg-red-500' : budgetStats.percentageUsed > 80 ? 'bg-amber-400' : 'bg-gradient-to-r from-emerald-400 to-emerald-500'}`}
+                                    className={`h-full rounded-full shadow-sm ${budgetStats.percentageUsed > 100 ?'0' : budgetStats.percentageUsed > 80 ?'bg-amber-400' :'bg-gradient-to-r from-emerald-400 to-emerald-500'}`}
                                 />
                             </div>
                             <p className="text-xs text-slate-500 text-right font-bold relative z-10">
-                                {budgetStats.remaining >= 0 ? <span className="text-emerald-600">₹{budgetStats.remaining.toLocaleString()} Left</span> : <span className="text-red-500">Over by ₹{Math.abs(budgetStats.remaining).toLocaleString()}</span>}
+                                {budgetStats.remaining >= 0 ? <span className="text-[#1A1A1A]">₹{budgetStats.remaining.toLocaleString()} Left</span> : <span className="text-[#1A1A1A]">Over by ₹{Math.abs(budgetStats.remaining).toLocaleString()}</span>}
                             </p>
                         </div>
                     ) : (
@@ -216,20 +216,20 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setIsEditingBudget(true)}
-                            className="w-full bg-white/60 backdrop-blur-md border-2 border-dashed border-slate-300 p-6 rounded-[2.5rem] h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-600 transition-all cursor-pointer group"
+                            className="w-full bg-white/60 backdrop-blur-md border-2 border-dashed border-slate-300 p-6 rounded-[2.5rem] h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:/50 hover:text-[#1A1A1A] transition-all cursor-pointer group"
                         >
-                            <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all text-blue-500"><Plus size={28} /></div>
+                            <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all text-[#1A1A1A]"><Plus size={28} /></div>
                             <span className="font-bold text-sm tracking-wide">Set a Budget</span>
                         </motion.button>
                     )}
                 </div>
             </div>
 
-            {viewMode === 'transactions' ? (
+            {viewMode ==='transactions' ? (
                 <>
                     {/* Filters */}
                     <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide pt-2">
-                        <FilterButton active={filterCategory === 'All'} onClick={() => setFilterCategory('All')} label="All Expenses" />
+                        <FilterButton active={filterCategory ==='All'} onClick={() => setFilterCategory('All')} label="All Expenses" />
                         {CATEGORIES.map(cat => (
                             <FilterButton
                                 key={cat.name}
@@ -246,10 +246,10 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <div className="space-y-3">
                         {filteredExpenses.length === 0 ? (
                             <div className="text-center py-20 border-2 border-dashed border-slate-200/60 rounded-[2.5rem] bg-white/50 backdrop-blur-sm">
-                                {filterCategory === 'All' ? (
+                                {filterCategory ==='All' ? (
                                     <div className="flex flex-col items-center gap-4">
-                                        <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-500">
-                                            <IndianRupee size={32} />
+                                        <div className="w-20 h-20  rounded-3xl flex items-center justify-center text-[#1A1A1A]">
+                                            <CurrencyInr size={32} />
                                         </div>
                                         <div>
                                             <h3 className="text-2xl font-black text-slate-800">No expenses yet</h3>
@@ -257,11 +257,11 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                         </div>
                                         <button onClick={() => setIsAddModalOpen(true)} className="mt-2 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Add First Expense</button>
                                     </div>
-                                ) : 'No expenses in this category.'}
+                                ) :'No expenses in this category.'}
                             </div>
                         ) : (
                             filteredExpenses.map((expense) => {
-                                const payer = travelers.find(t => t.id === expense.paidBy)?.name || 'Someone';
+                                const payer = travelers.find(t => t.id === expense.paidBy)?.name ||'Someone';
                                 const isMultiSplit = expense.splitDetails && Object.keys(expense.splitDetails).length > 1;
 
                                 return (
@@ -275,19 +275,19 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                     >
                                         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                                             <div className="flex items-start gap-5 w-full md:w-auto">
-                                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-200" style={{ backgroundColor: CATEGORIES.find(c => c.name === expense.category)?.color || '#94a3b8' }}>
-                                                    {expense.category === 'Food' ? <Utensils size={24} /> : <Tag size={24} />}
+                                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-200" style={{ backgroundColor: CATEGORIES.find(c => c.name === expense.category)?.color ||'#94a3b8' }}>
+                                                    {expense.category ==='Food' ? <ForkKnife size={24} /> : <Tag size={24} />}
                                                 </div>
                                                 <div>
-                                                    <div className="font-extrabold text-slate-900 text-lg leading-tight mb-1">{expense.description || 'Untitled Expense'}</div>
+                                                    <div className="font-extrabold text-slate-900 text-lg leading-tight mb-1">{expense.description ||'Untitled Expense'}</div>
                                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-2">
                                                         <span>{expense.dayName}</span>
                                                         <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                                                         <span>{expense.date}</span>
                                                     </div>
                                                     <div className="mt-2 text-sm font-medium text-slate-600 flex items-center gap-2">
-                                                        <span className="bg-slate-100 px-2 py-0.5 rounded-lg text-xs">Paid by <span className="text-slate-900 font-bold">{expense.paidBy === user.uid ? 'You' : payer}</span></span>
-                                                        {isMultiSplit && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg font-bold">Split group</span>}
+                                                        <span className="px-2 py-0.5 rounded-lg text-xs">Paid by <span className="text-slate-900 font-bold">{expense.paidBy === user.uid ?'You' : payer}</span></span>
+                                                        {isMultiSplit && <span className="text-xs text-[#1A1A1A]  px-2 py-0.5 rounded-lg font-bold">Split group</span>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -299,10 +299,10 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                                 </div>
                                                 <button
                                                     onClick={() => openDeleteModal(expense.id)}
-                                                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                    className="p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                                                     title="Delete"
                                                 >
-                                                    <Trash2 size={20} />
+                                                    <Trash size={20} />
                                                 </button>
                                             </div>
                                         </div>
@@ -318,7 +318,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     {/* User Balances List */}
                     <div className="bg-white rounded-2xl border border-slate-200 p-6">
                         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <Users size={20} className="text-blue-500" /> Trip Balances
+                            <Users size={20} className="text-[#1A1A1A]" /> Trip Balances
                         </h3>
                         <div className="space-y-4">
                             {travelers.map(t => {
@@ -327,21 +327,21 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                 const isDebt = bal < 0;
 
                                 return (
-                                    <div key={t.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                                    <div key={t.id} className="flex items-center justify-between p-3 rounded-xl">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                                            <div className="w-10 h-10 rounded-full  flex items-center justify-center font-bold text-slate-600">
                                                 {t.name?.[0]}
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-slate-700">{t.id === user.uid ? 'You' : t.name}</p>
+                                                <p className="font-semibold text-slate-700">{t.id === user.uid ?'You' : t.name}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className={`font-bold ${isOwed ? 'text-emerald-600' : isDebt ? 'text-red-500' : 'text-slate-400'}`}>
-                                                {bal === 0 ? 'Settled' : `${isOwed ? '+' : '-'}₹${Math.abs(bal).toLocaleString()}`}
+                                            <p className={`font-bold ${isOwed ?'text-[#1A1A1A]' : isDebt ?'text-[#1A1A1A]' :'text-slate-400'}`}>
+                                                {bal === 0 ?'Settled' : `${isOwed ?'+' :'-'}₹${Math.abs(bal).toLocaleString()}`}
                                             </p>
                                             <p className="text-[10px] uppercase font-bold text-slate-400">
-                                                {isOwed ? 'Gets back' : isDebt ? 'Owes' : 'Balanced'}
+                                                {isOwed ?'Gets back' : isDebt ?'Owes' :'Balanced'}
                                             </p>
                                         </div>
                                     </div>
@@ -351,10 +351,10 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     </div>
 
                     {/* Pending Settlements */}
-                    <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-6 flex flex-col items-center justify-center text-center">
-                        <CheckCircle size={48} className="text-emerald-500 mb-4" />
+                    <div className="rounded-2xl border border-emerald-100 p-6 flex flex-col items-center justify-center text-center">
+                        <CheckCircle size={48} className="text-[#1A1A1A] mb-4" />
                         <h3 className="text-lg font-bold text-emerald-900 mb-2">How to Settle Up?</h3>
-                        <p className="text-emerald-700 text-sm mb-4">
+                        <p className="text-[#1A1A1A] text-sm mb-4">
                             We have calculated the most efficient way to clear all debts in just <b>{settlements.length}</b> transactions.
                         </p>
                         <button
@@ -381,29 +381,29 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowSettlementModal(false)} />
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-md rounded-2xl p-6 relative z-10 shadow-2xl">
-                            <button onClick={() => setShowSettlementModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full"><X size={20} /></button>
+                            <button onClick={() => setShowSettlementModal(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover: rounded-full"><X size={20} /></button>
                             <h3 className="text-xl font-bold text-slate-800 mb-6">Settlement Plan</h3>
 
                             {settlements.length === 0 ? (
                                 <div className="text-center py-8 text-slate-500">
-                                    <CheckCircle size={48} className="mx-auto mb-4 text-emerald-500" />
+                                    <CheckCircle size={48} className="mx-auto mb-4 text-[#1A1A1A]" />
                                     <p>All settled up! No transactions needed.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {settlements.map((s, idx) => {
-                                        const fromName = travelers.find(t => t.id === s.from)?.name || 'Someone';
-                                        const toName = travelers.find(t => t.id === s.to)?.name || 'Someone';
+                                        const fromName = travelers.find(t => t.id === s.from)?.name ||'Someone';
+                                        const toName = travelers.find(t => t.id === s.to)?.name ||'Someone';
                                         const isMeFrom = s.from === user.uid;
                                         const isMeTo = s.to === user.uid;
 
                                         return (
-                                            <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <div key={idx} className="flex items-center justify-between p-4  rounded-xl border border-slate-100">
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-sm">
-                                                        <span className={`font-bold ${isMeFrom ? 'text-red-600' : 'text-slate-700'}`}>{isMeFrom ? 'You' : fromName}</span>
+                                                        <span className={`font-bold ${isMeFrom ?'text-[#1A1A1A]' :'text-slate-700'}`}>{isMeFrom ?'You' : fromName}</span>
                                                         <span className="text-slate-400 mx-1">pays</span>
-                                                        <span className={`font-bold ${isMeTo ? 'text-emerald-600' : 'text-slate-700'}`}>{isMeTo ? 'You' : toName}</span>
+                                                        <span className={`font-bold ${isMeTo ?'text-[#1A1A1A]' :'text-slate-700'}`}>{isMeTo ?'You' : toName}</span>
                                                     </div>
                                                 </div>
                                                 <div className="font-bold text-slate-800">₹{s.amount.toLocaleString()}</div>
@@ -413,7 +413,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                 </div>
                             )}
                             <p className="text-xs text-center text-slate-400 mt-6">
-                                Settle these offline via UPI/Cash and then add an expense with "Settlement" category to clear balances.
+                                Settle these offline via UPI/Cash and then add an expense with"Settlement" category to clear balances.
                             </p>
                         </motion.div>
                     </div>
@@ -457,21 +457,21 @@ const FilterButton = ({ active, onClick, label, color, hasDot }) => (
     <button
         onClick={onClick}
         className={`px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${active
-            ? (color ? 'ring-4 ring-opacity-20 text-white shadow-lg scale-105' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-105')
-            : 'bg-white/70 backdrop-blur-md text-slate-600 border border-white/50 hover:bg-white hover:shadow-md'
+            ? (color ?'ring-4 ring-opacity-20 text-white shadow-lg scale-105' :'bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-105')
+            :'bg-white/70 backdrop-blur-md text-slate-600 border border-white/50 hover:bg-white hover:shadow-md'
             }`}
-        style={active && color ? { backgroundColor: color, borderColor: color, '--tw-ring-color': color } : {}}
+        style={active && color ? { backgroundColor: color, borderColor: color,'--tw-ring-color': color } : {}}
     >
-        {hasDot && <span className={`w-2 h-2 rounded-full ${active ? 'bg-white' : ''}`} style={!active ? { backgroundColor: color } : {}} />}
+        {hasDot && <span className={`w-2 h-2 rounded-full ${active ?'bg-white' :''}`} style={!active ? { backgroundColor: color } : {}} />}
         {label}
     </button>
 );
 
 // Helper Components
 const CategoryBadge = ({ category }) => {
-    const cat = CATEGORIES.find(c => c.name === category) || { color: '#94a3b8' };
+    const cat = CATEGORIES.find(c => c.name === category) || { color:'#94a3b8' };
     return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium  text-slate-600">
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
             {category}
         </span>

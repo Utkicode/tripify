@@ -1,12 +1,12 @@
-import React from 'react';
-import { MapPin, Trash2, Clock, Users, Edit2, Plus, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from'react';
+import { MapPin, Trash, Clock, Users, PencilSimple, Plus, ArrowRight } from'@phosphor-icons/react';
+import { motion, AnimatePresence } from'framer-motion';
 
 const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limit }) => {
     // Apply limit if provided (for dashboard view)
     const displayedTrips = limit ? tripsList.slice(0, limit) : tripsList;
 
-    // Simplified animations to prevent 'opacity: 0' stuck state
+    // Simplified animations to prevent'opacity: 0' stuck state
     const item = {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0 }
@@ -23,7 +23,7 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-purple-600 font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
+                                className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-[#1A1A1A] font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
                             >
                                 Your Collection
                             </motion.div>
@@ -59,7 +59,7 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                     <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
                     <div className="relative z-10">
                         <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/60">
-                            <MapPin size={48} className="text-purple-500" strokeWidth={1.5} />
+                            <MapPin size={48} className="text-[#1A1A1A]" strokeWidth={1.5} />
                         </div>
                         <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">No trips found</h3>
                         <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">
@@ -84,33 +84,33 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                 layout
                                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                                 onClick={() => setCurrentTripId(trip.id)}
-                                whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
+                                whileHover={{ y: -8, boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
                                 whileTap={{ scale: 0.98 }}
                                 className="group relative bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
                             >
                                 {/* Cover Image Placeholder */}
-                                <div className={`h-40 w-full bg-gradient-to-br ${index % 2 === 0 ? 'from-blue-50 to-indigo-50' : 'from-purple-50 to-pink-50'} relative overflow-hidden group-hover:h-44 transition-all duration-500`}>
+                                <div className={`h-40 w-full bg-gradient-to-br ${index % 2 === 0 ?'from-blue-50 to-indigo-50' :'from-purple-50 to-pink-50'} relative overflow-hidden group-hover:h-44 transition-all duration-500`}>
                                     {/* Decorative Blob */}
                                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-[40px] transition-transform group-hover:scale-150"></div>
 
                                     <div className="absolute bottom-6 left-8 right-8 z-10">
                                         <div className="inline-flex items-center gap-2 bg-white/30 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full text-xs font-bold text-slate-700 mb-2 shadow-sm">
-                                            <MapPin size={12} className="text-slate-900" /> {trip.destination || 'Planning...'}
+                                            <MapPin size={12} className="text-slate-900" /> {trip.destination ||'Planning...'}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="p-8 flex-1 flex flex-col relative z-10">
                                     <div className="flex justify-between items-start mb-6">
-                                        <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-purple-600 transition-colors line-clamp-2 tracking-tight" title={trip.tripName}>
+                                        <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-[#1A1A1A] transition-colors line-clamp-2 tracking-tight" title={trip.tripName}>
                                             {trip.tripName}
                                         </h3>
                                         <button
                                             onClick={(e) => deleteTrip(e, trip.id, trip.tripName)}
-                                            className="text-slate-300 hover:text-red-500 bg-white/50 hover:bg-red-50 p-2.5 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-transparent hover:border-red-100 transform translate-x-4 group-hover:translate-x-0"
+                                            className="text-slate-300 hover:text-[#1A1A1A] bg-white/50 hover: p-2.5 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-transparent hover:border-red-100 transform translate-x-4 group-hover:translate-x-0"
                                             title="Delete Trip"
                                         >
-                                            <Trash2 size={18} strokeWidth={2} />
+                                            <Trash size={18} strokeWidth={2} />
                                         </button>
                                     </div>
 
@@ -118,13 +118,13 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                         <div className="bg-white/40 rounded-2xl p-3 border border-white/50">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Duration</p>
                                             <p className="flex items-center gap-1.5 font-bold text-slate-700 text-sm">
-                                                <Clock size={14} className="text-purple-500" /> {trip.days?.length || 0} Days
+                                                <Clock size={14} className="text-[#1A1A1A]" /> {trip.dayCount || 0} Days
                                             </p>
                                         </div>
                                         <div className="bg-white/40 rounded-2xl p-3 border border-white/50">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Travelers</p>
                                             <p className="flex items-center gap-1.5 font-bold text-slate-700 text-sm">
-                                                <Users size={14} className="text-purple-500" /> {trip.travelerCount || 1}
+                                                <Users size={14} className="text-[#1A1A1A]" /> {trip.travelerCount || 1}
                                             </p>
                                         </div>
                                     </div>
@@ -134,8 +134,8 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Budget</p>
                                             <p className="text-2xl font-black text-slate-900 tracking-tight">₹{(trip.totalCost || 0).toLocaleString()}</p>
                                         </div>
-                                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
-                                            <Edit2 size={16} strokeWidth={2.5} />
+                                        <div className="w-10 h-10 rounded-full  flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                                            <PencilSimple size={16} strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 </div>
@@ -151,9 +151,9 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                             whileInView="show"
                             viewport={{ once: true }}
                             onClick={createNewTrip}
-                            whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+                            whileHover={{ scale: 1.02, backgroundColor:'rgba(255, 255, 255, 0.4)' }}
                             whileTap={{ scale: 0.98 }}
-                            className="bg-white/20 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-300/50 hover:border-purple-400/50 flex flex-col items-center justify-center gap-6 p-8 text-slate-400 hover:text-purple-600 transition-all min-h-[350px] group"
+                            className="bg-white/20 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-300/50 hover:border-purple-400/50 flex flex-col items-center justify-center gap-6 p-8 text-slate-400 hover:text-[#1A1A1A] transition-all min-h-[350px] group"
                         >
                             <div className="w-20 h-20 rounded-[2rem] bg-white/40 border border-white/50 flex items-center justify-center shadow-lg group-hover:shadow-purple-200/50 group-hover:scale-110 transition-all duration-300">
                                 <Plus size={32} strokeWidth={2.5} />

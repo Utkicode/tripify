@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy, limit, collectionGroup } from "firebase/firestore";
-import { db } from '../firebase';
-import { appId } from '../constants';
-import ActivityFeed from './ActivityFeed';
-import { AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from'react';
+import { Bell } from'@phosphor-icons/react';
+import { collection, query, where, onSnapshot, orderBy, limit, collectionGroup } from"firebase/firestore";
+import { db } from'../firebase';
+import { appId } from'../constants';
+import { subscribeToNotifications, markAllAsRead } from'../services/notificationService';
+import ActivityFeed from'./ActivityFeed';
+import { AnimatePresence } from'framer-motion';
 
 const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [activities, setActivities] = useState([]);
+    const [activities, setActivities] = useState([]); // Trip activities
+    const [notifications, setNotifications] = useState([]); // User notifications (Invites)
+    const [mergedFeed, setMergedFeed] = useState([]);
     const bellRef = useRef(null);
 
     // Close on click outside
@@ -31,22 +34,22 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
         if (tripId) {
             // Context-specific (inside a trip)
             q = query(
-                collection(db, 'artifacts', appId, 'trips', tripId, 'activities'),
-                orderBy('timestamp', 'desc'),
+                collection(db,'artifacts', appId,'trips', tripId,'activities'),
+                orderBy('timestamp','desc'),
                 limit(50)
             );
         } else {
             // Global (all shared trips)
-            // DISABLED: Requires complex Collection Group Index + Security Rules for 'groups'.
-            // Re-enabling this requires updating logic to mirror 'collaborators' onto activity docs.
+            // DISABLED: Requires complex Collection Group Index + Security Rules for'groups'.
+            // Re-enabling this requires updating logic to mirror'collaborators' onto activity docs.
             // setActivities([]);
             return;
 
             /*
             q = query(
-                collectionGroup(db, 'activities'),
-                where('collaborators', 'array-contains', user.uid),
-                orderBy('timestamp', 'desc'),
+                collectionGroup(db,'activities'),
+                where('collaborators','array-contains', user.uid),
+                orderBy('timestamp','desc'),
                 limit(20)
             );
             */
@@ -64,21 +67,53 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
                 : newActivities.filter(a => a.performedBy !== user.uid);
 
             setActivities(filteredActivities);
-
-            // Calculate Unread Count
-            if (!isOpen) {
-                const lastReadStr = localStorage.getItem('tripify_last_read_time');
-                const lastRead = lastReadStr ? Number(lastReadStr) : 0;
-
-                const count = filteredActivities.filter(a => (a.timestamp || 0) > lastRead).length;
-                setUnreadCount(count);
-            }
         }, (error) => {
             console.error("Notification listener error (check indexes):", error);
         });
 
         return () => unsubscribe();
-    }, [user, tripId, isOpen]);
+    }, [user, tripId]);
+
+    // Listen to Global User Notifications (Invites)
+    useEffect(() => {
+        if (!user) return;
+        const unsubscribe = subscribeToNotifications(user.uid, (newNotifications) => {
+            setNotifications(newNotifications);
+        });
+        return () => unsubscribe();
+    }, [user]);
+
+    // Merge and Calculate Unread
+    useEffect(() => {
+        // Merge activities and notifications
+        const normalizedNotifications = notifications.map(n => ({
+            ...n,
+            isNotification: true, // Flag to distinguish
+            userName: n.senderName, // Map for ActivityFeed
+            // message is already there
+        }));
+
+        const allItems = [...activities, ...normalizedNotifications].sort((a, b) => {
+            const tA = a.timestamp?.toMillis ? a.timestamp.toMillis() : (a.timestamp || 0);
+            const tB = b.timestamp?.toMillis ? b.timestamp.toMillis() : (b.timestamp || 0);
+            return tB - tA; // Descending
+        });
+
+        setMergedFeed(allItems);
+
+        if (!isOpen) {
+            const lastReadStr = localStorage.getItem('tripify_last_read_time');
+            const lastRead = lastReadStr ? Number(lastReadStr) : 0;
+
+            // Unread Activities (Timestamp based)
+            const unreadActivitiesCount = activities.filter(a => (a.timestamp || 0) > lastRead).length;
+
+            // Unread Notifications (Boolean based)
+            const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
+            setUnreadCount(unreadActivitiesCount + unreadNotificationsCount);
+        }
+    }, [activities, notifications, isOpen]);
 
     const handleToggle = () => {
         setIsOpen(!isOpen);
@@ -86,6 +121,11 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
             // Opening: Mark all as read
             setUnreadCount(0);
             localStorage.setItem('tripify_last_read_time', Date.now().toString());
+
+            // Mark server-side notifications as read
+            if (user) {
+                markAllAsRead(user.uid);
+            }
         }
     };
 
@@ -93,12 +133,12 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
         <div className="relative" ref={bellRef}>
             <button
                 onClick={handleToggle}
-                className={`p-2 rounded-lg transition-colors relative ${isOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                className={`p-2 rounded-lg transition-colors relative ${isOpen ?' text-[#1A1A1A]' :'text-slate-400 hover:text-slate-600 hover:'}`}
             >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                    <span className="absolute -top-1 -right-1 w-5 h-5 0 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                        {unreadCount > 9 ?'9+' : unreadCount}
                     </span>
                 )}
             </button>
@@ -106,7 +146,7 @@ const NotificationBell = ({ user, tripId, setCurrentTripId, setCurrentView }) =>
             <AnimatePresence>
                 {isOpen && (
                     <ActivityFeed
-                        activities={activities}
+                        activities={mergedFeed}
                         setCurrentTripId={setCurrentTripId}
                         setCurrentView={setCurrentView}
                         onClose={() => setIsOpen(false)}
