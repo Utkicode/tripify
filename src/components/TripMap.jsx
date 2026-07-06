@@ -58,14 +58,31 @@ const TripMap = ({ days = [] }) => {
         if (!searchQuery.trim()) return;
         setIsSearching(true);
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=1`);
             const data = await response.json();
-            if (data && data.length > 0) {
-                const result = data[0];
+            if (data && data.features && data.features.length > 0) {
+                const feature = data.features[0];
+                const [lon, lat] = feature.geometry.coordinates;
+                const props = feature.properties;
+                
+                let name = props.name;
+                if (!name && props.street) {
+                    name = props.housenumber ? `${props.housenumber} ${props.street}` : props.street;
+                }
+                
+                const nameParts = [];
+                if (name) nameParts.push(name);
+                const cityOrTown = props.city || props.town || props.village;
+                if (cityOrTown && cityOrTown !== name) nameParts.push(cityOrTown);
+                if (props.state && props.state !== name && props.state !== cityOrTown) nameParts.push(props.state);
+                if (props.country && props.country !== name) nameParts.push(props.country);
+                
+                const displayName = nameParts.join(', ');
+                
                 setSelectedLocation({
-                    lat: parseFloat(result.lat),
-                    lon: parseFloat(result.lon),
-                    name: result.display_name
+                    lat,
+                    lon,
+                    name: displayName
                 });
             }
         } catch (error) {

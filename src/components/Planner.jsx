@@ -45,11 +45,36 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
 
             setIsSearching(true);
             try {
-                // Determine user's current view logic or just global search
-                // For now, global search via Nominatim
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`);
+                const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(searchQuery)}&limit=5`);
                 const data = await response.json();
-                setSearchResults(data);
+                if (data && data.features) {
+                    const mapped = data.features.map(feature => {
+                        const props = feature.properties;
+                        const [lon, lat] = feature.geometry.coordinates;
+                        
+                        let name = props.name;
+                        if (!name && props.street) {
+                            name = props.housenumber ? `${props.housenumber} ${props.street}` : props.street;
+                        }
+                        
+                        const nameParts = [];
+                        if (name) nameParts.push(name);
+                        const cityOrTown = props.city || props.town || props.village;
+                        if (cityOrTown && cityOrTown !== name) nameParts.push(cityOrTown);
+                        if (props.state && props.state !== name && props.state !== cityOrTown) nameParts.push(props.state);
+                        if (props.country && props.country !== name) nameParts.push(props.country);
+                        
+                        const displayName = nameParts.join(', ');
+                        return {
+                            display_name: displayName,
+                            lat: String(lat),
+                            lon: String(lon)
+                        };
+                    });
+                    setSearchResults(mapped);
+                } else {
+                    setSearchResults([]);
+                }
             } catch (error) {
                 console.error("Search error:", error);
             } finally {
