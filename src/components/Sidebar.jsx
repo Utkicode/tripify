@@ -122,7 +122,7 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user, isCollapsed,
                     <div className={`bg-white/50 rounded-[2rem] p-2 border border-white/50 shadow-sm ${isCollapsed ?'flex flex-col items-center gap-2' :''}`}>
                         <div className={`flex items-center gap-3 p-1.5 rounded-[1.5rem] hover:bg-white transition-all cursor-pointer ${isCollapsed ?'justify-center p-0 hover:bg-transparent' :''}`}>
                             <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-slate-900/20 ring-2 ring-white">
-                                {user.email[0].toUpperCase()}
+                                {(user.email || user.displayName || 'U')[0].toUpperCase()}
                             </div>
                             {!isCollapsed && (
                                 <div className="flex-1 min-w-0 pr-2">

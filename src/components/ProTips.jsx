@@ -113,7 +113,7 @@ const ProTips = () => {
                     <p className="text-[#9CA3AF] text-sm font-medium">
                         Got a tip that actually helped?{' '}
                         <a
-                            href="mailto:utkarshgupta9759@gmail.com"
+                            href="mailto:support@travelcfo.app"
                             className="text-[#374151] font-semibold underline underline-offset-2 hover:text-[#1A1A1A] transition-colors"
                         >
                             Send it our way.

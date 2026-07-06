@@ -1,6 +1,8 @@
 import { collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { appId } from "../constants";
+import { validateExpenseData } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 // Helper to get the expenses collection reference
 const getExpensesRef = (uid, tripId) => {
@@ -13,6 +15,8 @@ export const ExpenseService = {
      * Add a new expense
      */
     addExpense: async (uid, tripId, expenseData) => {
+        const validation = validateExpenseData(expenseData);
+        if (!validation.valid) throw new Error(validation.errors.join('; '));
         try {
             const expensesRef = getExpensesRef(uid, tripId);
             const docRef = await addDoc(expensesRef, {
@@ -22,7 +26,7 @@ export const ExpenseService = {
             });
             return docRef.id;
         } catch (error) {
-            console.error("Error adding expense:", error);
+            logError("Error adding expense:", error);
             throw error;
         }
     },
@@ -35,7 +39,7 @@ export const ExpenseService = {
             const expenseRef = doc(db, 'artifacts', appId, 'trips', tripId, 'expenses', expenseId);
             await deleteDoc(expenseRef);
         } catch (error) {
-            console.error("Error deleting expense:", error);
+            logError("Error deleting expense:", error);
             throw error;
         }
     },
@@ -44,6 +48,8 @@ export const ExpenseService = {
      * Update an expense
      */
     updateExpense: async (uid, tripId, expenseId, updates) => {
+        const validation = validateExpenseData(updates);
+        if (!validation.valid) throw new Error(validation.errors.join('; '));
         try {
             const expenseRef = doc(db, 'artifacts', appId, 'trips', tripId, 'expenses', expenseId);
             await updateDoc(expenseRef, {
@@ -51,7 +57,7 @@ export const ExpenseService = {
                 updatedAt: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error updating expense:", error);
+            logError("Error updating expense:", error);
             throw error;
         }
     },

@@ -46,7 +46,7 @@ const GlobalExpenses = ({ tripsList }) => {
     const handleExport = async () => {
         setIsGenerating(true);
         try {
-            await generateExpenseReport(user, profile, tripsList);
+            await generateExpenseReport(user, profile, tripsList, profile?.behavior?.defaultCurrency);
         } catch (error) {
             console.error("Export failed:", error);
             alert("Failed to generate report. Please try again.");

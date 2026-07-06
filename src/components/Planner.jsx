@@ -162,7 +162,7 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
         }
 
         const newItem = {
-            id: Date.now(),
+            id: crypto.randomUUID(),
             name:'',
             amount:'',
             category:'Misc',

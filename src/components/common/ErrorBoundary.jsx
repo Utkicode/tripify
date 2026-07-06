@@ -37,9 +37,14 @@ class ErrorBoundary extends React.Component {
                             We're sorry, but an unexpected error occurred. We've logged this issue and are working to fix it.
                         </p>
 
-                        <div className="rounded-lg p-4 mb-8 text-left overflow-auto max-h-32 text-xs font-mono text-slate-600">
-                            {this.state.error && this.state.error.toString()}
-                        </div>
+                        {import.meta.env.DEV && (
+                            <div className="rounded-lg p-4 mb-8 text-left overflow-auto max-h-32 text-xs font-mono text-slate-600">
+                                {this.state.error && this.state.error.toString()}
+                            </div>
+                        )}
+                        {!import.meta.env.DEV && (
+                            <p className="text-sm text-slate-500 mb-8">An unexpected error occurred. Please try refreshing the page.</p>
+                        )}
 
                         <button
                             onClick={this.handleReload}

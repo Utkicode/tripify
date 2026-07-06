@@ -2,6 +2,8 @@ import React, { useState, useEffect } from'react';
 import { applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from"firebase/auth";
 import { auth } from'../firebase';
 import { CheckCircle, XCircle, SpinnerGap, LockKey, ArrowRight } from'@phosphor-icons/react';
+import { logError } from '../utils/logger.js';
+import { AUTH_ERROR_MESSAGES } from '../utils/validation.js';
 
 export default function AuthActionHandler({ onComplete }) {
     // We can't use react-router hooks if this component is rendered conditionally OUTSIDE the router in App.jsx. 
@@ -16,6 +18,7 @@ export default function AuthActionHandler({ onComplete }) {
 
     // For password reset
     const [email, setEmail] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
         // Parse query params manually since we might be outside Router context or just simplifying
@@ -69,7 +72,13 @@ export default function AuthActionHandler({ onComplete }) {
 
     const handlePasswordResetSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         if (!newPassword) return;
+
+        if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+            setError('Password must be at least 8 characters with an uppercase letter and a number.');
+            return;
+        }
 
         setStatus('loading');
         try {
@@ -77,7 +86,7 @@ export default function AuthActionHandler({ onComplete }) {
             setStatus('success');
             setMessage('Your password has been reset successfully. You can now login with your new password.');
         } catch (error) {
-            console.error("Password reset error:", error);
+            logError("Password reset error:", error);
             setStatus('error');
             setMessage(getErrorMessage(error));
         }
@@ -90,7 +99,7 @@ export default function AuthActionHandler({ onComplete }) {
         if (error.code ==='auth/invalid-action-code') {
             return'The link is invalid. It may have specifically been used already.';
         }
-        return error.message ||'An error occurred.';
+        return AUTH_ERROR_MESSAGES[error.code] || error.message || 'An error occurred.';
     };
 
     const handleContinue = () => {
@@ -125,6 +134,11 @@ export default function AuthActionHandler({ onComplete }) {
                     </div>
 
                     <form onSubmit={handlePasswordResetSubmit} className="space-y-4">
+                        {error && (
+                            <div className="p-3 mb-4 rounded-xl text-red-600 bg-red-50 text-sm font-semibold text-center">
+                                {error}
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
                             <input

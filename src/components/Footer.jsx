@@ -27,7 +27,7 @@ const Footer = ({ setCurrentView, onOpenFeedback }) => {
                         </p>
                         <p className="text-[#9CA3AF] text-sm font-medium">
                             Questions?{''}
-                            <a href="mailto:utkarshgupta9759@gmail.com" className="text-[#6B7280] underline underline-offset-2 hover:text-[#1A1A1A] transition-colors font-semibold">
+                            <a href="mailto:support@travelcfo.app" className="text-[#6B7280] underline underline-offset-2 hover:text-[#1A1A1A] transition-colors font-semibold">
                                 Email us directly.
                             </a>
                         </p>
@@ -68,7 +68,7 @@ const Footer = ({ setCurrentView, onOpenFeedback }) => {
                         <h4 className="font-black text-[#1A1A1A] mb-5 text-xs uppercase tracking-widest">Support & Legal</h4>
                         <ul className="space-y-3 text-[#6B7280] font-medium text-sm">
                             <li>
-                                <a href="mailto:utkarshgupta9759@gmail.com" className="hover:text-[#1A1A1A] transition-colors flex items-center gap-1.5">
+                                <a href="mailto:support@travelcfo.app" className="hover:text-[#1A1A1A] transition-colors flex items-center gap-1.5">
                                     <EnvelopeSimple size={13} className="text-[#9CA3AF]" />
                                     Contact
                                 </a>

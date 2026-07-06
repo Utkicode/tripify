@@ -87,6 +87,7 @@ const ProfileCompletion = ({ user, onComplete }) => {
                             className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none"
                             placeholder="John Doe"
                             required
+                            maxLength={100}
                         />
                     </div>
 
@@ -113,6 +114,7 @@ const ProfileCompletion = ({ user, onComplete }) => {
                             onChange={(e) => setBio(e.target.value)}
                             className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none min-h-[100px] resize-none"
                             placeholder="I love hiking and exploring new cities..."
+                            maxLength={1000}
                         />
                     </div>
 

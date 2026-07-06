@@ -25,7 +25,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     const currencyCode = profile?.behavior?.defaultCurrency ||'USD';
     const currencySymbol = getCurrencySymbol(currencyCode);
     const displayName = profile?.identity?.displayName || user?.displayName ||'Traveler';
-    const firstName = displayName.split('')[0];
+    const firstName = displayName.split(' ')[0];
 
     // --- Metric Calculations ---
     const { totalBudget, totalSpent } = React.useMemo(() => calculateGlobalStats(tripsList), [tripsList]);

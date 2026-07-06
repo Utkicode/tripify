@@ -17,7 +17,7 @@ export const calculateGlobalStats = (trips = []) => {
         // Expenses: Check for efficient flat list first (from GlobalExpenses/PDF), else fall back to nested days (legacy/planner)
         if (trip.expenses && Array.isArray(trip.expenses)) {
             trip.expenses.forEach(item => {
-                const amount = Number(item.cost || item.amount) || 0; // handle both cost (PDF) and amount (original)
+                const amount = Math.max(0, Number(item.cost || item.amount) || 0); // handle both cost (PDF) and amount (original)
                 totalSpent += amount;
 
                 const cat = item.category || 'Misc';
@@ -32,7 +32,7 @@ export const calculateGlobalStats = (trips = []) => {
             trip.days.forEach(day => {
                 if (day.items && Array.isArray(day.items)) {
                     day.items.forEach(item => {
-                        const amount = Number(item.amount) || 0;
+                        const amount = Math.max(0, Number(item.amount) || 0);
                         totalSpent += amount;
 
                         // Category Breakdown

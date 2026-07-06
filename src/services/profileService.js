@@ -1,6 +1,8 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId } from '../constants';
+import { validateProfileData } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 const COLLECTION_PATH = `artifacts/${appId}/users`;
 
@@ -19,7 +21,7 @@ export const profileService = {
             }
             return null;
         } catch (error) {
-            console.error("Error fetching user profile:", error);
+            logError("Error fetching user profile:", error);
             throw error;
         }
     },
@@ -30,14 +32,16 @@ export const profileService = {
      * @param {Object} data 
      */
     async setUserProfile(uid, data) {
+        const validation = validateProfileData(data);
+        if (!validation.valid) throw new Error(validation.errors.join('; '));
         try {
             const docRef = doc(db, COLLECTION_PATH, uid);
             await setDoc(docRef, {
                 ...data,
-                updatedAt: Date.now()
+                updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
-            console.error("Error setting user profile:", error);
+            logError("Error setting user profile:", error);
             throw error;
         }
     },
@@ -48,14 +52,16 @@ export const profileService = {
      * @param {Object} data 
      */
     async updateUserProfile(uid, data) {
+        const validation = validateProfileData(data);
+        if (!validation.valid) throw new Error(validation.errors.join('; '));
         try {
             const docRef = doc(db, COLLECTION_PATH, uid);
             await updateDoc(docRef, {
                 ...data,
-                updatedAt: Date.now()
+                updatedAt: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error updating user profile:", error);
+            logError("Error updating user profile:", error);
             throw error;
         }
     },

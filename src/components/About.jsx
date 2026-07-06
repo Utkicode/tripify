@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import SEO from './common/SEO';
+import { SITE_URL } from '../constants';
 
 const About = ({ setCurrentView }) => {
 
@@ -66,7 +67,7 @@ const About = ({ setCurrentView }) => {
             <SEO
                 title="About TravelCFO — why we built it and who it's actually for"
                 description="TravelCFO started as a shared Google Sheet after a Goa trip. Now it's an app. Here's the real story."
-                canonical="https://tripify-c49b6.web.app/?view=about"
+                canonical={`${SITE_URL}/?view=about`}
             />
 
             {/* ── Header ── */}
@@ -184,7 +185,7 @@ const About = ({ setCurrentView }) => {
                                 <div>
                                     <p className="text-white font-extrabold text-lg">Utkarsh</p>
                                     <p className="text-[#9CA3AF] text-sm font-semibold mt-0.5">
-                                        Founder · <a href="mailto:utkarshgupta9759@gmail.com" className="hover:text-white transition-colors underline underline-offset-4 decoration-white/20">utkarshgupta9759@gmail.com</a>
+                                        Founder · <a href="mailto:support@travelcfo.app" className="hover:text-white transition-colors underline underline-offset-4 decoration-white/20">support@travelcfo.app</a>
                                     </p>
                                 </div>
                             </div>

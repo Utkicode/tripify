@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from'framer-motion';
 import { ArrowRight, List, X, Receipt, Users, ChartBar, FileArrowDown, WifiHigh, DeviceMobile, ListDashes } from'@phosphor-icons/react';
 import SEO from'./common/SEO';
 import Auth from'./Auth';
+import { SITE_URL } from '../constants';
 
 const LandingPage = ({ currentView }) => {
     const [showAuth, setShowAuth] = useState(false);
@@ -92,7 +93,7 @@ const LandingPage = ({ currentView }) => {
             <SEO
                 title="TravelCFO — Split trip costs without the awkward spreadsheet"
                 description="Create a trip, invite your friends, log expenses as you go. When it's over, everyone knows exactly who owes what. Free."
-                canonical="https://tripify-c49b6.web.app/"
+                canonical={`${SITE_URL}/`}
             />
 
             {/* ── Navbar ── */}
@@ -330,7 +331,7 @@ const LandingPage = ({ currentView }) => {
                                 </div>
                                 <div>
                                     <p className="text-white font-bold text-base">Utkarsh</p>
-                                    <p className="text-[#6B7280] text-sm font-medium">Founder · <a href="mailto:utkarshgupta9759@gmail.com" className="hover:text-slate-300 transition-colors underline underline-offset-2">utkarshgupta9759@gmail.com</a></p>
+                                    <p className="text-[#6B7280] text-sm font-medium">Founder · <a href="mailto:support@travelcfo.app" className="hover:text-slate-300 transition-colors underline underline-offset-2">support@travelcfo.app</a></p>
                                 </div>
                             </div>
                         </div>

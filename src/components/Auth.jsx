@@ -8,6 +8,8 @@ import {
     sendEmailVerification
 } from"firebase/auth";
 import { auth } from'../firebase.js';
+import { logError } from '../utils/logger.js';
+import { AUTH_ERROR_MESSAGES } from '../utils/validation.js';
 
 const Auth = ({ isModal = false, onClose }) => {
     // Mode State
@@ -26,7 +28,6 @@ const Auth = ({ isModal = false, onClose }) => {
 
     const checkStrength = (pass) => {
         let score = 0;
-        if (pass.length > 5) score++;
         if (pass.length > 8) score++;
         if (/[A-Z]/.test(pass)) score++;
         if (/[0-9]/.test(pass)) score++;
@@ -45,6 +46,22 @@ const Auth = ({ isModal = false, onClose }) => {
         setError('');
         try {
             if (isSignUp) {
+                // Enforce minimum password strength before allowing signup
+                if (password.length < 8) {
+                    setError('Password must be at least 8 characters.');
+                    setLoading(false);
+                    return;
+                }
+                if (!/[A-Z]/.test(password)) {
+                    setError('Password must contain at least one uppercase letter.');
+                    setLoading(false);
+                    return;
+                }
+                if (!/[0-9]/.test(password)) {
+                    setError('Password must contain at least one number.');
+                    setLoading(false);
+                    return;
+                }
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(userCredential.user, { displayName: name });
                 await sendEmailVerification(userCredential.user);
@@ -53,8 +70,8 @@ const Auth = ({ isModal = false, onClose }) => {
                 await signInWithEmailAndPassword(auth, email, password);
             }
         } catch (err) {
-            console.error(err);
-            setError(err.message.replace('Firebase:',''));
+            logError(err);
+            setError(AUTH_ERROR_MESSAGES[err.code] || 'Something went wrong. Please try again.');
             setLoading(false);
         }
     };

@@ -1,10 +1,15 @@
 import { collection, addDoc, query, where, onSnapshot, orderBy, limit, serverTimestamp, updateDoc, doc, writeBatch, getDocs } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId } from '../constants';
+import { validateNotificationData } from '../utils/validation.js';
+import { logError } from '../utils/logger.js';
 
 // Send a notification to a specific user
 export const sendNotification = async (toUserId, notificationData) => {
     try {
+        const validation = validateNotificationData(notificationData);
+        if (!validation.valid) throw new Error(validation.errors.join('; '));
+
         const notificationsRef = collection(db, 'artifacts', appId, 'users', toUserId, 'notifications');
 
         await addDoc(notificationsRef, {
@@ -15,7 +20,7 @@ export const sendNotification = async (toUserId, notificationData) => {
 
         return { success: true };
     } catch (error) {
-        console.error("Error sending notification:", error);
+        logError("Error sending notification:", error);
         return { success: false, error };
     }
 };
@@ -39,7 +44,7 @@ export const subscribeToNotifications = (userId, callback) => {
 
         callback(notifications);
     }, (error) => {
-        console.error("Error subscribing to notifications:", error);
+        logError("Error subscribing to notifications:", error);
     });
 
     return unsubscribe;
@@ -53,7 +58,7 @@ export const markAsRead = async (userId, notificationId) => {
             read: true
         });
     } catch (error) {
-        console.error("Error marking notification as read:", error);
+        logError("Error marking notification as read:", error);
     }
 };
 
@@ -64,13 +69,15 @@ export const markAllAsRead = async (userId) => {
         const q = query(notificationsRef, where('read', '==', false));
         const snapshot = await getDocs(q);
 
-        const batch = writeBatch(db);
-        snapshot.docs.forEach((doc) => {
-            batch.update(doc.ref, { read: true });
-        });
-
-        await batch.commit();
+        const CHUNK_SIZE = 400; // Stay under Firestore's 500 limit
+        const unreadDocs = snapshot.docs;
+        for (let i = 0; i < unreadDocs.length; i += CHUNK_SIZE) {
+            const chunk = unreadDocs.slice(i, i + CHUNK_SIZE);
+            const batch = writeBatch(db);
+            chunk.forEach((doc) => batch.update(doc.ref, { read: true }));
+            await batch.commit();
+        }
     } catch (error) {
-        console.error("Error marking all as read:", error);
+        logError("Error marking all as read:", error);
     }
 };

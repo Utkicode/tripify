@@ -82,6 +82,7 @@ const ProfileIdentity = () => {
                             onChange={handleChange}
                             className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none font-medium"
                             placeholder="Your Name"
+                            maxLength={100}
                         />
                     </div>
                     <div className="space-y-2">
@@ -110,6 +111,7 @@ const ProfileIdentity = () => {
                         rows={4}
                         className="w-full px-4 py-3  border border-slate-200 rounded-xl focus:border-blue-500 focus:bg-white transition-all outline-none resize-none font-medium"
                         placeholder="Tell us a bit about yourself..."
+                        maxLength={1000}
                     />
                 </div>
 

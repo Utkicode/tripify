@@ -1,7 +1,8 @@
-import React, { useState } from'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { logError } from '../utils/logger.js';
 import { motion, AnimatePresence } from'framer-motion';
 import { X, EnvelopeSimple, UserPlus, CheckCircle, MagnifyingGlass, WarningCircle } from'@phosphor-icons/react';
-import { collection, query, where, getDocs, updateDoc, doc, arrayUnion } from"firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc, arrayUnion, getDoc } from "firebase/firestore";
 import { db } from'../firebase';
 import { appId } from'../constants';
 import { sendNotification } from'../services/notificationService';
@@ -10,6 +11,14 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState('idle'); // idle, searching, inviting, success, error
     const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+    const timerRef = useRef(null);
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
 
     const handleInvite = async (e) => {
         e.preventDefault();
@@ -17,6 +26,7 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
 
         setStatus('searching');
         setMessage('');
+        setError('');
 
         try {
             // 1. Find user by email
@@ -45,6 +55,19 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
             setStatus('inviting');
             const tripRef = doc(db,'artifacts', appId,'trips', tripId);
 
+            const tripSnap = await getDoc(tripRef);
+            if (!tripSnap.exists()) {
+                setStatus('error');
+                setError('Trip not found.');
+                return;
+            }
+            const tripData = tripSnap.data();
+            if (tripData.ownerId !== currentUser.uid) {
+                setStatus('error');
+                setError('Only the trip owner can invite collaborators.');
+                return;
+            }
+
             await updateDoc(tripRef, {
                 collaborators: arrayUnion(targetUid),
                 travelers: arrayUnion({
@@ -62,18 +85,18 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
                 senderId: currentUser.uid,
                 senderName: currentUser.displayName || currentUser.email ||'Someone',
                 message: `${currentUser.displayName ||'Someone'} invited you to join"${tripName ||'a trip'}"`,
-                link: `/trip/${tripId}`
+                link: `/?trip=${tripId}`
             });
 
             setStatus('success');
-            setTimeout(() => {
+            timerRef.current = setTimeout(() => {
                 onClose();
                 setEmail('');
                 setStatus('idle');
             }, 2000);
 
         } catch (error) {
-            console.error("Invite error:", error);
+            logError("Invite error:", error);
             setStatus('error');
             setMessage('Failed to invite. Please try again.');
         }
@@ -134,7 +157,7 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
                                     {status ==='error' && (
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-[#1A1A1A] text-sm font-bold  p-4 rounded-2xl border border-red-100">
                                             <WarningCircle size={20} className="shrink-0" />
-                                            {message}
+                                            {error || message}
                                         </motion.div>
                                     )}
 

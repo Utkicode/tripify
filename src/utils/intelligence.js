@@ -85,7 +85,11 @@ export const getNextBestActions = (trips, user) => {
 
     const nearestTrip = upcomingTrips[0];
     const readiness = calculateTripReadiness(nearestTrip);
-    const daysUntil = nearestTrip.startDate ? differenceInDays(new Date(nearestTrip.startDate), new Date()) : 30; // default to far out if no date
+    let daysUntil = 30;
+    if (nearestTrip.startDate) {
+        const startDate = new Date(nearestTrip.startDate);
+        daysUntil = isNaN(startDate.getTime()) ? 30 : differenceInDays(startDate, new Date());
+    }
 
     // Rule 1: High Urgency - Trip soon, low readiness
     if (daysUntil < 7 && daysUntil >= 0 && readiness.score < 80) {

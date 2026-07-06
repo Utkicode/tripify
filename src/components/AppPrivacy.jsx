@@ -27,6 +27,7 @@ const AppPrivacy = () => {
                         <p className="text-lg font-medium">
                             We collect information you provide directly to us when you create an account, plan a trip, or communicate with us.
                             This includes your name, email address, and trip details.
+                            We also collect your browser's User-Agent string when you submit feedback, which helps us diagnose technical issues. This is only collected when you explicitly submit feedback and is not used for tracking.
                         </p>
                     </section>
 

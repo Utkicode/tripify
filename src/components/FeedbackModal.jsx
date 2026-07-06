@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from'framer-motion';
 import { collection, addDoc } from"firebase/firestore";
 import { db } from'../firebase';
 import { appId } from'../constants';
+import { logError } from '../utils/logger.js';
 
 const FeedbackModal = ({ isOpen, onClose, user }) => {
     const [title, setTitle] = useState('');
@@ -41,7 +42,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
             }, 3000);
 
         } catch (error) {
-            console.error("Error submitting feedback:", error);
+            logError("Error submitting feedback:", error);
             alert("Failed to send feedback. Please try again.");
         } finally {
             setIsSubmitting(false);
@@ -110,6 +111,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                                             onChange={(e) => setTitle(e.target.value)}
                                             placeholder="Found a bug in..."
                                             className="w-full px-5 py-4 rounded-2xl  border-2 border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-medium"
+                                            maxLength={200}
                                         />
                                     </div>
 
@@ -122,6 +124,7 @@ const FeedbackModal = ({ isOpen, onClose, user }) => {
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Tell us what happened..."
                                             className="w-full px-5 py-4 rounded-2xl  border-2 border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all resize-none font-medium text-slate-700 placeholder:text-slate-400 leading-relaxed"
+                                            maxLength={2000}
                                         />
                                     </div>
 

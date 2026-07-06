@@ -10,3 +10,9 @@ export const getCurrencySymbol = (currencyCode) => {
         default: return '$';
     }
 };
+
+const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'INR', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD', 'THB', 'KRW'];
+
+export function isValidCurrency(code) {
+  return typeof code === 'string' && SUPPORTED_CURRENCIES.includes(code.toUpperCase());
+}

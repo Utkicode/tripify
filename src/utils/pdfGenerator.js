@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { appId } from '../constants';
+import { getCurrencySymbol } from './currency.js';
 
 /**
  * Fetch all expenses for a list of trips.
@@ -49,7 +50,14 @@ export const fetchAllExpenses = async (trips) => {
     return Promise.all(enrichmentPromises);
 };
 
-export const generateExpenseReport = async (user, profile, tripsList) => {
+function safeDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export const generateExpenseReport = async (user, profile, tripsList, currencyCode) => {
+    const symbol = getCurrencySymbol(currencyCode || profile?.behavior?.defaultCurrency || 'USD');
     // 1. Fetch Data
     const enrichedTrips = await fetchAllExpenses(tripsList);
 
@@ -114,9 +122,9 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
 
     yPos += 10;
     const stats = [
-        [`Total Trips: ${totalTrips}`, `Total Spend: INR ${totalSpend.toLocaleString()}`],
-        [`Average Spend per Trip: INR ${Math.round(avgSpend).toLocaleString()}`, `Highest Spend Category: ${highestCatName}`],
-        [`Last Expense Logged: ${lastExpenseDate ? format(new Date(lastExpenseDate), 'dd MMM yyyy') : 'N/A'}`]
+        [`Total Trips: ${totalTrips}`, `Total Spend: ${symbol} ${totalSpend.toLocaleString()}`],
+        [`Average Spend per Trip: ${symbol} ${Math.round(avgSpend).toLocaleString()}`, `Highest Spend Category: ${highestCatName}`],
+        [`Last Expense Logged: ${safeDate(lastExpenseDate) ? format(safeDate(lastExpenseDate), 'dd MMM yyyy') : 'N/A'}`]
     ];
 
     autoTable(doc, {
@@ -143,10 +151,10 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
 
     const tripRows = enrichedTrips.map(t => [
         t.tripName,
-        format(new Date(t.createdAt), 'dd MMM yyyy'),
+        safeDate(t.createdAt) ? format(safeDate(t.createdAt), 'dd MMM yyyy') : '—',
         t.destination || '—', // Destination isn't always set in trip root?
         t.travelerCount || 1,
-        `INR ${t.totalActualSpend.toLocaleString()}`
+        `${symbol} ${t.totalActualSpend.toLocaleString()}`
     ]);
 
     autoTable(doc, {
@@ -180,11 +188,11 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
 
         // Trip Expenses Table
         const expenseRows = trip.expenses.map(e => [
-            e.date ? format(new Date(e.date), 'dd MMM yyyy') : 'N/A',
+            safeDate(e.date) ? format(safeDate(e.date), 'dd MMM yyyy') : '',
             e.activityName || e.description || 'Expense',
             e.category || 'Misc',
             e.paidBy,
-            `INR ${e.cost.toLocaleString()}`
+            `${symbol} ${e.cost.toLocaleString()}`
         ]);
 
         if (expenseRows.length > 0) {
@@ -201,7 +209,7 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
             yPos = doc.lastAutoTable.finalY + 2;
             doc.setFontSize(10);
             doc.setFont(undefined, 'bold');
-            doc.text(`Total Spend (${trip.tripName}): INR ${trip.totalActualSpend.toLocaleString()}`, 14, yPos + 5);
+            doc.text(`Total Spend (${trip.tripName}): ${symbol} ${trip.totalActualSpend.toLocaleString()}`, 14, yPos + 5);
             yPos += 15;
         } else {
             doc.setFontSize(10);
@@ -234,7 +242,7 @@ export const generateExpenseReport = async (user, profile, tripsList) => {
         .sort((a, b) => b[1] - a[1]) // Descending
         .map(([cat, amount]) => [
             cat,
-            `INR ${amount.toLocaleString()}`,
+            `${symbol} ${amount.toLocaleString()}`,
             `${totalSpend > 0 ? Math.round((amount / totalSpend) * 100) : 0}%`
         ]);
 

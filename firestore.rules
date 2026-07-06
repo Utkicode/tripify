@@ -17,7 +17,9 @@ service cloud.firestore {
 
     // Check if user is listed in the 'collaborators' array of the document
     function isCollaborator(resourceData) {
-      return isAuthenticated() && (request.auth.uid in resourceData.collaborators);
+      return isAuthenticated()
+        && resourceData.collaborators != null
+        && (request.auth.uid in resourceData.collaborators);
     }
 
     // Check if the user is a collaborator on the PARENT trip
@@ -35,7 +37,7 @@ service cloud.firestore {
       // Read: Authenticated users can read profiles (to find people to invite)
       // We might want to restrict this further later (e.g. strict ID lookup only), 
       // but for "Searching" users, open read for auth users is common.
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId);
       
       // Write: Only the owner can edit their profile
       allow write: if isOwner(userId);
@@ -51,9 +53,19 @@ service cloud.firestore {
     match /artifacts/{appId}/trips/{tripId} {
       // Create: Authenticated users can create trips
       // Validation: Must set themselves as owner and distinct in collaborators
-      allow create: if isAuthenticated() 
+      allow create: if isAuthenticated()
                     && request.resource.data.ownerId == request.auth.uid
-                    && request.resource.data.collaborators.hasAll([request.auth.uid]);
+                    && request.resource.data.collaborators.hasAll([request.auth.uid])
+                    && request.resource.data.keys().hasOnly([
+                        'ownerId', 'collaborators', 'name', 'description',
+                        'startDate', 'endDate', 'destination', 'budget',
+                        'currency', 'totalCost', 'createdAt', 'updatedAt'
+                      ])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 200
+                    && (request.resource.data.budget == null || (request.resource.data.budget is number && request.resource.data.budget >= 0))
+                    && (request.resource.data.destination == null || (request.resource.data.destination is string && request.resource.data.destination.size() <= 200));
 
       // Read/Update/Delete: Must be a collaborator
       allow read, update, delete: if isCollaborator(resource.data);
@@ -72,7 +84,14 @@ service cloud.firestore {
 
       // Path: artifacts/{appId}/trips/{tripId}/expenses/{expenseId}
       match /expenses/{expenseId} {
-         allow read, write: if isParentTripCollaborator(appId, tripId);
+         allow read: if isParentTripCollaborator(appId, tripId);
+         allow write: if isParentTripCollaborator(appId, tripId)
+           && request.resource.data.amount is number
+           && request.resource.data.amount > 0
+           && request.resource.data.amount <= 999999999
+           && request.resource.data.category is string
+           && request.resource.data.category.size() <= 50
+           && request.resource.data.paidBy is string;
       }
     }
     // 4. Feedback
@@ -80,7 +99,13 @@ service cloud.firestore {
     match /feedback/{feedbackId} {
       // Allow anyone (even unauthenticated, if needed, or just auth) to create feedback
       // Since our app supports anonymous feedback via "Report a Bug", let's be permissive strictly for creation.
-      allow create: if true; 
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasOnly(['text', 'rating', 'createdAt', 'userId'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() < 1000
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5; 
       
       // Only admins/devs should read/delete (restricted for now, or open if you want to build an admin panel later)
       allow read, update, delete: if false; 

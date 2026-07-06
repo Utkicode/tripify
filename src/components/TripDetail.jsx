@@ -26,6 +26,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const hasUnsavedChanges = React.useRef(false);
     const [daysLoading, setDaysLoading] = useState(true); // Track sub-collection load
+    const [tripData, setTripData] = useState(null);
+    const [currency, setCurrency] = useState('USD');
 
     // --- Data Sync: Fetch Detail ---
     // --- Data Sync: Fetch Detail & Days ---
@@ -43,7 +45,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                setTripData(data);
                 setDetailLoading(false);
+                if (data.currency) setCurrency(data.currency);
 
                 // --- Lazy Migration Check ---
                 if (data.days && Array.isArray(data.days) && data.days.length > 0) {
@@ -73,6 +77,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 if (data.destination && data.destination !== destination) setDestination(data.destination ||'');
                 if (data.budget !== undefined && data.budget !== budget) setBudget(data.budget);
                 if (data.collaborators) setCollaborators(data.collaborators);
+            } else {
+                setDetailLoading(false);
+                setTripData(null);
             }
         }, (error) => {
             console.error("Error fetching trip details:", error);
@@ -162,6 +169,21 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             if (clearInitialTab) clearInitialTab();
         }
     }, [initialTab, clearInitialTab]);
+
+    if (!detailLoading && !tripData) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-[#FAFAF7]">
+                <div className="text-center">
+                    <h2 className="text-xl font-semibold text-slate-700">Trip Not Found</h2>
+                    <p className="text-slate-500 mt-2">This trip doesn't exist or you don't have access.</p>
+                    <button onClick={() => { setCurrentTripId(null); }}
+                        className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg">
+                        Back to My Trips
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen  text-slate-800 font-sans flex flex-col">
@@ -291,7 +313,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                     />
                                 )}
                                 {activeTab ==='travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
-                                {activeTab ==='expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} />}
+                                {activeTab ==='expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} currencyCode={currency} />}
                                 {activeTab ==='map' && <TripMap days={days} />}
                             </motion.div>
                         </AnimatePresence>

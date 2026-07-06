@@ -37,7 +37,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 30 // <== 30 days
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -51,7 +51,7 @@ export default defineConfig({
               cacheName: 'gstatic-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 30 // <== 30 days
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -64,6 +64,7 @@ export default defineConfig({
 
   ],
   build: {
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {

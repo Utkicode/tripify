@@ -12,7 +12,8 @@ export const calculateTripBalances = (expenses = [], travelers = [], currentUser
     });
 
     expenses.forEach(exp => {
-        const amount = Number(exp.amount) || 0;
+        const amount = Number(exp.amount);
+        if (isNaN(amount) || amount <= 0) return; // Skip invalid/negative expenses entirely
         const paidBy = exp.paidBy || exp.userId; // Fallback to creator if paidBy missing
 
         // 1. Credit the payer
@@ -24,13 +25,14 @@ export const calculateTripBalances = (expenses = [], travelers = [], currentUser
 
         // 2. Debit the split participants
         if (exp.splitDetails) {
-            // New Schema
+            const totalSplit = Object.values(exp.splitDetails).reduce((sum, v) => sum + Number(v || 0), 0);
+            // Only process splits if they roughly match the expense amount (within 2 cents)
+            if (Math.abs(totalSplit - amount) > 0.02) return; // Skip malformed splits
             Object.entries(exp.splitDetails).forEach(([uid, splitAmount]) => {
                 if (balances[uid] === undefined) balances[uid] = 0;
                 if (share[uid] === undefined) share[uid] = 0;
-
-                balances[uid] -= splitAmount;
-                share[uid] += splitAmount;
+                balances[uid] -= Number(splitAmount) || 0;
+                share[uid] += Number(splitAmount) || 0;
             });
         } else {
             // Old Schema (Assume equal split among everyone? Or just creator?)
@@ -58,12 +60,13 @@ export const calculateSettlements = (balances) => {
     let creditors = [];
 
     Object.entries(balances).forEach(([id, amount]) => {
-        if (amount < -0.01) debtors.push({ id, amount }); // use small epsilon for float safety
-        if (amount > 0.01) creditors.push({ id, amount });
+        const amountInCents = Math.round(amount * 100);
+        if (amountInCents < 0) debtors.push({ id, amount: amountInCents });
+        if (amountInCents > 0) creditors.push({ id, amount: amountInCents });
     });
 
-    debtors.sort((a, b) => a.amount - b.amount); // Ascending (most negative first) - e.g. -100, -50
-    creditors.sort((a, b) => b.amount - a.amount); // Descending (most positive first) - e.g. 100, 50
+    debtors.sort((a, b) => a.amount - b.amount); // Ascending (most negative first)
+    creditors.sort((a, b) => b.amount - a.amount); // Descending (most positive first)
 
     const settlements = [];
 
@@ -77,14 +80,11 @@ export const calculateSettlements = (balances) => {
         // The amount to settle is the minimum of the debt magnitude or the credit available
         let amount = Math.min(Math.abs(debtor.amount), creditor.amount);
 
-        // Round to 2 decimals
-        amount = Math.round(amount * 100) / 100;
-
         if (amount > 0) {
             settlements.push({
                 from: debtor.id,
                 to: creditor.id,
-                amount
+                amount: Math.round((amount / 100) * 100) / 100 // Convert back to dollars with 2 decimal precision
             });
         }
 
@@ -92,9 +92,9 @@ export const calculateSettlements = (balances) => {
         debtor.amount += amount;
         creditor.amount -= amount;
 
-        // Move indices if settled (allow small floating point tolerance)
-        if (Math.abs(debtor.amount) < 0.01) i++;
-        if (creditor.amount < 0.01) j++;
+        // Move indices if settled
+        if (debtor.amount === 0) i++;
+        if (creditor.amount === 0) j++;
     }
 
     return settlements;

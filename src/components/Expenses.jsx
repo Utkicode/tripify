@@ -6,8 +6,13 @@ import { ExpenseService } from'../services/ExpenseService';
 import AddExpenseModal from'./AddExpenseModal';
 import ConfirmModal from'./common/ConfirmModal';
 import { calculateTripBalances, calculateSettlements } from'../utils/expenseUtils';
+import { getCurrencySymbol } from '../utils/currency.js';
+import { useProfile } from '../context/ProfileContext';
 
-const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [] }) => {
+const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [], currencyCode: currencyProp }) => {
+    const { profile } = useProfile();
+    const currencyCode = currencyProp || profile?.behavior?.defaultCurrency || 'USD';
+    const symbol = getCurrencySymbol(currencyCode);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterCategory, setFilterCategory] = useState('All');
@@ -113,7 +118,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <h2 className="text-3xl font-black text-slate-900 tracking-tight">Trip Wallet</h2>
                     {isBudgetSet ? (
                         <div className="flex items-center gap-3 mt-2 text-sm font-semibold text-slate-600 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/50 shadow-sm">
-                            <span>Budget: <span className="text-slate-900">₹{budget.toLocaleString()}</span></span>
+                             <span>Budget: <span className="text-slate-900">{symbol}{budget.toLocaleString()}</span></span>
                             <button onClick={() => setIsEditingBudget(true)} className="p-1 hover: rounded-full text-[#1A1A1A] transition-colors"><PencilSimple size={14} /></button>
                         </div>
                     ) : (
@@ -167,7 +172,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                 <StatsCard
                     icon={CurrencyInr} iconColor="text-[#1A1A1A]" bgColor=""
                     label="Total Spending"
-                    value={`₹${totalCost.toLocaleString()}`}
+                    value={`${symbol}${totalCost.toLocaleString()}`}
                     subElement={totalCost > 0 && <span className="text-xs  text-[#1A1A1A] px-2.5 py-1 rounded-full font-bold flex items-center shadow-sm">+<ArrowUpRight size={12} strokeWidth={3} /></span>}
                 />
 
@@ -175,7 +180,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <StatsCard
                         icon={Users} iconColor={myBalance >= 0 ?"text-[#1A1A1A]" :"text-[#1A1A1A]"} bgColor={myBalance >= 0 ?"" :""}
                         label="My Position"
-                        value={myBalance === 0 ?"Settled" : `₹${Math.abs(myBalance).toLocaleString()}`}
+                        value={myBalance === 0 ?"Settled" : `${symbol}${Math.abs(myBalance).toLocaleString()}`}
                         subValue={myBalance > 0 ?"You are owed" : myBalance < 0 ?"You owe" :"All squared up"}
                         delay={0.1}
                     />
@@ -183,7 +188,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     <StatsCard
                         icon={TrendUp} iconColor="text-[#1A1A1A]" bgColor=""
                         label="Average / Day"
-                        value={`₹${avgDaily.toLocaleString()}`}
+                        value={`${symbol}${avgDaily.toLocaleString()}`}
                         subElement={<span className="text-[10px] uppercase font-bold tracking-wider /80 text-slate-500 px-3 py-1 rounded-full border border-slate-200">Daily Avg</span>}
                         delay={0.1}
                     />
@@ -208,7 +213,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                 />
                             </div>
                             <p className="text-xs text-slate-500 text-right font-bold relative z-10">
-                                {budgetStats.remaining >= 0 ? <span className="text-[#1A1A1A]">₹{budgetStats.remaining.toLocaleString()} Left</span> : <span className="text-[#1A1A1A]">Over by ₹{Math.abs(budgetStats.remaining).toLocaleString()}</span>}
+                                {budgetStats.remaining >= 0 ? <span className="text-[#1A1A1A]">{symbol}{budgetStats.remaining.toLocaleString()} Left</span> : <span className="text-[#1A1A1A]">Over by {symbol}{Math.abs(budgetStats.remaining).toLocaleString()}</span>}
                             </p>
                         </div>
                     ) : (
@@ -294,7 +299,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
 
                                             <div className="flex items-center justify-between w-full md:w-auto md:justify-end gap-6 pl-[4.5rem] md:pl-0">
                                                 <div className="text-right">
-                                                    <div className="font-black text-2xl text-slate-900">₹{Number(expense.amount).toLocaleString()}</div>
+                                                    <div className="font-black text-2xl text-slate-900">{symbol}{Number(expense.amount).toLocaleString()}</div>
                                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{expense.category}</div>
                                                 </div>
                                                 <button
@@ -338,7 +343,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                         </div>
                                         <div className="text-right">
                                             <p className={`font-bold ${isOwed ?'text-[#1A1A1A]' : isDebt ?'text-[#1A1A1A]' :'text-slate-400'}`}>
-                                                {bal === 0 ?'Settled' : `${isOwed ?'+' :'-'}₹${Math.abs(bal).toLocaleString()}`}
+                                                {bal === 0 ?'Settled' : `${isOwed ?'+' :'-'}${symbol}${Math.abs(bal).toLocaleString()}`}
                                             </p>
                                             <p className="text-[10px] uppercase font-bold text-slate-400">
                                                 {isOwed ?'Gets back' : isDebt ?'Owes' :'Balanced'}
@@ -406,7 +411,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                                         <span className={`font-bold ${isMeTo ?'text-[#1A1A1A]' :'text-slate-700'}`}>{isMeTo ?'You' : toName}</span>
                                                     </div>
                                                 </div>
-                                                <div className="font-bold text-slate-800">₹{s.amount.toLocaleString()}</div>
+                                                <div className="font-bold text-slate-800">{symbol}{s.amount.toLocaleString()}</div>
                                             </div>
                                         );
                                     })}

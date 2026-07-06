@@ -3,6 +3,8 @@ import { EnvelopeSimple, ArrowsClockwise, SignOut, ArrowRight } from'@phosphor-i
 import { sendEmailVerification, signOut, reload } from"firebase/auth";
 import { auth } from'../firebase';
 import { motion } from'framer-motion';
+import { logError } from '../utils/logger.js';
+import { AUTH_ERROR_MESSAGES } from '../utils/validation.js';
 
 const VerifyEmail = ({ user }) => {
     const [loading, setLoading] = useState(false);
@@ -29,7 +31,8 @@ const VerifyEmail = ({ user }) => {
                 setMessage('Error: No authenticated user found.');
             }
         } catch (error) {
-            setMessage('Error sending email:' + error.message);
+            logError("Error sending email:", error);
+            setMessage('Error: ' + (AUTH_ERROR_MESSAGES[error.code] || 'Something went wrong. Please try again.'));
         }
         setLoading(false);
     };
@@ -44,7 +47,8 @@ const VerifyEmail = ({ user }) => {
                 window.location.reload(); // Force hard reload to ensure state sync if needed
             }
         } catch (error) {
-            setMessage('Error checking status:' + error.message);
+            logError("Error checking status:", error);
+            setMessage('Error: ' + (AUTH_ERROR_MESSAGES[error.code] || 'Something went wrong. Please try again.'));
         }
         setLoading(false);
     };

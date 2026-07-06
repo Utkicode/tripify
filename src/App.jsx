@@ -3,7 +3,7 @@ import { ArrowsClockwise } from'@phosphor-icons/react';
 import { signOut } from"firebase/auth";
 import { collection, query, onSnapshot, addDoc, deleteDoc, doc, where, getDoc } from"firebase/firestore";
 import { auth, db } from'./firebase.js';
-import { appId } from'./constants.js';
+import { appId, SITE_URL } from'./constants.js';
 import { sendNotification } from'./services/notificationService';
 import { useProfile } from'./context/ProfileContext';
 
@@ -84,6 +84,7 @@ export default function App() {
   const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
   const [tripLoading, setTripLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
@@ -172,30 +173,33 @@ export default function App() {
 
     setIsDeleting(true);
     try {
-      // 1. Fetch trip first to get collaborators (for notifications)
       const tripRef = doc(db,'artifacts', appId,'trips', tripId);
+      // Verify current user is the trip owner before allowing deletion
       const tripSnap = await getDoc(tripRef);
-
-      if (tripSnap.exists()) {
-        const tripData = tripSnap.data();
-        const collaborators = tripData.collaborators || [];
-
-        // Filter out current user (the deleter)
-        const targetUsers = collaborators.filter(uid => uid !== user.uid);
-
-        // Send notification to each collaborator
-        await Promise.all(targetUsers.map(uid =>
-          sendNotification(uid, {
-            type:'trip_delete',
-            tripId: null, // Trip is gone, so no ID to link to
-            tripName: tripName ||'A trip',
-            senderId: user.uid,
-            senderName: user.displayName || user.email ||'Someone',
-            message: `${user.displayName ||'Someone'} deleted the trip"${tripName ||'Untitled'}"`,
-            timestamp: Date.now()
-          })
-        ));
+      if (!tripSnap.exists()) { setError('Trip not found'); setIsDeleting(false); return; }
+      const tripData = tripSnap.data();
+      if (tripData.ownerId !== user.uid) {
+        setError('Only the trip owner can delete this trip.');
+        setIsDeleting(false);
+        return;
       }
+      const collaborators = tripData.collaborators || [];
+
+      // Filter out current user (the deleter)
+      const targetUsers = collaborators.filter(uid => uid !== user.uid);
+
+      // Send notification to each collaborator
+      await Promise.all(targetUsers.map(uid =>
+        sendNotification(uid, {
+          type:'trip_delete',
+          tripId: null, // Trip is gone, so no ID to link to
+          tripName: tripName ||'A trip',
+          senderId: user.uid,
+          senderName: user.displayName || user.email ||'Someone',
+          message: `${user.displayName ||'Someone'} deleted the trip "${tripName ||'Untitled'}"`,
+          timestamp: Date.now()
+        })
+      ));
 
       // 2. Delete the trip document (Global)
       await deleteDoc(tripRef);
@@ -280,6 +284,25 @@ export default function App() {
   // If a specific trip is open, show the editor (Full screen mode)
   // If a specific trip is open, show the editor (Full screen mode)
   if (currentTripId) {
+    // Verify user is a collaborator on this trip before rendering
+    if (!tripLoading) {
+      const isCollaborator = tripsList.some(t => t.id === currentTripId);
+      if (!isCollaborator) {
+        // User is not a collaborator — show access denied
+        return (
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-slate-700">Access Denied</h2>
+              <p className="text-slate-500 mt-2">You don't have access to this trip.</p>
+              <button onClick={() => { window.history.pushState({}, '', '/'); setCurrentTripId(null); setCurrentView('trips'); }}
+                className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg">
+                Go to My Trips
+              </button>
+            </div>
+          </div>
+        );
+      }
+    }
     return (
       <Suspense fallback={<AppLoadingSkeleton />}>
         <TripDetail
@@ -328,7 +351,7 @@ export default function App() {
                 currentView ==='vacation-budget-app' ?'vacation cost, holiday budget, travel finance, trip calculator' :
                   currentView ==='itinerary-builder' ?'trip itinerary, travel schedule, daily planner, travel map' :'travel planner, expense tracker, group travel, itinerary builder'
           }
-          canonical={`https://tripify-c49b6.web.app/?view=${currentView}`}
+          canonical={`${SITE_URL}/?view=${currentView}`}
         />
 
         {currentView ==='dashboard' && (
@@ -374,11 +397,12 @@ export default function App() {
       </Layout>
       <ConfirmationModal
         isOpen={deleteModalInfo.isOpen}
-        onClose={() => setDeleteModalInfo({ ...deleteModalInfo, isOpen: false })}
-        onConfirm={confirmDeleteTrip}
-        title="Delete Trip?"
-        message={`Are you sure you want to delete"${deleteModalInfo.tripName}"? This action cannot be undone.`}
+        onClose={() => { setDeleteModalInfo({ ...deleteModalInfo, isOpen: false }); setError(null); }}
+        onConfirm={error ? () => setDeleteModalInfo({ ...deleteModalInfo, isOpen: false }) : confirmDeleteTrip}
+        title={error ? "Error" : "Delete Trip?"}
+        message={error || `Are you sure you want to delete "${deleteModalInfo.tripName}"? This action cannot be undone.`}
         isLoading={isDeleting}
+        confirmText={error ? "Close" : "Delete"}
       />
     </Suspense>
   );

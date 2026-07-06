@@ -2,6 +2,7 @@ import React, { useState } from'react';
 import { motion } from'framer-motion';
 import { Receipt, Users, ChartBar, FileArrowDown, DeviceMobile, WifiHigh } from'@phosphor-icons/react';
 import SEO from'./common/SEO';
+import { SITE_URL } from '../constants';
 
 const Features = ({ onShowAuth }) => {
     const [activeFeature, setActiveFeature] = useState(null);
@@ -11,7 +12,7 @@ const Features = ({ onShowAuth }) => {
             <SEO
                 title="What TravelCFO does — and why you'll actually use it"
                 description="Six features. All aimed at one thing: finishing a trip without the awkward money conversation. Free to use."
-                canonical="https://tripify-c49b6.web.app/?view=features"
+                canonical={`${SITE_URL}/?view=features`}
             />
 
             {/* ── Header ── */}

@@ -3,6 +3,7 @@ import { CreditCard, Wallet, WarningCircle, FloppyDisk, SpinnerGap, CurrencyDoll
 import { motion, AnimatePresence } from'framer-motion';
 import { useProfile } from'../../context/ProfileContext';
 import { generateExpenseReport } from'../../utils/pdfGenerator'; // Use new generator
+import { logError } from '../../utils/logger.js';
 import { auth, db } from'../../firebase'; // Need db for fetching trips
 import { collection, query, where, getDocs } from'firebase/firestore'; // Firestore imports
 import { appId } from'../../constants';
@@ -110,13 +111,13 @@ const ProfileSettings = () => {
             const tripsList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
             // 2. Generate Report
-            await generateExpenseReport(user, profile, tripsList);
+            await generateExpenseReport(user, profile, tripsList, profile?.behavior?.defaultCurrency);
 
             setMessage('Report generated successfully!');
             setTimeout(() => setMessage(''), 3000);
         } catch (error) {
             setMessage('Failed to generate report.');
-            console.error(error);
+            logError(error);
         } finally {
             setExportLoading(false);
         }
@@ -239,8 +240,8 @@ const ProfileSettings = () => {
                                     <span className="block text-xs text-slate-500">Real-time alerts for shared trips.</span>
                                 </div>
                             </div>
-                            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${formData.notifications?.push ?'0' :''}`}>
-                                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${formData.notifications?.push ?'translate-x-5' :'translate-x-0'}`} />
+                            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${formData.notifications?.push ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${formData.notifications?.push ? 'translate-x-5' : 'translate-x-0'}`} />
                             </div>
                             <input type="checkbox" name="notify_push" checked={formData.notifications?.push ?? true} onChange={handleChange} className="hidden" />
                         </label>
@@ -253,8 +254,8 @@ const ProfileSettings = () => {
                                     <span className="block text-xs text-slate-500">Weekly summaries and security notices.</span>
                                 </div>
                             </div>
-                            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${formData.notifications?.email ?'0' :''}`}>
-                                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${formData.notifications?.email ?'translate-x-5' :'translate-x-0'}`} />
+                            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${formData.notifications?.email ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${formData.notifications?.email ? 'translate-x-5' : 'translate-x-0'}`} />
                             </div>
                             <input type="checkbox" name="notify_email" checked={formData.notifications?.email ?? true} onChange={handleChange} className="hidden" />
                         </label>

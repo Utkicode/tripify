@@ -15,7 +15,7 @@ const Travelers = ({ travelers, setTravelers }) => {
     };
 
     const addTraveler = () => setTravelers([...travelers, {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         name:'',
         email:'',
         phone:'',
