@@ -326,12 +326,11 @@ const LandingPage = ({ currentView }) => {
                             <blockquote className="text-3xl md:text-4xl lg:text-5xl font-black text-white leading-[1.1] tracking-tight mb-10">"I built this because after every trip, the settling-up process took longer than the trip itself. There had to be a better way."
                             </blockquote>
                             <div className="flex items-center gap-4">
-                                <div className="w-11 h-11 bg-[#374151] flex items-center justify-center rounded text-white font-black text-lg">
-                                    U
+                                <div className="w-11 h-11 bg-[#374151] flex items-center justify-center rounded text-white font-black text-sm">
+                                    TC
                                 </div>
                                 <div>
-                                    <p className="text-white font-bold text-base">Utkarsh</p>
-                                    <p className="text-[#6B7280] text-sm font-medium">Founder · <a href="mailto:support@travelcfo.app" className="hover:text-slate-300 transition-colors underline underline-offset-2">support@travelcfo.app</a></p>
+                                    <p className="text-white font-bold text-base">A message from founder</p>
                                 </div>
                             </div>
                         </div>

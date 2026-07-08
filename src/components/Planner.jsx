@@ -8,10 +8,11 @@ import { collection, addDoc, updateDoc, setDoc, deleteDoc, doc } from"firebase/f
 import { db } from'../firebase';
 import { appId } from'../constants';
 import AddExpenseModal from'./AddExpenseModal';
-import ConfirmModal from'./common/ConfirmModal';
+import { useConfirm } from'../context/ConfirmContext';
 
 const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = false, isCompleted = false }) => {
     const { profile } = useProfile();
+    const confirm = useConfirm();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
     const [expenseModalInfo, setExpenseModalInfo] = useState({ isOpen: false, data: {} });
     const [locationSearch, setLocationSearch] = useState({ isOpen: false, dayId: null, itemId: null });
@@ -114,59 +115,41 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
         }
     };
 
-    // --- Delete Confirmation State ---
-    const [confirmInfo, setConfirmInfo] = useState({
-        isOpen: false,
-        type: null, //'day' or'item'
-        id: null,
-        secondaryId: null // for item deletion (dayId)
-    });
-
     const openDeleteDayModal = (dayId) => {
-        setConfirmInfo({
-            isOpen: true,
-            type:'day',
-            id: dayId,
-            secondaryId: null
+        confirm({
+            title: 'Delete Day?',
+            message: 'Are you sure you want to delete this day? All activities within it will be lost.',
+            confirmLabel: 'Delete',
+            isDestructive: true,
+            onConfirm: () => handleDeleteDay(dayId)
         });
     };
 
     const openDeleteItemModal = (dayId, itemId) => {
-        setConfirmInfo({
-            isOpen: true,
-            type:'item',
-            id: itemId,
-            secondaryId: dayId
+        confirm({
+            title: 'Delete Activity?',
+            message: 'Are you sure you want to delete this activity?',
+            confirmLabel: 'Delete',
+            isDestructive: true,
+            onConfirm: () => handleDeleteItem(dayId, itemId)
         });
     };
 
-    const handleConfirmDelete = async () => {
-        if (confirmInfo.type ==='day') {
-            const dayId = confirmInfo.id;
-            try {
-                await deleteDoc(doc(db,'artifacts', appId,'trips', tripId,'days', String(dayId)));
-                await updateDoc(doc(db,'artifacts', appId,'trips', tripId), { dayCount: Math.max(0, days.length - 1) });
-                if (expandedDay === dayId) setExpandedDay(days[0]?.id || null);
-                logActivity(`deleted a day`,'delete');
-            } catch (error) {
-                console.error("Error deleting day:", error);
-            }
-        } else if (confirmInfo.type ==='item') {
-            const itemId = confirmInfo.id;
-            const dayId = confirmInfo.secondaryId;
-            const day = days.find(d => d.id === dayId);
-            if (day) {
-                const updatedItems = day.items.filter(item => item.id !== itemId);
-                try {
-                    const dayRef = doc(db,'artifacts', appId,'trips', tripId,'days', String(dayId));
-                    await updateDoc(dayRef, { items: updatedItems });
-                    logActivity(`removed an activity`,'delete');
-                } catch (error) {
-                    console.error("Error deleting item:", error);
-                }
-            }
-        }
-        setConfirmInfo({ isOpen: false, type: null, id: null, secondaryId: null });
+    const handleDeleteDay = async (dayId) => {
+        await deleteDoc(doc(db,'artifacts', appId,'trips', tripId,'days', String(dayId)));
+        await updateDoc(doc(db,'artifacts', appId,'trips', tripId), { dayCount: Math.max(0, days.length - 1) });
+        if (expandedDay === dayId) setExpandedDay(days[0]?.id || null);
+        logActivity(`deleted a day`,'delete');
+    };
+
+    const handleDeleteItem = async (dayId, itemId) => {
+        const day = days.find(d => d.id === dayId);
+        if (!day) return;
+
+        const updatedItems = day.items.filter(item => item.id !== itemId);
+        const dayRef = doc(db,'artifacts', appId,'trips', tripId,'days', String(dayId));
+        await updateDoc(dayRef, { items: updatedItems });
+        logActivity(`removed an activity`,'delete');
     };
 
     const sortItems = (items) => {
@@ -225,8 +208,6 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
             console.error("Error updating item:", error);
         }
     };
-
-    // deleteItem function replaced by openDeleteItemModal + handleConfirmDelete logic above
 
     const updateDay = async (dayId, field, value) => {
         try {
@@ -633,17 +614,6 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                     </div>
                 )}
             </AnimatePresence>
-            {/* Confirmation Modal */}
-            <ConfirmModal
-                isOpen={confirmInfo.isOpen}
-                onClose={() => setConfirmInfo({ ...confirmInfo, isOpen: false })}
-                onConfirm={handleConfirmDelete}
-                title={confirmInfo.type ==='day' ?"Delete Day?" :"Delete Activity?"}
-                message={confirmInfo.type ==='day'
-                    ?"Are you sure you want to delete this day? All activities within it will be lost."
-                    :"Are you sure you want to delete this activity?"
-                }
-            />
         </div>
     );
 };

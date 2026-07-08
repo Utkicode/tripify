@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './index.css'
 import { HelmetProvider } from 'react-helmet-async';
 import { ProfileProvider } from './context/ProfileContext'
+import { ConfirmProvider } from './context/ConfirmContext'
 
 import ErrorBoundary from './components/common/ErrorBoundary'
 
@@ -28,7 +29,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <HelmetProvider>
         <ProfileProvider>
-          <App />
+          <ConfirmProvider>
+            <App />
+          </ConfirmProvider>
         </ProfileProvider>
       </HelmetProvider>
     </ErrorBoundary>

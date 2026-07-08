@@ -1,12 +1,12 @@
-import React, { useState } from'react';
+import React from'react';
 import { Trash, User as UserIcon, UserPlus, EnvelopeSimple, Phone, Calendar, UserCircle, ForkKnife, Heart } from'@phosphor-icons/react';
 import { motion, AnimatePresence } from'framer-motion';
 import Input from'./ui/Input';
 import Select from'./ui/Select';
-import ConfirmationModal from'./ConfirmationModal';
+import { useConfirm } from'../context/ConfirmContext';
 
 const Travelers = ({ travelers, setTravelers, isCompleted = false }) => {
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, idx: null });
+    const confirm = useConfirm();
 
     const handleTravelerChange = (idx, field, val) => {
         const newTravelers = [...travelers];
@@ -26,15 +26,17 @@ const Travelers = ({ travelers, setTravelers, isCompleted = false }) => {
     }]);
 
     const confirmDelete = (idx) => {
-        setDeleteModal({ isOpen: true, idx });
-    };
-
-    const handleDeleteTraveler = () => {
-        if (deleteModal.idx === null) return;
-        const newTravelers = [...travelers];
-        newTravelers.splice(deleteModal.idx, 1);
-        setTravelers(newTravelers);
-        setDeleteModal({ isOpen: false, idx: null });
+        confirm({
+            title: 'Delete Traveler?',
+            message: 'Are you sure you want to remove this traveler from the trip? This cannot be undone.',
+            confirmLabel: 'Delete Traveler',
+            isDestructive: true,
+            onConfirm: () => {
+                const newTravelers = [...travelers];
+                newTravelers.splice(idx, 1);
+                setTravelers(newTravelers);
+            }
+        });
     };
 
     return (
@@ -158,14 +160,6 @@ const Travelers = ({ travelers, setTravelers, isCompleted = false }) => {
                 </motion.button>
             )}
 
-            <ConfirmationModal
-                isOpen={deleteModal.isOpen}
-                onClose={() => setDeleteModal({ isOpen: false, idx: null })}
-                onConfirm={handleDeleteTraveler}
-                title="Delete Traveler?"
-                message="Are you sure you want to remove this traveler from the trip? This cannot be undone."
-                confirmText="Delete Traveler"
-            />
         </div>
     );
 };
