@@ -4,11 +4,10 @@ import { motion, AnimatePresence } from'framer-motion';
 import { useProfile } from'../../context/ProfileContext';
 import { generateExpenseReport } from'../../utils/pdfGenerator'; // Use new generator
 import { logError } from '../../utils/logger.js';
-import { auth, db } from'../../firebase'; // Need db for fetching trips
+import { db } from'../../firebase'; // Need db for fetching trips
 import { collection, query, where, getDocs } from'firebase/firestore'; // Firestore imports
 import { appId } from'../../constants';
-import { deleteUser } from'firebase/auth';
-import ConfirmModal from'../common/ConfirmModal';
+import { useConfirm } from'../../context/ConfirmContext';
 
 const CURRENCIES = [
     { value:'INR', label:'INR - Indian Rupee' },
@@ -22,6 +21,7 @@ const CONTENT_TYPES = [
 
 const ProfileSettings = () => {
     const { profile, updateProfile, user } = useProfile();
+    const confirm = useConfirm();
     const [formData, setFormData] = useState({
         defaultCurrency:'INR',
         defaultPaymentMode:'CREDIT',
@@ -117,13 +117,21 @@ const ProfileSettings = () => {
         }
     };
 
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-
     const handleDeleteAccount = () => {
-        alert("For safety in this demo, account deletion is simulated. In production, this would wipe your data.");
-        setShowDeleteModal(false);
+        setMessage('For safety in this demo, account deletion is simulated. In production, this would wipe your data.');
+        setTimeout(() => setMessage(''), 5000);
         // Actual delete logic:
         // await deleteUser(auth.currentUser);
+    };
+
+    const confirmDeleteAccount = () => {
+        confirm({
+            title: 'Delete Account?',
+            message: 'Are you ABSOLUTELY sure? This will delete your account and all data. This action cannot be undone.',
+            confirmLabel: 'Yes, Delete My Account',
+            isDestructive: true,
+            onConfirm: handleDeleteAccount
+        });
     };
 
     return (
@@ -305,7 +313,7 @@ const ProfileSettings = () => {
                     <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowDeleteModal(true)}
+                        onClick={confirmDeleteAccount}
                         className="flex flex-col items-start p-6 bg-white border border-slate-200 rounded-2xl hover:shadow-lg hover:border-red-200 transition-all text-left group"
                     >
                         <div className="p-3  text-[#1A1A1A] rounded-xl mb-4 group-hover: transition-colors">
@@ -332,15 +340,6 @@ const ProfileSettings = () => {
                 )}
             </AnimatePresence>
 
-            <ConfirmModal
-                isOpen={showDeleteModal}
-                onClose={() => setShowDeleteModal(false)}
-                onConfirm={handleDeleteAccount}
-                title="Delete Account?"
-                message="Are you ABSOLUTELY sure? This will delete your account and all data. This action cannot be undone."
-                confirmLabel="Yes, Delete My Account"
-                isDestructive={true}
-            />
         </motion.div>
     );
 };

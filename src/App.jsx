@@ -26,9 +26,9 @@ const AppPrivacy = lazy(() => import('./components/AppPrivacy'));
 const TermsOfService = lazy(() => import('./components/TermsOfService'));
 
 import AuthActionHandler from'./components/AuthActionHandler';
-import ConfirmationModal from'./components/ConfirmationModal';
 import { AppLoadingSkeleton } from'./components/common/LoadingSkeleton';
 import SEO from'./components/common/SEO';
+import { useConfirm } from'./context/ConfirmContext';
 
 export default function App() {
   // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
@@ -42,6 +42,7 @@ export default function App() {
 
   // --- Auth & Profile State (from Context) ---
   const { user, loading, isProfileComplete, refreshProfile } = useProfile();
+  const confirm = useConfirm();
 
   // --- App View State ---
   // --- App View State ---
@@ -84,7 +85,6 @@ export default function App() {
   const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
   const [tripLoading, setTripLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
@@ -164,26 +164,18 @@ export default function App() {
   };
 
   // --- Delete Trip Logic ---
-  const [deleteModalInfo, setDeleteModalInfo] = useState({ isOpen: false, tripId: null, tripName:'' });
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const confirmDeleteTrip = async () => {
-    const { tripId, tripName } = deleteModalInfo;
+  const confirmDeleteTrip = async (tripId, tripName) => {
     if (!tripId) return;
 
-    setIsDeleting(true);
-    try {
-      const tripRef = doc(db,'artifacts', appId,'trips', tripId);
-      // Verify current user is the trip owner before allowing deletion
-      const tripSnap = await getDoc(tripRef);
-      if (!tripSnap.exists()) { setError('Trip not found'); setIsDeleting(false); return; }
-      const tripData = tripSnap.data();
-      if (tripData.ownerId !== user.uid) {
-        setError('Only the trip owner can delete this trip.');
-        setIsDeleting(false);
-        return;
-      }
-      const collaborators = tripData.collaborators || [];
+    const tripRef = doc(db,'artifacts', appId,'trips', tripId);
+    // Verify current user is the trip owner before allowing deletion
+    const tripSnap = await getDoc(tripRef);
+    if (!tripSnap.exists()) throw new Error('Trip not found.');
+    const tripData = tripSnap.data();
+    if (tripData.ownerId !== user.uid) {
+      throw new Error('Only the trip owner can delete this trip.');
+    }
+    const collaborators = tripData.collaborators || [];
 
       // Filter out current user (the deleter)
       const targetUsers = collaborators.filter(uid => uid !== user.uid);
@@ -216,17 +208,17 @@ export default function App() {
         read: false
       });
 
-    } catch (error) {
-      console.error("Error deleting trip:", error);
-    } finally {
-      setIsDeleting(false);
-      setDeleteModalInfo({ isOpen: false, tripId: null, tripName:'' });
-    }
   };
 
   const deleteTrip = (e, tripId, tripName) => {
     e.stopPropagation();
-    setDeleteModalInfo({ isOpen: true, tripId, tripName });
+    confirm({
+      title: 'Delete Trip?',
+      message: `Are you sure you want to delete "${tripName ||'Untitled'}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      isDestructive: true,
+      onConfirm: () => confirmDeleteTrip(tripId, tripName)
+    });
   };
 
 
@@ -395,15 +387,6 @@ export default function App() {
         )}
 
       </Layout>
-      <ConfirmationModal
-        isOpen={deleteModalInfo.isOpen}
-        onClose={() => { setDeleteModalInfo({ ...deleteModalInfo, isOpen: false }); setError(null); }}
-        onConfirm={error ? () => setDeleteModalInfo({ ...deleteModalInfo, isOpen: false }) : confirmDeleteTrip}
-        title={error ? "Error" : "Delete Trip?"}
-        message={error || `Are you sure you want to delete "${deleteModalInfo.tripName}"? This action cannot be undone.`}
-        isLoading={isDeleting}
-        confirmText={error ? "Close" : "Delete"}
-      />
     </Suspense>
   );
 }

@@ -113,7 +113,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={createNewTrip}
-                        className="bg-slate-900 text-white pl-6 pr-8 py-4 md:py-5 rounded-[2.5rem] font-bold shadow-2xl shadow-slate-900/30 flex items-center gap-4 group transition-all w-fit"
+                        className="btn-primary pl-6 pr-8 py-4 md:py-5 rounded-[2.5rem] shadow-2xl flex items-center gap-4 group w-fit"
                     >
                         <div className="bg-white/20 p-2 rounded-full group-hover:rotate-90 transition-transform duration-500">
                             <Plus size={24} />
@@ -199,7 +199,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                             <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>
                             <button
                                 onClick={createNewTrip}
-                                className="bg-blue-600 text-white px-10 py-4 rounded-full font-bold hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 hover:scale-105 active:scale-95 text-lg"
+                                className="btn-primary px-10 py-4 rounded-full text-lg hover:scale-105"
                             >
                                 {EMPTY_STATE_MESSAGES.no_trips.cta}
                             </button>

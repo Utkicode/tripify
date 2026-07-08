@@ -1,33 +1,45 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
       colors: {
-        // TravelCFO Design System
+        // TravelCFO New-Gen Travel Fintech Design System
         warm: {
-          bg:    '#FAFAF7', // primary background — warm off-white
-          card:  '#FFFFFF', // card surface
+          bg: '#F7F8FA',
+          paper: '#FAF7F2',
+          card: '#FFFFFF',
         },
         ink: {
-          DEFAULT: '#1A1A1A', // primary text — warmer than pure slate
-          muted:   '#6B7280', // secondary text
-          faint:   '#9CA3AF', // placeholders, labels
+          DEFAULT: '#1E293B',
+          strong: '#0F172A',
+          muted: '#64748B',
+          faint: '#94A3B8',
         },
         accent: {
-          DEFAULT: '#E8A317', // amber — finance/premium anchor
-          hover:   '#D4920F',
+          DEFAULT: '#FF6B35',
+          hover: '#E8553D',
+          pressed: '#CF442A',
         },
         border: {
-          DEFAULT: '#E5E7EB',
+          DEFAULT: 'rgba(15, 23, 42, 0.08)',
         },
         money: {
-          green: '#16A34A',
-          red:   '#DC2626',
+          green: '#059669',
+          red: '#DC2626',
         },
+        trust: {
+          navy: '#172033',
+          slate: '#1E293B',
+        },
+      },
+      boxShadow: {
+        card: '0 4px 20px -4px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)',
+        'card-hover': '0 8px 25px -5px rgba(15, 23, 42, 0.12), 0 3px 8px rgba(15, 23, 42, 0.06)',
+        wallet: '0 20px 45px -24px rgba(15, 23, 42, 0.55)',
       },
       keyframes: {
         shimmer: {
@@ -41,4 +53,4 @@ export default {
     },
   },
   plugins: [],
-}
+};

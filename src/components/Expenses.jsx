@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from'framer-motion';
 import { CATEGORIES } from'../constants';
 import { ExpenseService } from'../services/ExpenseService';
 import AddExpenseModal from'./AddExpenseModal';
-import ConfirmModal from'./common/ConfirmModal';
 import { calculateTripBalances, calculateSettlements } from'../utils/expenseUtils';
 import { getCurrencySymbol } from '../utils/currency.js';
 import { useProfile } from '../context/ProfileContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [], currencyCode: currencyProp, isCompleted = false }) => {
     const { profile } = useProfile();
+    const confirm = useConfirm();
     const currencyCode = currencyProp || profile?.behavior?.defaultCurrency || 'INR';
     const symbol = getCurrencySymbol(currencyCode);
     const [expenses, setExpenses] = useState([]);
@@ -52,18 +53,14 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
         return day ? `Day ${days.indexOf(day) + 1}` :'Extra Day';
     };
 
-    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
-    const openDeleteModal = (id) => setConfirmDeleteId(id);
-
-    const handleConfirmDelete = async () => {
-        if (!confirmDeleteId) return;
-        try {
-            await ExpenseService.deleteExpense(user.uid, tripId, confirmDeleteId);
-        } catch (error) {
-            console.error('Failed to delete expense', error);
-        }
-        setConfirmDeleteId(null);
+    const openDeleteModal = (id) => {
+        confirm({
+            title: 'Delete Expense?',
+            message: 'Are you sure you want to remove this expense? This will affect trip totals and splits.',
+            confirmLabel: 'Delete',
+            isDestructive: true,
+            onConfirm: () => ExpenseService.deleteExpense(user.uid, tripId, id)
+        });
     };
 
     const handleSaveBudget = () => {
@@ -433,14 +430,6 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                 )}
             </AnimatePresence>
 
-            {/* Confirmation Modal */}
-            <ConfirmModal
-                isOpen={!!confirmDeleteId}
-                onClose={() => setConfirmDeleteId(null)}
-                onConfirm={handleConfirmDelete}
-                title="Delete Expense?"
-                message="Are you sure you want to remove this expense? This will affect trip totals and splits."
-            />
         </div>
     );
 };

@@ -179,14 +179,11 @@ const About = ({ setCurrentView }) => {
                                 I wanted to build something that felt fast, human, and completely eliminated the post-trip spreadsheet handoff."
                             </blockquote>
                             <div className="flex items-center gap-5 mb-10 md:mb-0">
-                                <div className="w-14 h-14 bg-gradient-to-br from-[#E8A317] to-orange-500 flex items-center justify-center text-white font-black text-2xl rounded-full shadow-[0_0_20px_rgba(232,163,23,0.3)] border border-[#1A1A1A] ring-2 ring-white/10 shrink-0">
-                                    U
+                                <div className="w-14 h-14 bg-gradient-to-br from-[#E8A317] to-orange-500 flex items-center justify-center text-white font-black text-lg rounded-full shadow-[0_0_20px_rgba(232,163,23,0.3)] border border-[#1A1A1A] ring-2 ring-white/10 shrink-0">
+                                    TC
                                 </div>
                                 <div>
-                                    <p className="text-white font-extrabold text-lg">Utkarsh</p>
-                                    <p className="text-[#9CA3AF] text-sm font-semibold mt-0.5">
-                                        Founder · <a href="mailto:support@travelcfo.app" className="hover:text-white transition-colors underline underline-offset-4 decoration-white/20">support@travelcfo.app</a>
-                                    </p>
+                                    <p className="text-white font-extrabold text-lg">A message from founder</p>
                                 </div>
                             </div>
                         </div>
