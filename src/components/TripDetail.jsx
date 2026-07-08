@@ -12,6 +12,7 @@ import NotificationBell from'./NotificationBell';
 import { motion, AnimatePresence } from'framer-motion';
 
 import InviteModal from'./InviteModal';
+import { useConfirm } from'../context/ConfirmContext';
 
 const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
@@ -29,6 +30,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const [tripData, setTripData] = useState(null);
     const [currency, setCurrency] = useState('INR');
     const [actualCost, setActualCost] = useState(0);
+    const [expensesCount, setExpensesCount] = useState(0);
+    const confirm = useConfirm();
 
     // --- Data Sync: Fetch Detail ---
     // --- Data Sync: Fetch Detail & Days ---
@@ -113,6 +116,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             const expensesData = snapshot.docs.map(doc => doc.data());
             const computedActualCost = expensesData.reduce((sum, item) => sum + Number(item.amount || 0), 0);
             setActualCost(computedActualCost);
+            setExpensesCount(snapshot.docs.length);
         }, (error) => {
             console.error("Error listening to expenses:", error);
         });
@@ -127,25 +131,38 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const isCompleted = !!tripData?.isCompleted;
     const isOwner = tripData?.ownerId === user?.uid;
 
-    const handleCompleteTrip = async () => {
-        if (!user || !tripId) return;
-        try {
-            const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
-            await updateDoc(docRef, {
-                isCompleted: true,
-                updatedAt: Date.now()
-            });
-            await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
-                text: `marked the trip as completed`,
-                type: 'update',
-                timestamp: Date.now(),
-                performedBy: user.uid,
-                userName: user.displayName || 'Traveler',
-                collaborators: collaborators
-            });
-        } catch (error) {
-            console.error("Failed to complete trip:", error);
-        }
+    const hasItineraryItems = days.some(day => day.items && day.items.length > 0);
+    const hasExpenses = expensesCount > 0;
+    const isMarkCompleteDisabled = !hasItineraryItems || !hasExpenses;
+
+    const handleCompleteTrip = () => {
+        confirm({
+            title: 'Complete Trip?',
+            message: 'Are you sure you want to mark this trip as completed? This will lock editing and set the trip workspace to read-only.',
+            confirmLabel: 'Complete Trip',
+            cancelLabel: 'Cancel',
+            isDestructive: false,
+            onConfirm: async () => {
+                if (!user || !tripId) return;
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+                    await updateDoc(docRef, {
+                        isCompleted: true,
+                        updatedAt: Date.now()
+                    });
+                    await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                        text: `marked the trip as completed`,
+                        type: 'update',
+                        timestamp: Date.now(),
+                        performedBy: user.uid,
+                        userName: user.displayName || 'Traveler',
+                        collaborators: collaborators
+                    });
+                } catch (error) {
+                    console.error("Failed to complete trip:", error);
+                }
+            }
+        });
     };
 
     const handleReopenTrip = async () => {
@@ -319,7 +336,13 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     ) : (
                         <button
                             onClick={handleCompleteTrip}
-                            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-all active:scale-95 border border-emerald-200/50"
+                            disabled={isMarkCompleteDisabled}
+                            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full transition-all border ${
+                                isMarkCompleteDisabled
+                                    ? 'text-slate-400 bg-slate-100/50 border-slate-200 cursor-not-allowed opacity-60'
+                                    : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border-emerald-200/50 cursor-pointer'
+                            }`}
+                            title={isMarkCompleteDisabled ? 'Add at least one itinerary activity and one expense to complete the trip' : 'Complete Trip'}
                         >
                             <CheckCircle size={16} className="stroke-[2.5]" />
                             <span>Complete Trip</span>
