@@ -28,6 +28,8 @@ export const calculateGlobalStats = (trips = []) => {
                     categoryTotals['Misc'] += amount;
                 }
             });
+        } else if (trip.totalCost !== undefined && trip.totalCost !== null) {
+            totalSpent += Number(trip.totalCost) || 0;
         } else if (trip.days && Array.isArray(trip.days)) {
             trip.days.forEach(day => {
                 if (day.items && Array.isArray(day.items)) {
@@ -61,17 +63,7 @@ export const calculateGlobalStats = (trips = []) => {
 
 export const calculateTripStats = (trip) => {
     let budget = Number(trip.budget) || 0;
-    let spent = 0;
-
-    if (trip.days && Array.isArray(trip.days)) {
-        trip.days.forEach(day => {
-            if (day.items && Array.isArray(day.items)) {
-                day.items.forEach(item => {
-                    spent += Number(item.amount) || 0;
-                });
-            }
-        });
-    }
+    let spent = Number(trip.totalCost) || 0;
 
     return { budget, spent, remaining: budget - spent };
 };

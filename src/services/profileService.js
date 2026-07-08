@@ -92,7 +92,7 @@ export const profileService = {
                 dietaryRestrictions: []
             },
             behavior: {
-                defaultCurrency: 'USD',
+                defaultCurrency: 'INR',
                 defaultPaymentMode: 'CREDIT',
                 dailyBudgetSoftLimit: 0,
                 receiptAutoLink: true

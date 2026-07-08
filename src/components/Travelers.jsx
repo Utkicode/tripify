@@ -5,7 +5,7 @@ import Input from'./ui/Input';
 import Select from'./ui/Select';
 import ConfirmationModal from'./ConfirmationModal';
 
-const Travelers = ({ travelers, setTravelers }) => {
+const Travelers = ({ travelers, setTravelers, isCompleted = false }) => {
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, idx: null });
 
     const handleTravelerChange = (idx, field, val) => {
@@ -52,12 +52,14 @@ const Travelers = ({ travelers, setTravelers }) => {
                         {/* Decorative Gradient Blob */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-[4rem] z-0 pointer-events-none"></div>
 
-                        <button
-                            onClick={() => confirmDelete(idx)}
-                            className="absolute top-8 right-8 p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all opacity-0 group-hover:opacity-100 z-10"
-                        >
-                            <Trash size={20} />
-                        </button>
+                        {!isCompleted && (
+                            <button
+                                onClick={() => confirmDelete(idx)}
+                                className="absolute top-8 right-8 p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all opacity-0 group-hover:opacity-100 z-10"
+                            >
+                                <Trash size={20} />
+                            </button>
+                        )}
 
                         <div className="flex items-center gap-6 mb-8 relative z-10">
                             <div className="w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center text-[#1A1A1A] font-extrabold text-3xl shadow-sm border border-white">
@@ -76,8 +78,9 @@ const Travelers = ({ travelers, setTravelers }) => {
                                     icon={UserIcon}
                                     value={t.name}
                                     onChange={(e) => handleTravelerChange(idx,'name', e.target.value)}
+                                    disabled={isCompleted}
                                     placeholder="Enter full name"
-                                    className="bg-transparent border-none focus:ring-0 text-lg font-bold placeholder:font-normal"
+                                    className={`bg-transparent border-none focus:ring-0 text-lg font-bold placeholder:font-normal ${isCompleted ? 'cursor-default' : ''}`}
                                 />
                             </div>
 
@@ -88,8 +91,9 @@ const Travelers = ({ travelers, setTravelers }) => {
                                         type="number"
                                         value={t.age}
                                         onChange={(e) => handleTravelerChange(idx,'age', e.target.value)}
+                                        disabled={isCompleted}
                                         placeholder="Age"
-                                        className="bg-transparent border-none focus:ring-0 font-bold"
+                                        className={`bg-transparent border-none focus:ring-0 font-bold ${isCompleted ? 'cursor-default' : ''}`}
                                     />
                                 </div>
                                 <div className="bg-white/50 p-1 rounded-[1.5rem] border border-white/40 shadow-inner">
@@ -97,13 +101,14 @@ const Travelers = ({ travelers, setTravelers }) => {
                                         label="Gender"
                                         value={t.gender}
                                         onChange={(e) => handleTravelerChange(idx,'gender', e.target.value)}
+                                        disabled={isCompleted}
                                         options={[
                                             { value:"", label:"Select..." },
                                             { value:"Male", label:"Male" },
                                             { value:"Female", label:"Female" },
                                             { value:"Other", label:"Other" }
                                         ]}
-                                        className="bg-transparent border-none focus:ring-0 font-bold"
+                                        className={`bg-transparent border-none focus:ring-0 font-bold ${isCompleted ? 'cursor-default' : ''}`}
                                     />
                                 </div>
                             </div>
@@ -115,8 +120,9 @@ const Travelers = ({ travelers, setTravelers }) => {
                                         type="text"
                                         value={t.dietaryPreferences}
                                         onChange={(e) => handleTravelerChange(idx,'dietaryPreferences', e.target.value)}
+                                        disabled={isCompleted}
                                         placeholder="Dietary Preferences..."
-                                        className="w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400"
+                                        className={`w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400 ${isCompleted ? 'cursor-default' : ''}`}
                                     />
                                 </div>
                                 <div className="/50 p-1 pl-2 rounded-[1.5rem] border border-rose-100/50 flex items-center gap-2">
@@ -125,8 +131,9 @@ const Travelers = ({ travelers, setTravelers }) => {
                                         type="text"
                                         value={t.specialNeeds}
                                         onChange={(e) => handleTravelerChange(idx,'specialNeeds', e.target.value)}
+                                        disabled={isCompleted}
                                         placeholder="Medical / Special Needs..."
-                                        className="w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400"
+                                        className={`w-full bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 placeholder:text-slate-400 ${isCompleted ? 'cursor-default' : ''}`}
                                     />
                                 </div>
                             </div>
@@ -135,19 +142,21 @@ const Travelers = ({ travelers, setTravelers }) => {
                 ))}
             </AnimatePresence>
 
-            <motion.button
-                layout
-                whileHover={{ scale: 1.02, backgroundColor:'rgba(255, 255, 255, 0.6)' }}
-                whileTap={{ scale: 0.98 }}
-                onClick={addTraveler}
-                className="bg-white/30 backdrop-blur-md border-2 border-dashed border-slate-300 rounded-[3rem] p-6 flex flex-col items-center justify-center text-slate-400 hover:text-[#1A1A1A] hover:border-blue-400 transition-all min-h-[400px] group shadow-sm hover:shadow-xl"
-            >
-                <div className="w-24 h-24 rounded-[2rem] bg-white shadow-sm flex items-center justify-center mb-6 group-hover:shadow-lg transition-all group-hover:scale-110 group-hover:-rotate-3">
-                    <UserPlus size={40} className="text-slate-300 group-hover:text-[#1A1A1A] transition-colors" />
-                </div>
-                <span className="font-extrabold text-xl text-slate-600 tracking-tight">Add New Traveler</span>
-                <span className="text-sm opacity-60 font-bold mt-2">Track details for another person</span>
-            </motion.button>
+            {!isCompleted && (
+                <motion.button
+                    layout
+                    whileHover={{ scale: 1.02, backgroundColor:'rgba(255, 255, 255, 0.6)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={addTraveler}
+                    className="bg-white/30 backdrop-blur-md border-2 border-dashed border-slate-300 rounded-[3rem] p-6 flex flex-col items-center justify-center text-slate-400 hover:text-[#1A1A1A] hover:border-blue-400 transition-all min-h-[400px] group shadow-sm hover:shadow-xl"
+                >
+                    <div className="w-24 h-24 rounded-[2rem] bg-white shadow-sm flex items-center justify-center mb-6 group-hover:shadow-lg transition-all group-hover:scale-110 group-hover:-rotate-3">
+                        <UserPlus size={40} className="text-slate-300 group-hover:text-[#1A1A1A] transition-colors" />
+                    </div>
+                    <span className="font-extrabold text-xl text-slate-600 tracking-tight">Add New Traveler</span>
+                    <span className="text-sm opacity-60 font-bold mt-2">Track details for another person</span>
+                </motion.button>
+            )}
 
             <ConfirmationModal
                 isOpen={deleteModal.isOpen}

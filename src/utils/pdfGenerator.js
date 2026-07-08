@@ -57,7 +57,7 @@ function safeDate(dateStr) {
 }
 
 export const generateExpenseReport = async (user, profile, tripsList, currencyCode) => {
-    const symbol = getCurrencySymbol(currencyCode || profile?.behavior?.defaultCurrency || 'USD');
+    const symbol = getCurrencySymbol(currencyCode || profile?.behavior?.defaultCurrency || 'INR');
     // 1. Fetch Data
     const enrichedTrips = await fetchAllExpenses(tripsList);
 

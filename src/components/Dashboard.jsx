@@ -22,7 +22,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     if (isLoading) return <DashboardSkeleton />;
 
     // safe fallbacks
-    const currencyCode = profile?.behavior?.defaultCurrency ||'USD';
+    const currencyCode = profile?.behavior?.defaultCurrency ||'INR';
     const currencySymbol = getCurrencySymbol(currencyCode);
     const displayName = profile?.identity?.displayName || user?.displayName ||'Traveler';
     const firstName = displayName.split(' ')[0];

@@ -15,13 +15,13 @@ const CurrencyIcon = ({ currency }) => {
         case'GBP': return <CurrencyGbp size={24} className="text-slate-400" />;
         case'JPY': return <CurrencyJpy size={24} className="text-slate-400" />;
         case'INR': return <CurrencyInr size={24} className="text-slate-400" />;
-        default: return <CurrencyDollar size={24} className="text-slate-400" />;
+        default: return <CurrencyInr size={24} className="text-slate-400" />;
     }
 };
 
 const AddExpenseModal = ({ isOpen, onClose, user, tripId, travelers = [], initialData = null }) => {
     const { profile } = useProfile();
-    const defaultCurrency = profile?.behavior?.defaultCurrency ||'USD';
+    const defaultCurrency = profile?.behavior?.defaultCurrency ||'INR';
 
     // Use empty object if initialData is null for safe access
     const data = initialData || {};

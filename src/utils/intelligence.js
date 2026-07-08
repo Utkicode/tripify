@@ -19,17 +19,22 @@ export const calculateTripReadiness = (trip) => {
     if (trip.destination) score += 15;
     else missing.push('Destination');
 
-    if (trip.days && trip.days.length > 0) score += 15;
+    const hasDays = (trip.dayCount !== undefined ? trip.dayCount > 0 : (trip.days && trip.days.length > 0));
+    if (hasDays) score += 15;
     else missing.push('Dates');
 
     // 2. Itinerary Depth (30%)
-    const totalDays = trip.days?.length || 0;
+    const totalDays = trip.dayCount !== undefined ? trip.dayCount : (trip.days?.length || 0);
     let daysWithActivities = 0;
 
     if (totalDays > 0) {
-        trip.days.forEach(day => {
-            if (day.items && day.items.length > 0) daysWithActivities++;
-        });
+        if (trip.daysWithActivitiesCount !== undefined) {
+            daysWithActivities = trip.daysWithActivitiesCount;
+        } else if (trip.days) {
+            trip.days.forEach(day => {
+                if (day.items && day.items.length > 0) daysWithActivities++;
+            });
+        }
         const itineraryCompleteness = (daysWithActivities / totalDays);
         score += Math.floor(itineraryCompleteness * 30);
 
@@ -37,7 +42,8 @@ export const calculateTripReadiness = (trip) => {
     }
 
     // 3. Logistics & Budget (30%)
-    if (trip.travelers && trip.travelers.length > 0) score += 10;
+    const hasTravelers = (trip.travelerCount !== undefined ? trip.travelerCount > 0 : (trip.travelers && trip.travelers.length > 0));
+    if (hasTravelers) score += 10;
     // Assuming budget is part of trip object or calculated from preferences (mocked for now as checked)
     if (trip.totalCost > 0) score += 10;
     else missing.push('Budget/Expenses');
@@ -65,21 +71,34 @@ export const calculateTripReadiness = (trip) => {
 export const getNextBestActions = (trips, user) => {
     const actions = [];
 
-    // Sort trips by proximity (soonest first)
+    // Sort trips by proximity (soonest first), excluding completed ones
     const upcomingTrips = trips
-        .filter(t => !t.isArchived) // Assuming archived flag or date check
+        .filter(t => !t.isArchived && !t.isCompleted)
         .sort((a, b) => (a.startDate || 0) - (b.startDate || 0)); // simplistic date sort
 
     if (upcomingTrips.length === 0) {
-        actions.push({
-            id: 'create_first_trip',
-            type: 'primary',
-            priority: 100,
-            title: 'Start your first adventure',
-            message: 'Create a new trip to start planning your next getaway.',
-            cta: 'Create Trip',
-            action: 'create_trip'
-        });
+        const hasCompletedTrips = trips.some(t => t.isCompleted);
+        if (hasCompletedTrips) {
+            actions.push({
+                id: 'plan_next_trip',
+                type: 'primary',
+                priority: 100,
+                title: 'Plan your next adventure',
+                message: 'Your previous journey is completed. Time to start planning your next getaway!',
+                cta: 'Plan Next Trip',
+                action: 'create_trip'
+            });
+        } else {
+            actions.push({
+                id: 'create_first_trip',
+                type: 'primary',
+                priority: 100,
+                title: 'Start your first adventure',
+                message: 'Create a new trip to start planning your next getaway.',
+                cta: 'Create Trip',
+                action: 'create_trip'
+            });
+        }
         return actions;
     }
 

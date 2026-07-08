@@ -13,7 +13,7 @@ const GlobalExpenses = ({ tripsList }) => {
     const [enrichedTrips, setEnrichedTrips] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    const currencyCode = profile?.behavior?.defaultCurrency ||'USD';
+    const currencyCode = profile?.behavior?.defaultCurrency ||'INR';
     const currencySymbol = getCurrencySymbol(currencyCode);
 
     // Fetch deep data (expenses) for all trips

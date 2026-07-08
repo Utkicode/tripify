@@ -93,10 +93,15 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                     {/* Decorative Blob */}
                                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-[40px] transition-transform group-hover:scale-150"></div>
 
-                                    <div className="absolute bottom-6 left-8 right-8 z-10">
-                                        <div className="inline-flex items-center gap-2 bg-white/30 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full text-xs font-bold text-slate-700 mb-2 shadow-sm">
-                                            <MapPin size={12} className="text-slate-900" /> {trip.destination ||'Planning...'}
+                                    <div className="absolute bottom-6 left-8 right-8 z-10 flex items-center justify-between gap-2">
+                                        <div className="inline-flex items-center gap-2 bg-white/30 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm truncate">
+                                            <MapPin size={12} className="text-slate-900 shrink-0" /> <span className="truncate">{trip.destination ||'Planning...'}</span>
                                         </div>
+                                        {trip.isCompleted && (
+                                            <span className="flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-20 shrink-0">
+                                                Completed
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 

@@ -9,9 +9,9 @@ import { calculateTripBalances, calculateSettlements } from'../utils/expenseUtil
 import { getCurrencySymbol } from '../utils/currency.js';
 import { useProfile } from '../context/ProfileContext';
 
-const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [], currencyCode: currencyProp }) => {
+const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, travelers = [], currencyCode: currencyProp, isCompleted = false }) => {
     const { profile } = useProfile();
-    const currencyCode = currencyProp || profile?.behavior?.defaultCurrency || 'USD';
+    const currencyCode = currencyProp || profile?.behavior?.defaultCurrency || 'INR';
     const symbol = getCurrencySymbol(currencyCode);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -119,12 +119,14 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                     {isBudgetSet ? (
                         <div className="flex items-center gap-3 mt-2 text-sm font-semibold text-slate-600 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/50 shadow-sm">
                              <span>Budget: <span className="text-slate-900">{symbol}{budget.toLocaleString()}</span></span>
-                            <button onClick={() => setIsEditingBudget(true)} className="p-1 hover: rounded-full text-[#1A1A1A] transition-colors"><PencilSimple size={14} /></button>
+                             {!isCompleted && <button onClick={() => setIsEditingBudget(true)} className="p-1 hover: rounded-full text-[#1A1A1A] transition-colors"><PencilSimple size={14} /></button>}
                         </div>
                     ) : (
-                        <button onClick={() => setIsEditingBudget(true)} className="text-sm text-[#1A1A1A] font-bold hover:underline mt-2 flex items-center gap-1">
-                            <Plus size={14} /> Set a Budget
-                        </button>
+                        !isCompleted ? (
+                            <button onClick={() => setIsEditingBudget(true)} className="text-sm text-[#1A1A1A] font-bold hover:underline mt-2 flex items-center gap-1">
+                                <Plus size={14} /> Set a Budget
+                            </button>
+                        ) : null
                     )}
                 </div>
 
@@ -158,12 +160,14 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                             <button onClick={handleSaveBudget} className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors">Save</button>
                         </motion.div>
                     )}
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[1.2rem] shadow-lg shadow-blue-500/30 active:scale-95 transition-all flex items-center gap-2"
-                    >
-                        <Plus size={22} /> <span className="hidden md:inline">Log Expense</span>
-                    </button>
+                    {!isCompleted && (
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-[1.2rem] shadow-lg shadow-blue-500/30 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            <Plus size={22} /> <span className="hidden md:inline">Log Expense</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -217,15 +221,17 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                             </p>
                         </div>
                     ) : (
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setIsEditingBudget(true)}
-                            className="w-full bg-white/60 backdrop-blur-md border-2 border-dashed border-slate-300 p-6 rounded-[2.5rem] h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:/50 hover:text-[#1A1A1A] transition-all cursor-pointer group"
-                        >
-                            <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all text-[#1A1A1A]"><Plus size={28} /></div>
-                            <span className="font-bold text-sm tracking-wide">Set a Budget</span>
-                        </motion.button>
+                        !isCompleted ? (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setIsEditingBudget(true)}
+                                className="w-full bg-white/60 backdrop-blur-md border-2 border-dashed border-slate-300 p-6 rounded-[2.5rem] h-full flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:/50 hover:text-[#1A1A1A] transition-all cursor-pointer group"
+                            >
+                                <div className="w-14 h-14 bg-white rounded-[1.2rem] flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all text-[#1A1A1A]"><Plus size={28} /></div>
+                                <span className="font-bold text-sm tracking-wide">Set a Budget</span>
+                            </motion.button>
+                        ) : null
                     )}
                 </div>
             </div>
@@ -260,7 +266,7 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                             <h3 className="text-2xl font-black text-slate-800">No expenses yet</h3>
                                             <p className="text-slate-500 font-medium">Start adding expenses to track your spending.</p>
                                         </div>
-                                        <button onClick={() => setIsAddModalOpen(true)} className="mt-2 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Add First Expense</button>
+                                        {!isCompleted && <button onClick={() => setIsAddModalOpen(true)} className="mt-2 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Add First Expense</button>}
                                     </div>
                                 ) :'No expenses in this category.'}
                             </div>
@@ -302,13 +308,15 @@ const Expenses = ({ days = [], user, tripId, budget = 0, onUpdateTripInfo, trave
                                                     <div className="font-black text-2xl text-slate-900">{symbol}{Number(expense.amount).toLocaleString()}</div>
                                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">{expense.category}</div>
                                                 </div>
-                                                <button
-                                                    onClick={() => openDeleteModal(expense.id)}
-                                                    className="p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                                    title="Delete"
-                                                >
-                                                    <Trash size={20} />
-                                                </button>
+                                                {!isCompleted && (
+                                                    <button
+                                                        onClick={() => openDeleteModal(expense.id)}
+                                                        className="p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash size={20} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </motion.div>

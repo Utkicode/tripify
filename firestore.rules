@@ -29,6 +29,12 @@ service cloud.firestore {
       return isAuthenticated() && (request.auth.uid in tripData.collaborators);
     }
 
+    // Check if the parent trip is active (not completed)
+    function isTripActive(appId, tripId) {
+      let tripData = get(/databases/$(database)/documents/artifacts/$(appId)/trips/$(tripId)).data;
+      return !('isCompleted' in tripData) || tripData.isCompleted != true;
+    }
+
     // --- Rules ---
 
     // 1. User Profiles
@@ -59,7 +65,8 @@ service cloud.firestore {
                     && request.resource.data.keys().hasOnly([
                         'ownerId', 'collaborators', 'name', 'description',
                         'startDate', 'endDate', 'destination', 'budget',
-                        'currency', 'totalCost', 'createdAt', 'updatedAt'
+                        'currency', 'totalCost', 'createdAt', 'updatedAt',
+                        'isCompleted'
                       ])
                     && request.resource.data.name is string
                     && request.resource.data.name.size() > 0
@@ -67,25 +74,41 @@ service cloud.firestore {
                     && (request.resource.data.budget == null || (request.resource.data.budget is number && request.resource.data.budget >= 0))
                     && (request.resource.data.destination == null || (request.resource.data.destination is string && request.resource.data.destination.size() <= 200));
 
-      // Read/Update/Delete: Must be a collaborator
-      allow read, update, delete: if isCollaborator(resource.data);
+      // Read: Collaborator
+      allow read: if isCollaborator(resource.data);
+
+      // Update: Collaborator AND either the trip is active, OR it is the owner reopening it
+      allow update: if isCollaborator(resource.data)
+                    && (
+                      (!('isCompleted' in resource.data) || resource.data.isCompleted != true)
+                      || (request.resource.data.isCompleted == false && request.auth.uid == resource.data.ownerId)
+                    );
+
+      // Delete: Owner can delete any time; collaborators can only delete active trips
+      allow delete: if isAuthenticated() && (
+                      (resource.data.ownerId == request.auth.uid) ||
+                      (isCollaborator(resource.data) && (!('isCompleted' in resource.data) || resource.data.isCompleted != true))
+                    );
       
       // 3. Trip Sub-collections (Days, Activities)
       // Path: artifacts/{appId}/trips/{tripId}/days/{dayId}
       match /days/{dayId} {
         // Inherit access from parent Trip
-        allow read, write: if isParentTripCollaborator(appId, tripId);
+        allow read: if isParentTripCollaborator(appId, tripId);
+        allow write: if isParentTripCollaborator(appId, tripId) && isTripActive(appId, tripId);
       }
       
       // Path: artifacts/{appId}/trips/{tripId}/activities/{activityId}
       match /activities/{activityId} {
-         allow read, write: if isParentTripCollaborator(appId, tripId);
+         allow read: if isParentTripCollaborator(appId, tripId);
+         allow write: if isParentTripCollaborator(appId, tripId) && isTripActive(appId, tripId);
       }
 
       // Path: artifacts/{appId}/trips/{tripId}/expenses/{expenseId}
       match /expenses/{expenseId} {
          allow read: if isParentTripCollaborator(appId, tripId);
          allow write: if isParentTripCollaborator(appId, tripId)
+           && isTripActive(appId, tripId)
            && request.resource.data.amount is number
            && request.resource.data.amount > 0
            && request.resource.data.amount <= 999999999

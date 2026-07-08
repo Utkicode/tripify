@@ -11,13 +11,7 @@ import { deleteUser } from'firebase/auth';
 import ConfirmModal from'../common/ConfirmModal';
 
 const CURRENCIES = [
-    { value:'USD', label:'USD - US Dollar' },
-    { value:'EUR', label:'EUR - CurrencyEur' },
-    { value:'GBP', label:'GBP - British Pound' },
-    { value:'JPY', label:'JPY - Japanese Yen' },
     { value:'INR', label:'INR - Indian Rupee' },
-    { value:'AUD', label:'AUD - Australian Dollar' },
-    { value:'CAD', label:'CAD - Canadian Dollar' },
 ];
 
 const CONTENT_TYPES = [
@@ -29,7 +23,7 @@ const CONTENT_TYPES = [
 const ProfileSettings = () => {
     const { profile, updateProfile, user } = useProfile();
     const [formData, setFormData] = useState({
-        defaultCurrency:'USD',
+        defaultCurrency:'INR',
         defaultPaymentMode:'CREDIT',
         dailyBudgetSoftLimit: 0,
         receiptAutoLink: true,
@@ -46,7 +40,7 @@ const ProfileSettings = () => {
         if (profile?.behavior) {
             setFormData(prev => ({
                 ...prev,
-                defaultCurrency: profile.behavior.defaultCurrency ||'USD',
+                defaultCurrency: profile.behavior.defaultCurrency ||'INR',
                 defaultPaymentMode: profile.behavior.defaultPaymentMode ||'CREDIT',
                 dailyBudgetSoftLimit: profile.behavior.dailyBudgetSoftLimit || 0,
                 receiptAutoLink: profile.behavior.receiptAutoLink ?? true,
@@ -186,7 +180,7 @@ const ProfileSettings = () => {
                         <div className="p-6 rounded-2xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-700 mb-3">Daily Soft Limit</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                                 <input
                                     type="number"
                                     name="dailyBudgetSoftLimit"

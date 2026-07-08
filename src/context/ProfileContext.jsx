@@ -115,7 +115,7 @@ export const ProfileProvider = ({ children }) => {
                         }
                         // Default preferences for legacy
                         if (!migratedProfile.preferences.travelPace) migratedProfile.preferences.travelPace = 'MODERATE';
-                        if (!migratedProfile.behavior.defaultCurrency) migratedProfile.behavior.defaultCurrency = 'USD';
+                        if (!migratedProfile.behavior.defaultCurrency) migratedProfile.behavior.defaultCurrency = 'INR';
 
                         // 2. Calculate New Score
                         const score = calculateCompleteness(migratedProfile);

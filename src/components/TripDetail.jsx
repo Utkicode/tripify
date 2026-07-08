@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from'react';
-import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin } from'@phosphor-icons/react';
-import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField } from"firebase/firestore";
+import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin, CheckCircle } from'@phosphor-icons/react';
+import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField, addDoc } from"firebase/firestore";
 import { db } from'../firebase';
 import { appId, createInitialDays, createInitialTravelers } from'../constants';
 import Planner from'./Planner';
@@ -27,7 +27,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const hasUnsavedChanges = React.useRef(false);
     const [daysLoading, setDaysLoading] = useState(true); // Track sub-collection load
     const [tripData, setTripData] = useState(null);
-    const [currency, setCurrency] = useState('USD');
+    const [currency, setCurrency] = useState('INR');
+    const [actualCost, setActualCost] = useState(0);
 
     // --- Data Sync: Fetch Detail ---
     // --- Data Sync: Fetch Detail & Days ---
@@ -103,11 +104,70 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             setDaysLoading(false); // Data loaded (or empty confirmed)
         });
 
+        // 3. Expenses Sub-collection Listener
+        const expensesQuery = query(
+            collection(db, 'artifacts', appId, 'trips', tripId, 'expenses')
+        );
+
+        const unsubscribeExpenses = onSnapshot(expensesQuery, (snapshot) => {
+            const expensesData = snapshot.docs.map(doc => doc.data());
+            const computedActualCost = expensesData.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+            setActualCost(computedActualCost);
+        }, (error) => {
+            console.error("Error listening to expenses:", error);
+        });
+
         return () => {
             unsubscribeTrip();
             unsubscribeDays();
+            unsubscribeExpenses();
         };
     }, [user, tripId]); // Removed dependencies to prevent listener recreation
+
+    const isCompleted = !!tripData?.isCompleted;
+    const isOwner = tripData?.ownerId === user?.uid;
+
+    const handleCompleteTrip = async () => {
+        if (!user || !tripId) return;
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+            await updateDoc(docRef, {
+                isCompleted: true,
+                updatedAt: Date.now()
+            });
+            await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                text: `marked the trip as completed`,
+                type: 'update',
+                timestamp: Date.now(),
+                performedBy: user.uid,
+                userName: user.displayName || 'Traveler',
+                collaborators: collaborators
+            });
+        } catch (error) {
+            console.error("Failed to complete trip:", error);
+        }
+    };
+
+    const handleReopenTrip = async () => {
+        if (!user || !tripId) return;
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+            await updateDoc(docRef, {
+                isCompleted: false,
+                updatedAt: Date.now()
+            });
+            await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                text: `reopened the trip`,
+                type: 'update',
+                timestamp: Date.now(),
+                performedBy: user.uid,
+                userName: user.displayName || 'Traveler',
+                collaborators: collaborators
+            });
+        } catch (error) {
+            console.error("Failed to reopen trip:", error);
+        }
+    };
 
     // Wrappers to track USER changes
     const handleSetDays = (newDays) => {
@@ -130,14 +190,13 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     // --- Data Sync: Save Changes (Metadata Only) ---
     useEffect(() => {
         // Only save if explicitly marked as unsaved (user action)
-        if (!user || !tripId || detailLoading || !hasUnsavedChanges.current) return;
+        if (!user || !tripId || detailLoading || !hasUnsavedChanges.current || isCompleted) return;
 
         const saveData = async () => {
             setSyncStatus('saving');
             try {
                 const docRef = doc(db,'artifacts', appId,'trips', tripId);
-                // Total Cost Calculation: Still needs days, but we read from state'days' which is synced from sub-col
-                const totalCost = days ? days.reduce((total, day) => total + day.items.reduce((dTotal, item) => dTotal + Number(item.amount), 0), 0) : 0;
+                const totalCost = actualCost;
 
                 await updateDoc(docRef, {
                     // days, // REMOVED: Days are now in sub-collection
@@ -160,7 +219,44 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
         const timer = setTimeout(saveData, 1000);
         return () => clearTimeout(timer);
-    }, [travelers, tripName, destination, budget, user, tripId, days]); // We keep'days' in dependency to update totalCost if days change, but we don't save'days' field.
+    }, [travelers, tripName, destination, budget, user, tripId, days, isCompleted, actualCost]);
+
+    // --- Data Sync: Keep trip document stats in sync with days/travelers sub-collection data ---
+    useEffect(() => {
+        if (!user || !tripId || detailLoading || !tripData) return;
+
+        const dayDates = days ? days.map(d => d.date).filter(Boolean) : [];
+        const computedStartDate = dayDates.length > 0 ? dayDates.reduce((min, d) => d < min ? d : min, dayDates[0]) : null;
+        const computedEndDate = dayDates.length > 0 ? dayDates.reduce((max, d) => d > max ? d : max, dayDates[0]) : null;
+        const computedTotalCost = actualCost;
+        const computedDayCount = days ? days.length : 0;
+        const computedTravelerCount = travelers ? travelers.length : 0;
+        const computedDaysWithActivitiesCount = days ? days.filter(day => day.items && day.items.length > 0).length : 0;
+
+        // Check if anything actually changed to prevent redundant writes
+        const hasChanged = 
+            computedTotalCost !== (tripData.totalCost || 0) ||
+            computedDayCount !== (tripData.dayCount || 0) ||
+            computedTravelerCount !== (tripData.travelerCount || 0) ||
+            computedStartDate !== (tripData.startDate || null) ||
+            computedEndDate !== (tripData.endDate || null) ||
+            computedDaysWithActivitiesCount !== (tripData.daysWithActivitiesCount || 0);
+
+        if (hasChanged) {
+            const updateObj = {
+                totalCost: computedTotalCost,
+                dayCount: computedDayCount,
+                travelerCount: computedTravelerCount,
+                daysWithActivitiesCount: computedDaysWithActivitiesCount,
+                updatedAt: Date.now()
+            };
+            if (computedStartDate) updateObj.startDate = computedStartDate;
+            if (computedEndDate) updateObj.endDate = computedEndDate;
+
+            const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+            updateDoc(docRef, updateObj).catch(err => console.error("Error syncing stats to trip:", err));
+        }
+    }, [days, travelers, tripData, user, tripId, detailLoading, actualCost]);
 
     // --- Deep Link Handling ---
     useEffect(() => {
@@ -204,21 +300,42 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                             type="text"
                             value={tripName}
                             onChange={(e) => handleUpdateTripInfo('tripName', e.target.value)}
-                            className="text-lg md:text-xl font-black text-slate-800 border-none bg-transparent focus:ring-0 p-0 hover:text-[#1A1A1A] transition-colors cursor-text w-full min-w-[100px] text-ellipsis placeholder:text-slate-300 text-left"
+                            disabled={isCompleted}
+                            className={`text-lg md:text-xl font-black text-slate-800 border-none bg-transparent focus:ring-0 p-0 w-full min-w-[100px] text-ellipsis placeholder:text-slate-300 text-left ${isCompleted ? 'cursor-default' : 'hover:text-[#1A1A1A] cursor-text transition-colors'}`}
                             placeholder="Untitled Trip"
                         />
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                    {/* Share Button One UI */}
-                    <button
-                        onClick={() => setIsInviteOpen(true)}
-                        className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[#1A1A1A]  hover: rounded-full transition-all active:scale-95"
-                    >
-                        <ShareNetwork size={18} className="stroke-[2.5]" />
-                        <span>Share</span>
-                    </button>
+                    {/* Complete Trip / Completed Badge */}
+                    {isCompleted ? (
+                        <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-full text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20">
+                                <CheckCircle size={16} weight="fill" />
+                                <span>Completed</span>
+                            </span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleCompleteTrip}
+                            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-all active:scale-95 border border-emerald-200/50"
+                        >
+                            <CheckCircle size={16} className="stroke-[2.5]" />
+                            <span>Complete Trip</span>
+                        </button>
+                    )}
+
+                    {/* Share Button One UI (Only shown if NOT completed) */}
+                    {!isCompleted && (
+                        <button
+                            onClick={() => setIsInviteOpen(true)}
+                            className="hidden md:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-[#1A1A1A]  hover: rounded-full transition-all active:scale-95"
+                        >
+                            <ShareNetwork size={18} className="stroke-[2.5]" />
+                            <span>Share</span>
+                        </button>
+                    )}
 
                     <div className="hidden sm:flex -space-x-3 mr-2">
                         {travelers.slice(0, 3).map((t, i) => (
@@ -226,21 +343,25 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 {t.name?.[0] ||'T'}
                             </div>
                         ))}
-                        <button
-                            onClick={() => setIsInviteOpen(true)}
-                            className="w-10 h-10 rounded-full border-[3px] border-white  flex items-center justify-center text-slate-400 hover: hover:text-[#1A1A1A] transition-all z-0 shadow-sm"
-                        >
-                            <Plus size={18} />
-                        </button>
+                        {!isCompleted && (
+                            <button
+                                onClick={() => setIsInviteOpen(true)}
+                                className="w-10 h-10 rounded-full border-[3px] border-white  flex items-center justify-center text-slate-400 hover: hover:text-[#1A1A1A] transition-all z-0 shadow-sm"
+                            >
+                                <Plus size={18} />
+                            </button>
+                        )}
                     </div>
 
                     <div className="w-px h-8  hidden sm:block mx-1"></div>
 
                     <NotificationBell user={user} tripId={tripId} />
 
-                    <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all hidden sm:inline-block border ${syncStatus ==='synced' ?' text-[#1A1A1A] border-emerald-100' :'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                        {syncStatus ==='saving' ?'SAVING...' :'SAVED'}
-                    </span>
+                    {!isCompleted && (
+                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all hidden sm:inline-block border ${syncStatus ==='synced' ?' text-[#1A1A1A] border-emerald-100' :'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                            {syncStatus ==='saving' ?'SAVING...' :'SAVED'}
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -260,8 +381,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                     type="text"
                                     value={destination}
                                     onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
+                                    disabled={isCompleted}
                                     placeholder="Add Destination"
-                                    className="bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md"
+                                    className={`bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md ${isCompleted ? 'cursor-default' : 'cursor-text'}`}
                                 />
                             </div>
                         </div>
@@ -291,6 +413,24 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     </div>
                 </div>
 
+                {/* Read-Only Status Banner */}
+                {isCompleted && (
+                    <div className="bg-slate-900 text-white px-4 md:px-8 py-3.5 flex items-center justify-between gap-4 text-xs md:text-sm font-bold border-b border-slate-800 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle size={18} weight="fill" className="text-emerald-400 shrink-0" />
+                            <span>This trip is completed and is in read-only mode.</span>
+                        </div>
+                        {isOwner && (
+                            <button
+                                onClick={handleReopenTrip}
+                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-full text-xs transition-all active:scale-95 shrink-0"
+                            >
+                                Reopen Trip
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* Main Tab Content */}
                 <div className="flex-1 overflow-y-auto  p-4 md:p-6">
                     <div className="max-w-5xl mx-auto pb-20">
@@ -310,10 +450,28 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                         tripId={tripId}
                                         collaborators={collaborators}
                                         isLoading={detailLoading || daysLoading}
+                                        isCompleted={isCompleted}
                                     />
                                 )}
-                                {activeTab ==='travelers' && <Travelers travelers={travelers} setTravelers={handleSetTravelers} />}
-                                {activeTab ==='expenses' && <Expenses days={days} user={user} tripId={tripId} budget={budget} onUpdateTripInfo={handleUpdateTripInfo} travelers={travelers} currencyCode={currency} />}
+                                {activeTab ==='travelers' && (
+                                    <Travelers 
+                                        travelers={travelers} 
+                                        setTravelers={handleSetTravelers} 
+                                        isCompleted={isCompleted}
+                                    />
+                                )}
+                                {activeTab ==='expenses' && (
+                                    <Expenses 
+                                        days={days} 
+                                        user={user} 
+                                        tripId={tripId} 
+                                        budget={budget} 
+                                        onUpdateTripInfo={handleUpdateTripInfo} 
+                                        travelers={travelers} 
+                                        currencyCode={currency} 
+                                        isCompleted={isCompleted}
+                                    />
+                                )}
                                 {activeTab ==='map' && <TripMap days={days} />}
                             </motion.div>
                         </AnimatePresence>
