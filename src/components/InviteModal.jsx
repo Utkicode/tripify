@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { logError } from '../utils/logger.js';
-import { motion, AnimatePresence } from'framer-motion';
-import { X, EnvelopeSimple, UserPlus, CheckCircle, MagnifyingGlass, WarningCircle } from'@phosphor-icons/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, EnvelopeSimple, UserPlus, CheckCircle, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react';
 import { collection, query, where, getDocs, updateDoc, doc, arrayUnion, getDoc } from "firebase/firestore";
-import { db } from'../firebase';
-import { appId } from'../constants';
-import { sendNotification } from'../services/notificationService';
+import { db } from '../firebase';
+import { appId } from '../constants';
+import { sendNotification } from '../services/notificationService';
 
 const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCollaborators = [] }) => {
     const [email, setEmail] = useState('');
@@ -30,8 +30,8 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
 
         try {
             // 1. Find user by email
-            const usersRef = collection(db,'artifacts', appId,'users');
-            const q = query(usersRef, where('email','==', email));
+            const usersRef = collection(db, 'artifacts', appId, 'users');
+            const q = query(usersRef, where('email', '==', email));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -53,7 +53,7 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
 
             // 3. Add to trip collaborators
             setStatus('inviting');
-            const tripRef = doc(db,'artifacts', appId,'trips', tripId);
+            const tripRef = doc(db, 'artifacts', appId, 'trips', tripId);
 
             const tripSnap = await getDoc(tripRef);
             if (!tripSnap.exists()) {
@@ -72,19 +72,19 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
                 collaborators: arrayUnion(targetUid),
                 travelers: arrayUnion({
                     id: targetUid,
-                    name: targetUserData.displayName || targetUserData.name ||'Traveler',
+                    name: targetUserData.displayName || targetUserData.name || 'Traveler',
                     email: targetUserData.email
                 })
             });
 
             // 4. Send Notification
             await sendNotification(targetUid, {
-                type:'trip_invite',
+                type: 'trip_invite',
                 tripId,
-                tripName: tripName ||'Unknown Trip',
+                tripName: tripName || 'Unknown Trip',
                 senderId: currentUser.uid,
-                senderName: currentUser.displayName || currentUser.email ||'Someone',
-                message: `${currentUser.displayName ||'Someone'} invited you to join"${tripName ||'a trip'}"`,
+                senderName: currentUser.displayName || currentUser.email || 'Someone',
+                message: `${currentUser.displayName || 'Someone'} invited you to join"${tripName || 'a trip'}"`,
                 link: `/?trip=${tripId}`
             });
 
@@ -117,7 +117,7 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        transition={{ type:"spring", damping: 25, stiffness: 300 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-900/40 w-full max-w-md overflow-hidden relative z-10 border border-white/50"
                     >
                         <div className="p-8">
@@ -154,14 +154,14 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
                                 </div>
 
                                 <AnimatePresence mode="wait">
-                                    {status ==='error' && (
+                                    {status === 'error' && (
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-[#1A1A1A] text-sm font-bold  p-4 rounded-2xl border border-red-100">
                                             <WarningCircle size={20} className="shrink-0" />
                                             {error || message}
                                         </motion.div>
                                     )}
 
-                                    {status ==='success' && (
+                                    {status === 'success' && (
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-[#1A1A1A] text-sm font-bold  p-4 rounded-2xl border border-emerald-100">
                                             <CheckCircle size={20} className="shrink-0" />
                                             Invitation sent successfully!
@@ -171,10 +171,10 @@ const InviteModal = ({ isOpen, onClose, tripId, tripName, currentUser, currentCo
 
                                 <button
                                     type="submit"
-                                    disabled={status ==='searching' || status ==='inviting' || status ==='success'}
+                                    disabled={status === 'searching' || status === 'inviting' || status === 'success'}
                                     className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-[1.5rem] shadow-xl shadow-blue-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                                 >
-                                    {(status ==='searching' || status ==='inviting') ? (
+                                    {(status === 'searching' || status === 'inviting') ? (
                                         <>
                                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             sending...

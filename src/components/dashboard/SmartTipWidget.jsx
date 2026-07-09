@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from'react';
-import { motion, AnimatePresence } from'framer-motion';
-import { Lightbulb, X } from'@phosphor-icons/react';
-import { SMART_TIPS } from'./SmartExamples';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lightbulb, X } from '@phosphor-icons/react';
+import { SMART_TIPS } from './SmartExamples';
 
 const SmartTipWidget = ({ onViewTip }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -34,7 +34,9 @@ const SmartTipWidget = ({ onViewTip }) => {
             </button>
 
             <div className="flex gap-4">
-                <div className="text-2xl pt-1 select-none">{tip.icon}</div>
+                <div className="p-2.5 rounded-xl bg-amber-50 shrink-0 mt-0.5 flex items-center justify-center border border-amber-100">
+                    <Lightbulb size={20} className="text-amber-600" weight="regular" />
+                </div>
                 <div>
                     <h4 className="text-sm font-bold text-amber-800 mb-1 flex items-center gap-2">
                         Smart Tip: {tip.category}
@@ -42,7 +44,7 @@ const SmartTipWidget = ({ onViewTip }) => {
                     <p className="text-sm text-amber-900/80 leading-relaxed mb-3">
                         {tip.text}
                     </p>
-                    {tip.action !=='none' && (
+                    {tip.action !== 'none' && (
                         <button
                             onClick={() => onViewTip(tip.action)}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline decoration-amber-300 underline-offset-2 transition-colors"

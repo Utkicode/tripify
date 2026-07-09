@@ -390,44 +390,47 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Cover Image Area (Mockup) */}
-                <div className="h-40 md:h-48 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0 transition-all">
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end bg-gradient-to-t from-black/60 to-transparent">
+                {/* Cover Band — z-10 keeps it below workspace header (z-30) but above content */}
+                <div
+                    className="h-40 md:h-48 relative shrink-0 transition-all z-10"
+                    style={{ background: '#1E293B' }}
+                >
+                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)' }}>
                         <div className="text-white w-full">
-                            <div className="flex items-center gap-2 mb-2 text-white/80 text-xs md:text-sm font-medium">
+                            <div className="flex items-center gap-2 mb-2 text-white/60 text-xs md:text-sm font-medium">
                                 <Calendar size={14} className="md:w-4 md:h-4" /> {days.length} Days  •  <Users size={14} className="md:w-4 md:h-4" /> {travelers.length} Travelers
                             </div>
                             <div className="flex items-center gap-2">
-                                <MapPin size={20} className="text-white/80 md:w-6 md:h-6" />
+                                <MapPin size={20} className="text-white/60 md:w-6 md:h-6" />
                                 <input
                                     type="text"
                                     value={destination}
                                     onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
                                     disabled={isCompleted}
                                     placeholder="Add Destination"
-                                    className={`bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md ${isCompleted ? 'cursor-default' : 'cursor-text'}`}
+                                    className={`bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/30 p-0 focus:ring-0 w-full max-w-md ${isCompleted ? 'cursor-default' : 'cursor-text'}`}
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-14 md:top-16">
+                {/* Tabs — sticky below workspace header (h-16 md:h-20 = 64px/80px) */}
+                <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-16 md:top-20">
                     <div className="flex gap-8 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         {[
-                            { id:'itinerary', label:'Itinerary' },
-                            { id:'expenses', label:'Expenses' },
-                            { id:'map', label:'Map' },
-                            { id:'travelers', label:'Travelers' }
+                            { id: 'itinerary', label: 'Itinerary' },
+                            { id: 'expenses', label: 'Expenses' },
+                            { id: 'map', label: 'Map' },
+                            { id: 'travelers', label: 'Travelers' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`py-4 text-sm font-bold border-b-[3px] transition-all relative whitespace-nowrap px-1 ${activeTab === tab.id
-                                    ?'border-blue-600 text-[#1A1A1A]'
-                                    :'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                                    ? 'border-[#FF6B35] text-[#FF6B35]'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                     }`}
                             >
                                 {tab.label}

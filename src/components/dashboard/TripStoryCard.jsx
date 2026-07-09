@@ -1,8 +1,8 @@
-import React, { useMemo } from'react';
-import { motion } from'framer-motion';
-import { Calendar, Users, ArrowRight, WarningCircle, CheckCircle } from'@phosphor-icons/react';
-import { calculateTripReadiness } from'../../utils/intelligence';
-import { getCurrencySymbol } from'../../utils/currency';
+import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Calendar, Users, ArrowRight, WarningCircle, CheckCircle } from '@phosphor-icons/react';
+import { calculateTripReadiness } from '../../utils/intelligence';
+import { getCurrencySymbol } from '../../utils/currency';
 
 const TripStoryCard = ({ trip, onClick }) => {
     const readiness = useMemo(() => calculateTripReadiness(trip), [trip]);
@@ -21,13 +21,13 @@ const TripStoryCard = ({ trip, onClick }) => {
         try {
             const startDate = new Date(start);
             if (isNaN(startDate.getTime())) return '';
-            
+
             const startFormat = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             if (!end) return startFormat;
-            
+
             const endDate = new Date(end);
             if (isNaN(endDate.getTime())) return startFormat;
-            
+
             const endFormat = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             return `${startFormat} - ${endFormat}`;
         } catch (e) {
@@ -39,7 +39,7 @@ const TripStoryCard = ({ trip, onClick }) => {
         <motion.div
             layout
             onClick={() => onClick(trip.id)}
-            whileHover={{ y: -8, boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
+            whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
             whileTap={{ scale: 0.98 }}
             className="group relative bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
         >
@@ -88,7 +88,7 @@ const TripStoryCard = ({ trip, onClick }) => {
                         <div className="shrink-0 mt-0.5">
                             {readiness.level === 'High' ? (
                                 <CheckCircle size={28} className="text-emerald-500" weight="fill" />
-                             ) : (
+                            ) : (
                                 <WarningCircle size={28} className={readiness.level === 'Medium' ? 'text-amber-500' : 'text-rose-500'} weight="fill" />
                             )}
                         </div>
@@ -101,8 +101,8 @@ const TripStoryCard = ({ trip, onClick }) => {
                             </p>
                             <p className="text-xs text-slate-500 leading-snug font-medium mt-1">
                                 {readiness.missing.length > 0
-                                    ? `Missing: ${readiness.missing[0]}${readiness.missing.length > 1 ? ` +${readiness.missing.length - 1}` :''}`
-                                    :'All set! Ready to go.'
+                                    ? `Missing: ${readiness.missing[0]}${readiness.missing.length > 1 ? ` +${readiness.missing.length - 1}` : ''}`
+                                    : 'All set! Ready to go.'
                                 }
                             </p>
                         </div>
