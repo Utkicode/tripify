@@ -1,70 +1,106 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, query, onSnapshot, addDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
-import { auth, db } from './firebase.js';
-import { appId } from './constants.js';
+import { useState, useEffect, Suspense, lazy } from'react';
+import { ArrowsClockwise } from'@phosphor-icons/react';
+import { signOut } from"firebase/auth";
+import { collection, query, onSnapshot, addDoc, deleteDoc, doc, where, getDoc } from"firebase/firestore";
+import { auth, db } from'./firebase.js';
+import { appId, SITE_URL } from'./constants.js';
+import { sendNotification } from'./services/notificationService';
+import { useProfile } from'./context/ProfileContext';
 
-import Auth from './components/Auth';
-import TripList from './components/TripList';
-import TripDetail from './components/TripDetail';
-import Dashboard from './components/Dashboard';
-import Layout from './components/Layout';
-import About from './components/About';
-import VerifyEmail from './components/VerifyEmail';
-import ProfileCompletion from './components/ProfileCompletion';
-import Profile from './components/Profile';
-import ProTips from './components/ProTips';
+// --- Lazy Load Components for Performance ---
+const Auth = lazy(() => import('./components/Auth'));
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const TripList = lazy(() => import('./components/TripList'));
+const TripDetail = lazy(() => import('./components/TripDetail'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Layout = lazy(() => import('./components/Layout'));
+const PublicLayout = lazy(() => import('./components/common/PublicLayout'));
+const Features = lazy(() => import('./components/Features'));
+const About = lazy(() => import('./components/About'));
+const VerifyEmail = lazy(() => import('./components/VerifyEmail'));
+const ProfileCompletion = lazy(() => import('./components/ProfileCompletion'));
+const Profile = lazy(() => import('./components/Profile'));
+const ProTips = lazy(() => import('./components/ProTips'));
+const GlobalExpenses = lazy(() => import('./components/GlobalExpenses'));
+const AppPrivacy = lazy(() => import('./components/AppPrivacy'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+
+import AuthActionHandler from'./components/AuthActionHandler';
+import { AppLoadingSkeleton } from'./components/common/LoadingSkeleton';
+import SEO from'./components/common/SEO';
+import { useConfirm } from'./context/ConfirmContext';
 
 export default function App() {
-  // --- Auth State ---
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
-  const [profileCheckLoading, setProfileCheckLoading] = useState(true);
+  // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
+  const params = new URLSearchParams(window.location.search);
+  const authMode = params.get('mode');
+  const oobCode = params.get('oobCode');
+
+  if (authMode && oobCode) {
+    return <AuthActionHandler />;
+  }
+
+  // --- Auth & Profile State (from Context) ---
+  const { user, loading, isProfileComplete, refreshProfile } = useProfile();
+  const confirm = useConfirm();
 
   // --- App View State ---
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'trips', 'expenses', 'settings'
-  const [currentTripId, setCurrentTripId] = useState(null);
-  const [tripsList, setTripsList] = useState([]);
+  // --- App View State ---
+  // Initialize from URL query params to persist state on refresh
+  const [currentView, setCurrentView] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('view') ||'dashboard';
+  });
 
-  // Listen for auth state
+  const [currentTripId, setCurrentTripId] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('trip') || null;
+  });
+
+  // Sync URL with State changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+    // Avoid interfering with auth action URLs (like verify email)
+    if (new URLSearchParams(window.location.search).get('mode')) return;
 
-      if (currentUser) {
-        // Check Profile Completion in Firestore
-        try {
-          const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid);
-          const userSnap = await getDoc(userDocRef);
+    const url = new URL(window.location);
 
-          if (userSnap.exists() && userSnap.data().isProfileComplete) {
-            setIsProfileComplete(true);
-          } else {
-            setIsProfileComplete(false);
-          }
-        } catch (error) {
-          console.error("Error checking profile:", error);
-        }
+    if (currentTripId) {
+      url.searchParams.set('trip', currentTripId);
+      url.searchParams.delete('view');
+    } else {
+      url.searchParams.delete('trip');
+      if (currentView !=='dashboard') {
+        url.searchParams.set('view', currentView);
       } else {
-        setIsProfileComplete(false);
+        url.searchParams.delete('view');
       }
-      setProfileCheckLoading(false);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    }
 
-  // Fetch trips
+    // Only update if changed to avoid unnecessary pushState calls
+    if (url.toString() !== window.location.toString()) {
+      window.history.pushState({},'', url);
+    }
+  }, [currentView, currentTripId]);
+
+  const [targetTab, setTargetTab] = useState(null);
+  const [tripsList, setTripsList] = useState([]);
+  const [tripLoading, setTripLoading] = useState(true);
+
+  // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
     if (!user || !isProfileComplete) {
       setTripsList([]);
+      setTripLoading(false);
       return;
     }
 
-    // Create query for user's trips
-    const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'trips'));
+    setTripLoading(true);
+
+    // New shared query: Find trips where I am a collaborator
+    const q = query(
+      collection(db,'artifacts', appId,'trips'),
+      where('collaborators','array-contains', user.uid)
+    );
 
     // Real-time listener
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -73,8 +109,10 @@ export default function App() {
         ...doc.data()
       }));
       setTripsList(tripsData);
+      setTripLoading(false);
     }, (error) => {
       console.error("Error fetching trips:", error);
+      setTripLoading(false);
     });
 
     return () => unsubscribe();
@@ -84,8 +122,8 @@ export default function App() {
     try {
       await signOut(auth);
       setCurrentTripId(null);
+      setTargetTab(null);
       setCurrentView('dashboard');
-      setIsProfileComplete(false);
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -95,105 +133,260 @@ export default function App() {
     if (!user) return;
     try {
       const newTrip = {
-        tripName: 'New Trip',
+        tripName:'New Trip',
         createdAt: Date.now(),
         updatedAt: Date.now(),
         days: [], // Start empty
-        travelers: [],
-        travelerCount: 0,
-        totalCost: 0
+        travelers: [{ id: user.uid, name: user.displayName ||'You', email: user.email }], // Initial traveler is creator
+        travelerCount: 1,
+        totalCost: 0,
+        ownerId: user.uid,
+        collaborators: [user.uid] // Critical for access control
       };
 
-      const docRef = await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'trips'), newTrip);
+      const docRef = await addDoc(collection(db,'artifacts', appId,'trips'), newTrip);
+
+      // Log Notification (Global)
+      // Note: We might want a separate notifications system later, keeping local for now or moving to global too?
+      // Keeping notifications local for now as they are user-specific.
+      await addDoc(collection(db,'artifacts', appId,'users', user.uid,'notifications'), {
+        type:'create',
+        message: `Created a new trip`,
+        user: user.displayName ||'User',
+        timestamp: Date.now(),
+        read: false
+      });
+
       setCurrentTripId(docRef.id); // Open the new trip immediately
     } catch (error) {
       console.error("Error creating trip:", error);
     }
   };
 
-  const deleteTrip = async (e, tripId) => {
-    e.stopPropagation(); // Prevent opening the trip
-    if (!confirm('Are you sure you want to delete this trip?')) return;
+  // --- Delete Trip Logic ---
+  const confirmDeleteTrip = async (tripId, tripName) => {
+    if (!tripId) return;
 
-    try {
-      await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'trips', tripId));
-      if (currentTripId === tripId) setCurrentTripId(null);
-    } catch (error) {
-      console.error("Error deleting trip:", error);
+    const tripRef = doc(db,'artifacts', appId,'trips', tripId);
+    // Verify current user is the trip owner before allowing deletion
+    const tripSnap = await getDoc(tripRef);
+    if (!tripSnap.exists()) throw new Error('Trip not found.');
+    const tripData = tripSnap.data();
+    if (tripData.ownerId !== user.uid) {
+      throw new Error('Only the trip owner can delete this trip.');
     }
+    const collaborators = tripData.collaborators || [];
+
+      // Filter out current user (the deleter)
+      const targetUsers = collaborators.filter(uid => uid !== user.uid);
+
+      // Send notification to each collaborator
+      await Promise.all(targetUsers.map(uid =>
+        sendNotification(uid, {
+          type:'trip_delete',
+          tripId: null, // Trip is gone, so no ID to link to
+          tripName: tripName ||'A trip',
+          senderId: user.uid,
+          senderName: user.displayName || user.email ||'Someone',
+          message: `${user.displayName ||'Someone'} deleted the trip "${tripName ||'Untitled'}"`,
+          timestamp: Date.now()
+        })
+      ));
+
+      // 2. Delete the trip document (Global)
+      await deleteDoc(tripRef);
+
+      // 3. Close if currently open
+      if (currentTripId === tripId) setCurrentTripId(null);
+
+      // 4. Log Notification (Self)
+      await addDoc(collection(db,'artifacts', appId,'users', user.uid,'notifications'), {
+        type:'delete',
+        message: `Trip'${tripName ||'Untitled'}' was deleted`,
+        user: user.displayName ||'User',
+        timestamp: Date.now(),
+        read: false
+      });
+
   };
 
-  if (authLoading || (user && profileCheckLoading)) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+  const deleteTrip = (e, tripId, tripName) => {
+    e.stopPropagation();
+    confirm({
+      title: 'Delete Trip?',
+      message: `Are you sure you want to delete "${tripName ||'Untitled'}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      isDestructive: true,
+      onConfirm: () => confirmDeleteTrip(tripId, tripName)
+    });
+  };
+
+
+
+  if (loading) {
+    return <AppLoadingSkeleton />;
   }
 
+  // --- UNAUTHENTICATED OR PUBLIC VIEW HANDLER ---
+  // If no user is logged in OR we are explicitly on a public route that we want to show even if logged in 
+  // (though usually we'd redirect logged in users to dash, let's keep it simple: if (!user), show public site).
   if (!user) {
-    return <Auth />;
+    if (currentView ==='dashboard') {
+      return (
+        <Suspense fallback={<AppLoadingSkeleton />}>
+          <LandingPage currentView={currentView} />
+        </Suspense>
+      );
+    }
+
+    // For other public views (features, about, etc.), use the PublicLayout
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <PublicLayout setCurrentView={setCurrentView} currentView={currentView}>
+          {currentView ==='features' && <Features />}
+          {currentView ==='about' && <About setCurrentView={setCurrentView} />}
+          {currentView ==='protips' && <ProTips />}
+          {currentView ==='privacy' && <AppPrivacy />}
+          {currentView ==='terms' && <TermsOfService />}
+          {/* Fallback to Landing if unknown view or is a SEO landing view */}
+          {['features','about','protips','privacy','terms'].indexOf(currentView) === -1 && <LandingPage currentView={currentView} />}
+        </PublicLayout>
+      </Suspense>
+    );
   }
 
   // 1. Email Verification Check (Skip if no email, e.g. Phone Auth)
   if (user.email && !user.emailVerified) {
-    return <VerifyEmail user={user} />;
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <VerifyEmail user={user} />
+      </Suspense>
+    );
   }
 
   // 2. Profile Completion Check
   if (!isProfileComplete) {
-    return <ProfileCompletion user={user} onComplete={() => setIsProfileComplete(true)} />;
+    return (
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <ProfileCompletion user={user} onComplete={() => refreshProfile(user.uid)} />
+      </Suspense>
+    ); // Force refresh on completion
   }
 
   // If a specific trip is open, show the editor (Full screen mode)
+  // If a specific trip is open, show the editor (Full screen mode)
   if (currentTripId) {
+    // Verify user is a collaborator on this trip before rendering
+    if (!tripLoading) {
+      const isCollaborator = tripsList.some(t => t.id === currentTripId);
+      if (!isCollaborator) {
+        // User is not a collaborator — show access denied
+        return (
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-slate-700">Access Denied</h2>
+              <p className="text-slate-500 mt-2">You don't have access to this trip.</p>
+              <button onClick={() => { window.history.pushState({}, '', '/'); setCurrentTripId(null); setCurrentView('trips'); }}
+                className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg">
+                Go to My Trips
+              </button>
+            </div>
+          </div>
+        );
+      }
+    }
     return (
-      <TripDetail
-        user={user}
-        tripId={currentTripId}
-        setCurrentTripId={setCurrentTripId}
-      />
+      <Suspense fallback={<AppLoadingSkeleton />}>
+        <TripDetail
+          user={user}
+          tripId={currentTripId}
+          setCurrentTripId={setCurrentTripId}
+          initialTab={targetTab}
+          clearInitialTab={() => setTargetTab(null)}
+        />
+      </Suspense>
     );
   }
 
   // Default Layout with Sidebar
   return (
-    <Layout
-      user={user}
-      handleLogout={handleLogout}
-      currentView={currentView}
-      setCurrentView={setCurrentView}
-      setCurrentTripId={setCurrentTripId}
-    >
-      {currentView === 'dashboard' && (
-        <Dashboard
-          user={user}
-          tripsList={tripsList}
-          setCurrentTripId={setCurrentTripId}
-          createNewTrip={createNewTrip}
-          deleteTrip={deleteTrip}
-          setCurrentView={setCurrentView}
+    <Suspense fallback={<AppLoadingSkeleton />}>
+      <Layout
+        user={user}
+        handleLogout={handleLogout}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        setCurrentTripId={setCurrentTripId}
+        tripsList={tripsList}
+      >
+        {/* --- Global SEO & View-Specific SEO --- */}
+        <SEO
+          title={
+            currentView ==='dashboard' ?'Dashboard' :
+              currentView ==='about' ?'About Us' :
+                currentView ==='profile' ?'My Profile' :
+                  currentView ==='protips' ?'Pro Tips' :
+                    currentView ==='travel-expense-tracker' ?'Best Travel Expense Tracker & Split Bill App' :
+                      currentView ==='group-trip-planner' ?'Group Trip Planner & Organizer' :
+                        currentView ==='vacation-budget-app' ?'Vacation Budget Planner & Calculator' :
+                          currentView ==='itinerary-builder' ?'Free Travel Itinerary Builder' :'Trip Planner'
+          }
+          description={
+            currentView ==='travel-expense-tracker' ?'Track shared travel expenses, split bills instantly, and manage your vacation budget with TravelCFO. The best free app for group travel costs.' :
+              currentView ==='group-trip-planner' ?'Collaborate on trip itineraries with friends in real-time. Vote on activities, share documents, and plan the perfect group trip together.' :
+                currentView ==='vacation-budget-app' ?'Calculate your travel costs, set daily limits, and stay on budget. Visual analytics for your flight, hotel, and food expenses.' :
+                  currentView ==='itinerary-builder' ?'Build detailed day-by-day travel itineraries. Drag and drop activities, add maps, and export your travel plan to PDF.' :"TravelCFO is the smartest way to plan trips, track expenses, and manage travel budgets. Free, private, and secure."
+          }
+          keywords={
+            currentView ==='travel-expense-tracker' ?'travel expense tracker, split bills, travel budget, cost sharing, expense manager' :
+              currentView ==='group-trip-planner' ?'group travel, plan trip with friends, collaborative itinerary, travel organizer' :
+                currentView ==='vacation-budget-app' ?'vacation cost, holiday budget, travel finance, trip calculator' :
+                  currentView ==='itinerary-builder' ?'trip itinerary, travel schedule, daily planner, travel map' :'travel planner, expense tracker, group travel, itinerary builder'
+          }
+          canonical={`${SITE_URL}/?view=${currentView}`}
         />
-      )}
 
-      {currentView === 'trips' && (
-        <TripList
-          tripsList={tripsList}
-          setCurrentTripId={setCurrentTripId}
-          createNewTrip={createNewTrip}
-          deleteTrip={deleteTrip}
-        />
-      )}
+        {currentView ==='dashboard' && (
+          <Dashboard
+            user={user}
+            tripsList={tripsList}
+            setCurrentTripId={setCurrentTripId}
+            createNewTrip={createNewTrip}
+            deleteTrip={deleteTrip}
+            setCurrentView={setCurrentView}
+            setTargetTab={setTargetTab}
+          />
+        )}
 
-      {currentView === 'about' && <About />}
-      {currentView === 'profile' && <Profile user={user} />}
-      {currentView === 'protips' && <ProTips />}
+        {currentView ==='trips' && (
+          <TripList
+            tripsList={tripsList}
+            setCurrentTripId={setCurrentTripId}
+            createNewTrip={createNewTrip}
+            deleteTrip={deleteTrip}
+          />
+        )}
 
-      {/* Placeholders for upcoming sections */}
-      {(currentView === 'expenses' || currentView === 'settings') && (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-          <div className="text-4xl mb-4">🚧</div>
-          <h2 className="text-xl font-bold text-slate-600">Coming Soon</h2>
-          <p>This module is under development.</p>
-        </div>
-      )}
+        {currentView ==='about' && <About setCurrentView={setCurrentView} />}
+        {currentView ==='profile' && <Profile user={user} onLogout={handleLogout} />}
+        {currentView ==='protips' && <ProTips />}
+        {currentView ==='privacy' && <AppPrivacy />}
+        {currentView ==='terms' && <TermsOfService />}
 
-    </Layout>
+        {/* Placeholders for upcoming sections */}
+        {currentView ==='expenses' && (
+          <GlobalExpenses tripsList={tripsList} setCurrentView={setCurrentView} />
+        )}
+
+        {currentView ==='settings' && (
+          <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className="text-4xl mb-4">🚧</div>
+            <h2 className="text-xl font-bold text-slate-600">Coming Soon</h2>
+            <p>This module is under development.</p>
+          </div>
+        )}
+
+      </Layout>
+    </Suspense>
   );
 }

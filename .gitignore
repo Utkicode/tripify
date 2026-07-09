@@ -122,3 +122,10 @@ dist-ssr
 # OS
 .DS_Store
 Thumbs.db
+
+.env.development
+.env.*
+!.env.example
+FEEDBACK_ACCESS.md
+.firebase/
+.firebaserc
