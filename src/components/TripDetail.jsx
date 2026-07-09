@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from'react';
-import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin, CheckCircle } from'@phosphor-icons/react';
-import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField, addDoc } from"firebase/firestore";
-import { db } from'../firebase';
-import { appId, createInitialDays, createInitialTravelers } from'../constants';
-import Planner from'./Planner';
-import Travelers from'./Travelers';
-import Insights from'./Insights';
-import Expenses from'./Expenses';
-import TripMap from'./TripMap';
-import NotificationBell from'./NotificationBell';
-import { motion, AnimatePresence } from'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin, CheckCircle } from '@phosphor-icons/react';
+import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField, addDoc } from "firebase/firestore";
+import { db } from '../firebase';
+import { appId, createInitialDays, createInitialTravelers } from '../constants';
+import Planner from './Planner';
+import Travelers from './Travelers';
+import Insights from './Insights';
+import Expenses from './Expenses';
+import TripMap from './TripMap';
+import NotificationBell from './NotificationBell';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import InviteModal from'./InviteModal';
+import InviteModal from './InviteModal';
 
 const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
@@ -19,7 +19,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const [days, setDays] = useState([]);
     const [travelers, setTravelers] = useState([]);
     const [collaborators, setCollaborators] = useState([]); // Track who has access
-    const [activeTab, setActiveTab] = useState(initialTab ||'itinerary');
+    const [activeTab, setActiveTab] = useState(initialTab || 'itinerary');
     const [budget, setBudget] = useState(0);
     const [syncStatus, setSyncStatus] = useState('synced');
     const [detailLoading, setDetailLoading] = useState(false);
@@ -37,7 +37,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         setDetailLoading(true);
         setDaysLoading(true); // Reset on ID change
 
-        const tripRef = doc(db,'artifacts', appId,'trips', tripId);
+        const tripRef = doc(db, 'artifacts', appId, 'trips', tripId);
 
         // 1. Metadata Listener
         const unsubscribeTrip = onSnapshot(tripRef, async (docSnap) => {
@@ -55,7 +55,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     console.log("Migrating legacy days to sub-collections...");
                     try {
                         const batch = writeBatch(db);
-                        const daysCollectionRef = collection(db,'artifacts', appId,'trips', tripId,'days');
+                        const daysCollectionRef = collection(db, 'artifacts', appId, 'trips', tripId, 'days');
 
                         data.days.forEach(day => {
                             const newDayRef = doc(daysCollectionRef, String(day.id));
@@ -75,7 +75,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 // Normal Metadata Update
                 if (JSON.stringify(data.travelers) !== JSON.stringify(travelers)) setTravelers(data.travelers || createInitialTravelers());
                 if (data.tripName && data.tripName !== tripName) setTripName(data.tripName);
-                if (data.destination && data.destination !== destination) setDestination(data.destination ||'');
+                if (data.destination && data.destination !== destination) setDestination(data.destination || '');
                 if (data.budget !== undefined && data.budget !== budget) setBudget(data.budget);
                 if (data.collaborators) setCollaborators(data.collaborators);
             } else {
@@ -89,8 +89,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
         // 2. Days Sub-collection Listener
         const daysQuery = query(
-            collection(db,'artifacts', appId,'trips', tripId,'days'),
-            orderBy('id','asc') // Ensure consistent order
+            collection(db, 'artifacts', appId, 'trips', tripId, 'days'),
+            orderBy('id', 'asc') // Ensure consistent order
         );
 
         const unsubscribeDays = onSnapshot(daysQuery, (snapshot) => {
@@ -182,9 +182,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
     const handleUpdateTripInfo = (field, value) => {
         hasUnsavedChanges.current = true;
-        if (field ==='tripName') setTripName(value);
-        if (field ==='destination') setDestination(value);
-        if (field ==='budget') setBudget(Number(value));
+        if (field === 'tripName') setTripName(value);
+        if (field === 'destination') setDestination(value);
+        if (field === 'budget') setBudget(Number(value));
     };
 
     // --- Data Sync: Save Changes (Metadata Only) ---
@@ -195,7 +195,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         const saveData = async () => {
             setSyncStatus('saving');
             try {
-                const docRef = doc(db,'artifacts', appId,'trips', tripId);
+                const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
                 const totalCost = actualCost;
 
                 await updateDoc(docRef, {
@@ -234,7 +234,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
         const computedDaysWithActivitiesCount = days ? days.filter(day => day.items && day.items.length > 0).length : 0;
 
         // Check if anything actually changed to prevent redundant writes
-        const hasChanged = 
+        const hasChanged =
             computedTotalCost !== (tripData.totalCost || 0) ||
             computedDayCount !== (tripData.dayCount || 0) ||
             computedTravelerCount !== (tripData.travelerCount || 0) ||
@@ -340,7 +340,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     <div className="hidden sm:flex -space-x-3 mr-2">
                         {travelers.slice(0, 3).map((t, i) => (
                             <div key={i} className="w-10 h-10 rounded-full border-[3px] border-white bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm relative z-0 hover:z-10 hover:scale-110 transition-transform cursor-context-menu">
-                                {t.name?.[0] ||'T'}
+                                {t.name?.[0] || 'T'}
                             </div>
                         ))}
                         {!isCompleted && (
@@ -358,8 +358,8 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     <NotificationBell user={user} tripId={tripId} />
 
                     {!isCompleted && (
-                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all hidden sm:inline-block border ${syncStatus ==='synced' ?' text-[#1A1A1A] border-emerald-100' :'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                            {syncStatus ==='saving' ?'SAVING...' :'SAVED'}
+                        <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all hidden sm:inline-block border ${syncStatus === 'synced' ? ' text-[#1A1A1A] border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                            {syncStatus === 'saving' ? 'SAVING...' : 'SAVED'}
                         </span>
                     )}
                 </div>
@@ -394,17 +394,17 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                 <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-14 md:top-16">
                     <div className="flex gap-8 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         {[
-                            { id:'itinerary', label:'Itinerary' },
-                            { id:'expenses', label:'Expenses' },
-                            { id:'map', label:'Map' },
-                            { id:'travelers', label:'Travelers' }
+                            { id: 'itinerary', label: 'Itinerary' },
+                            { id: 'expenses', label: 'Expenses' },
+                            { id: 'map', label: 'Map' },
+                            { id: 'travelers', label: 'Travelers' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`py-4 text-sm font-bold border-b-[3px] transition-all relative whitespace-nowrap px-1 ${activeTab === tab.id
-                                    ?'border-blue-600 text-[#1A1A1A]'
-                                    :'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                                    ? 'border-blue-600 text-[#1A1A1A]'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                     }`}
                             >
                                 {tab.label}
@@ -442,7 +442,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {activeTab ==='itinerary' && (
+                                {activeTab === 'itinerary' && (
                                     <Planner
                                         days={days}
                                         setDays={handleSetDays}
@@ -453,26 +453,26 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                         isCompleted={isCompleted}
                                     />
                                 )}
-                                {activeTab ==='travelers' && (
-                                    <Travelers 
-                                        travelers={travelers} 
-                                        setTravelers={handleSetTravelers} 
+                                {activeTab === 'travelers' && (
+                                    <Travelers
+                                        travelers={travelers}
+                                        setTravelers={handleSetTravelers}
                                         isCompleted={isCompleted}
                                     />
                                 )}
-                                {activeTab ==='expenses' && (
-                                    <Expenses 
-                                        days={days} 
-                                        user={user} 
-                                        tripId={tripId} 
-                                        budget={budget} 
-                                        onUpdateTripInfo={handleUpdateTripInfo} 
-                                        travelers={travelers} 
-                                        currencyCode={currency} 
+                                {activeTab === 'expenses' && (
+                                    <Expenses
+                                        days={days}
+                                        user={user}
+                                        tripId={tripId}
+                                        budget={budget}
+                                        onUpdateTripInfo={handleUpdateTripInfo}
+                                        travelers={travelers}
+                                        currencyCode={currency}
                                         isCompleted={isCompleted}
                                     />
                                 )}
-                                {activeTab ==='map' && <TripMap days={days} />}
+                                {activeTab === 'map' && <TripMap days={days} />}
                             </motion.div>
                         </AnimatePresence>
                     </div>
