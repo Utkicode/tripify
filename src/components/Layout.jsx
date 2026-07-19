@@ -68,13 +68,16 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
                             onClick={() => setCurrentView('dashboard')}
                             className="md:hidden flex items-center gap-2.5 hover:scale-105 active:scale-95 transition-all outline-none group"
                         >
-                            <div className="w-8 h-8 rounded-[0.8rem] bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20 flex items-center justify-center text-white font-black text-sm">
+                            <div
+                                className="w-8 h-8 rounded-[0.8rem] flex items-center justify-center text-white font-black text-sm"
+                                style={{ background: '#FF6B35' }}
+                            >
                                 T
                             </div>
-                            <span className="font-black text-lg tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-slate-800">
+                            <span className="font-black text-lg tracking-tight text-slate-900">
                                 TravelCFO
                             </span>
-                            <span className="px-1.5 py-0.5 rounded-md  text-[#1A1A1A] text-[8px] font-bold tracking-wider border border-blue-200 ml-1">
+                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8px] font-bold tracking-wider border border-slate-200 ml-1">
                                 BETA
                             </span>
                         </button>
@@ -85,7 +88,7 @@ const Layout = ({ children, user, handleLogout, currentView, setCurrentView, set
 
                     <div className="flex items-center gap-4">
                         <div className="relative z-50">
-                            <div className="hidden sm:flex items-center /50 backdrop-blur-sm border border-slate-200 rounded-[2rem] px-4 py-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition-all shadow-sm">
+                            <div className="hidden sm:flex items-center backdrop-blur-sm border border-slate-200 rounded-[2rem] px-4 py-2 focus-within:ring-2 focus-within:ring-[#FF6B35]/20 focus-within:border-[#FF6B35]/40 focus-within:bg-white transition-all shadow-sm bg-white/60">
                                 <MagnifyingGlass size={18} className="text-slate-400" />
                                 <input
                                     type="text"

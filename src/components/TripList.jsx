@@ -1,50 +1,64 @@
-import React from'react';
-import { MapPin, Trash, Clock, Users, PencilSimple, Plus, ArrowRight } from'@phosphor-icons/react';
-import { motion, AnimatePresence } from'framer-motion';
+import React from 'react';
+import { MapPin, Trash, Clock, Users, PencilSimple, Plus, ArrowRight, Warning } from '@phosphor-icons/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limit }) => {
-    // Apply limit if provided (for dashboard view)
-    const displayedTrips = limit ? tripsList.slice(0, limit) : tripsList;
+    const processedTrips = React.useMemo(() => {
+        return tripsList.map(trip => {
+            const baseName = trip.tripName || trip.destination || 'Untitled Trip';
+            if (baseName === 'Untitled Trip' || baseName === 'New Trip') return trip;
+            
+            const duplicates = tripsList.filter(t => {
+                const tName = t.tripName || t.destination || 'Untitled Trip';
+                return tName.toLowerCase() === baseName.toLowerCase();
+            });
+            
+            if (duplicates.length > 1) {
+                const dateTag = trip.startDate 
+                    ? new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'Draft';
+                return { 
+                    ...trip, 
+                    tripName: trip.tripName ? `${trip.tripName} (${dateTag})` : trip.tripName,
+                    destination: trip.destination ? `${trip.destination} (${dateTag})` : trip.destination
+                };
+            }
+            return trip;
+        });
+    }, [tripsList]);
 
-    // Simplified animations to prevent'opacity: 0' stuck state
+    const displayedTrips = limit ? processedTrips.slice(0, limit) : processedTrips;
+
     const item = {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0 }
     };
 
     return (
-        <div className="w-full space-y-12 pb-24">
+        <div className="w-full space-y-10 pb-24">
+            {/* ── Page Header — solid title, New Trip CTA inline right-aligned ── */}
             {!limit && (
-                <header className="relative py-8 md:py-12 px-4 md:px-0">
-                    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-purple-400/20 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
-
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <header className="pt-8 pb-2 px-4 md:px-0">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-[#1A1A1A] font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
-                            >
-                                Your Collection
-                            </motion.div>
-                            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4">
-                                My <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Trips</span>
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Your Collection</p>
+                            {/* Solid-color h1 — no gradient, no second accent */}
+                            <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1E293B', letterSpacing: '-0.01em', lineHeight: 1.2, marginBottom: '4px' }}>
+                                My Trips
                             </h1>
-                            <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-xl leading-relaxed">
-                                {tripsList.length} adventures planned and counting. Where to next?
+                            <p className="text-sm text-slate-500 font-medium">
+                                {tripsList.length} {tripsList.length === 1 ? 'adventure' : 'adventures'} planned. Where to next?
                             </p>
                         </div>
-
+                        {/* Primary CTA — inside header row, standard btn-primary */}
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
                             onClick={createNewTrip}
-                            className="bg-slate-900 text-white pl-6 pr-8 py-5 rounded-[2.5rem] font-bold shadow-2xl shadow-slate-900/30 flex items-center gap-4 group transition-all"
+                            className="btn-primary pl-4 pr-5 py-2.5 rounded-xl flex items-center gap-2 w-fit shrink-0 text-sm font-bold"
                         >
-                            <div className="bg-white/20 p-2 rounded-full group-hover:rotate-90 transition-transform duration-500">
-                                <Plus size={24} />
-                            </div>
-                            <span className="text-lg">New Trip</span>
+                            <Plus size={17} strokeWidth={2.5} />
+                            New Trip
                         </motion.button>
                     </div>
                 </header>
@@ -54,101 +68,118 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/50 shadow-xl p-12 md:p-20 text-center relative overflow-hidden"
+                    className="bg-white rounded-2xl border border-black/[0.05] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] p-16 text-center"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
-                    <div className="relative z-10">
-                        <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/60">
-                            <MapPin size={48} className="text-[#1A1A1A]" strokeWidth={1.5} />
-                        </div>
-                        <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">No trips found</h3>
-                        <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">
-                            Your passport is waiting to be stamped. Start planning your next great escape today.
-                        </p>
-                        <button
-                            onClick={createNewTrip}
-                            className="bg-purple-600 text-white px-10 py-4 rounded-full font-bold hover:bg-purple-700 transition-all shadow-lg hover:shadow-purple-500/30 hover:scale-105 active:scale-95 text-lg flex items-center justify-center gap-3 mx-auto"
-                        >
-                            Create Your First Trip <ArrowRight size={20} />
-                        </button>
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center mx-auto mb-5">
+                        <MapPin size={28} strokeWidth={1.5} style={{ color: '#FF6B35' }} />
                     </div>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#1E293B', marginBottom: '6px' }}>No trips found</h3>
+                    <p className="text-sm text-slate-500 max-w-sm mx-auto mb-7 leading-relaxed">
+                        Your passport is waiting to be stamped. Start planning your next great escape today.
+                    </p>
+                    <button onClick={createNewTrip} className="btn-primary px-7 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 mx-auto">
+                        Create Your First Trip <ArrowRight size={16} />
+                    </button>
                 </motion.div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence mode="popLayout">
-                        {displayedTrips.map((trip, index) => (
-                            <motion.div
-                                key={trip.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                layout
-                                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                                onClick={() => setCurrentTripId(trip.id)}
-                                whileHover={{ y: -8, boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
-                                whileTap={{ scale: 0.98 }}
-                                className="group relative bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
-                            >
-                                {/* Cover Image Placeholder */}
-                                <div className={`h-40 w-full bg-gradient-to-br ${index % 2 === 0 ?'from-blue-50 to-indigo-50' :'from-purple-50 to-pink-50'} relative overflow-hidden group-hover:h-44 transition-all duration-500`}>
-                                    {/* Decorative Blob */}
-                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-[40px] transition-transform group-hover:scale-150"></div>
+                        {displayedTrips.map((trip) => {
+                            const isUntitled = !trip.tripName || trip.tripName === 'New Trip';
+                            const hasNoDestination = !trip.destination;
+                            const isBlank = isUntitled && hasNoDestination;
 
-                                    <div className="absolute bottom-6 left-8 right-8 z-10 flex items-center justify-between gap-2">
-                                        <div className="inline-flex items-center gap-2 bg-white/30 backdrop-blur-md border border-white/40 px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm truncate">
-                                            <MapPin size={12} className="text-slate-900 shrink-0" /> <span className="truncate">{trip.destination ||'Planning...'}</span>
+                            return (
+                                <motion.div
+                                    key={trip.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    layout
+                                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                                    onClick={() => setCurrentTripId(trip.id)}
+                                    whileHover={{ y: -2, boxShadow: '0 8px 30px -8px rgba(0,0,0,0.12)' }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="group relative bg-white rounded-2xl border border-black/[0.05] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-pointer overflow-hidden flex flex-col"
+                                    style={{ borderRadius: '16px' }}
+                                >
+                                    {/* ── Cover strip ── */}
+                                    {isBlank ? (
+                                        /* Distinct "untitled" cover — dashed border, no colour confusion */
+                                        <div className="h-28 flex flex-col items-center justify-center gap-2 border-b-2 border-dashed border-slate-200 bg-slate-50 relative overflow-hidden">
+                                            <Warning size={22} strokeWidth={1.8} className="text-slate-300" />
+                                            <p className="text-xs font-bold text-slate-400 tracking-wide">Untitled trip — tap to name it</p>
                                         </div>
-                                        {trip.isCompleted && (
-                                            <span className="flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-20 shrink-0">
-                                                Completed
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                                    ) : (
+                                        <div className="h-28 relative overflow-hidden" style={{ background: '#F1F5F9' }}>
+                                            <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between gap-2">
+                                                <div className="inline-flex items-center gap-1.5 bg-white/80 backdrop-blur-md border border-white/60 px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm truncate max-w-[70%]">
+                                                    <MapPin size={11} className="text-[#FF6B35] shrink-0" />
+                                                    <span className="truncate">{trip.destination || 'Destination TBD'}</span>
+                                                </div>
+                                                {trip.isCompleted && (
+                                                    <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-wide shadow-sm shrink-0">
+                                                        Done
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                <div className="p-8 flex-1 flex flex-col relative z-10">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-[#1A1A1A] transition-colors line-clamp-2 tracking-tight" title={trip.tripName}>
-                                            {trip.tripName}
-                                        </h3>
-                                        <button
-                                            onClick={(e) => deleteTrip(e, trip.id, trip.tripName)}
-                                            className="text-slate-300 hover:text-[#1A1A1A] bg-white/50 hover: p-2.5 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm border border-transparent hover:border-red-100 transform translate-x-4 group-hover:translate-x-0"
-                                            title="Delete Trip"
-                                        >
-                                            <Trash size={18} strokeWidth={2} />
-                                        </button>
-                                    </div>
+                                    {/* ── Card body ── */}
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3
+                                                className="font-bold text-base text-slate-900 leading-snug line-clamp-2 flex-1 pr-2"
+                                                style={{ color: isBlank ? '#94a3b8' : '#1E293B', fontStyle: isBlank ? 'italic' : 'normal' }}
+                                                title={trip.tripName}
+                                            >
+                                                {isBlank ? 'Untitled Trip' : trip.tripName}
+                                            </h3>
+                                            <button
+                                                onClick={(e) => deleteTrip(e, trip.id, trip.tripName)}
+                                                className="text-slate-300 hover:text-red-400 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 shrink-0 hover:bg-red-50"
+                                                title="Delete Trip"
+                                            >
+                                                <Trash size={15} strokeWidth={2} />
+                                            </button>
+                                        </div>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-8">
-                                        <div className="bg-white/40 rounded-2xl p-3 border border-white/50">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Duration</p>
-                                            <p className="flex items-center gap-1.5 font-bold text-slate-700 text-sm">
-                                                <Clock size={14} className="text-[#1A1A1A]" /> {trip.dayCount || 0} Days
-                                            </p>
+                                        <div className="grid grid-cols-2 gap-3 mb-4">
+                                            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Duration</p>
+                                                <p className="flex items-center gap-1 font-bold text-slate-700 text-sm">
+                                                    <Clock size={12} className="text-slate-400" /> {trip.dayCount || 0} Days
+                                                </p>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Travelers</p>
+                                                <p className="flex items-center gap-1 font-bold text-slate-700 text-sm">
+                                                    <Users size={12} className="text-slate-400" /> {trip.travelerCount || 1}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="bg-white/40 rounded-2xl p-3 border border-white/50">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Travelers</p>
-                                            <p className="flex items-center gap-1.5 font-bold text-slate-700 text-sm">
-                                                <Users size={14} className="text-[#1A1A1A]" /> {trip.travelerCount || 1}
-                                            </p>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-auto pt-5 border-t border-slate-200/60 flex justify-between items-end">
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Budget</p>
-                                            <p className="text-2xl font-black text-slate-900 tracking-tight">₹{(trip.totalCost || 0).toLocaleString()}</p>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full  flex items-center justify-center text-slate-400 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
-                                            <PencilSimple size={16} strokeWidth={2.5} />
+                                        <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Budget</p>
+                                                <p
+                                                    className="text-lg font-bold text-slate-900 tabular-nums"
+                                                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontVariantNumeric: 'tabular-nums' }}
+                                                >
+                                                    ₹{(trip.totalCost || 0).toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <div className="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 transition-all group-hover:border-[#FF6B35] group-hover:text-[#FF6B35] group-hover:bg-orange-50">
+                                                <PencilSimple size={14} strokeWidth={2.5} />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
 
-                    {/* Add New Card (only in full list) - Premium Glass Tile */}
+                    {/* Add New Card */}
                     {!limit && (
                         <motion.button
                             variants={item}
@@ -156,14 +187,15 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                             whileInView="show"
                             viewport={{ once: true }}
                             onClick={createNewTrip}
-                            whileHover={{ scale: 1.02, backgroundColor:'rgba(255, 255, 255, 0.4)' }}
+                            whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.98 }}
-                            className="bg-white/20 backdrop-blur-md rounded-[3rem] border-2 border-dashed border-slate-300/50 hover:border-purple-400/50 flex flex-col items-center justify-center gap-6 p-8 text-slate-400 hover:text-[#1A1A1A] transition-all min-h-[350px] group"
+                            className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#FF6B35]/50 flex flex-col items-center justify-center gap-4 p-8 text-slate-400 hover:text-[#FF6B35] transition-all min-h-[280px] group bg-white/50 hover:bg-orange-50/30"
+                            style={{ borderRadius: '16px' }}
                         >
-                            <div className="w-20 h-20 rounded-[2rem] bg-white/40 border border-white/50 flex items-center justify-center shadow-lg group-hover:shadow-purple-200/50 group-hover:scale-110 transition-all duration-300">
-                                <Plus size={32} strokeWidth={2.5} />
+                            <div className="w-14 h-14 rounded-2xl bg-slate-100 group-hover:bg-orange-100 flex items-center justify-center transition-all duration-200">
+                                <Plus size={26} strokeWidth={2} />
                             </div>
-                            <span className="font-extrabold text-lg tracking-tight">Plan a New Adventure</span>
+                            <span className="font-bold text-sm">Plan a New Adventure</span>
                         </motion.button>
                     )}
                 </div>

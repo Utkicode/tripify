@@ -1,18 +1,18 @@
-import React from'react';
-import { motion } from'framer-motion';
-import { TrendUp, MapTrifold, CurrencyInr, ArrowRight, Plus, CurrencyDollar } from'@phosphor-icons/react';
-import { useProfile } from'../context/ProfileContext';
-import { getCurrencySymbol } from'../utils/currency';
-import { EMPTY_STATE_MESSAGES } from'./dashboard/SmartExamples';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { TrendUp, MapTrifold, CurrencyInr, ArrowRight, Plus, CurrencyDollar } from '@phosphor-icons/react';
+import { useProfile } from '../context/ProfileContext';
+import { getCurrencySymbol } from '../utils/currency';
+import { EMPTY_STATE_MESSAGES } from './dashboard/SmartExamples';
 
 // New Components
-import NBAWidget from'./dashboard/NBAWidget';
-import InsightCard from'./dashboard/InsightCard';
-import TripStoryCard from'./dashboard/TripStoryCard';
-import SmartTipWidget from'./dashboard/SmartTipWidget';
-import { calculateGlobalStats, calculateTripStats } from'../utils/analytics';
+import NBAWidget from './dashboard/NBAWidget';
+import InsightCard from './dashboard/InsightCard';
+import TripStoryCard from './dashboard/TripStoryCard';
+import SmartTipWidget from './dashboard/SmartTipWidget';
+import { calculateGlobalStats, calculateTripStats } from '../utils/analytics';
 
-import { DashboardSkeleton } from'./common/LoadingSkeleton';
+import { DashboardSkeleton } from './common/LoadingSkeleton';
 
 // ... existing imports ...
 
@@ -22,36 +22,64 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     if (isLoading) return <DashboardSkeleton />;
 
     // safe fallbacks
-    const currencyCode = profile?.behavior?.defaultCurrency ||'INR';
+    const currencyCode = profile?.behavior?.defaultCurrency || 'INR';
     const currencySymbol = getCurrencySymbol(currencyCode);
-    const displayName = profile?.identity?.displayName || user?.displayName ||'Traveler';
+    const displayName = profile?.identity?.displayName || user?.displayName || 'Traveler';
     const firstName = displayName.split(' ')[0];
 
     // --- Metric Calculations ---
     const { totalBudget, totalSpent } = React.useMemo(() => calculateGlobalStats(tripsList), [tripsList]);
 
-    // Enrich trips with financial stats for Intelligence Engine
-    const enrichedTrips = React.useMemo(() => {
+    // Disambiguate duplicate trip names
+    const processedTripsList = React.useMemo(() => {
         return tripsList.map(trip => {
-            const stats = calculateTripStats(trip);
-            return { ...trip, ...stats, totalCost: stats.spent }; // Ensure totalCost is present
+            const baseName = trip.tripName || trip.destination || 'Untitled Trip';
+            if (baseName === 'Untitled Trip' || baseName === 'New Trip') return trip;
+            
+            const duplicates = tripsList.filter(t => {
+                const tName = t.tripName || t.destination || 'Untitled Trip';
+                return tName.toLowerCase() === baseName.toLowerCase();
+            });
+            
+            if (duplicates.length > 1) {
+                const dateTag = trip.startDate 
+                    ? new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'Draft';
+                return { 
+                    ...trip, 
+                    tripName: trip.tripName ? `${trip.tripName} (${dateTag})` : trip.tripName,
+                    destination: trip.destination ? `${trip.destination} (${dateTag})` : trip.destination
+                };
+            }
+            return trip;
         });
     }, [tripsList]);
 
-    const totalTrips = tripsList.length;
+    // Enrich trips with financial stats for Intelligence Engine
+    const enrichedTrips = React.useMemo(() => {
+        return processedTripsList.map(trip => {
+            const stats = calculateTripStats(trip);
+            return { ...trip, ...stats, totalCost: stats.spent }; // Ensure totalCost is present
+        });
+    }, [processedTripsList]);
 
-    const upcomingTrips = tripsList
+    const totalTrips = processedTripsList.length;
+
+    const upcomingTrips = processedTripsList
         .filter(t => !t.isArchived)
         .sort((a, b) => (a.startDate || 0) - (b.startDate || 0))
         .slice(0, 3);
 
     // --- Handlers ---
     const handleNBAAction = (action) => {
-        if (action.action ==='create_trip') createNewTrip();
-        else if (action.tripId) {
+        if (action.action === 'create_trip') {
+            createNewTrip();
+        } else if (action.id && action.id.startsWith('add_dest_')) {
+            createNewTrip(action.tripId);
+        } else if (action.tripId) {
             setCurrentTripId(action.tripId);
-            if (action.action ==='view_trip_expenses') setTargetTab('expenses');
-            if (action.action ==='view_trip_itinerary') setTargetTab('itinerary');
+            if (action.action === 'view_trip_expenses') setTargetTab('expenses');
+            if (action.action === 'view_trip_itinerary') setTargetTab('itinerary');
         }
     };
 
@@ -62,13 +90,13 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
         }
 
         const tripId = upcomingTrips[0].id;
-        let tab ='itinerary';
+        let tab = 'itinerary';
 
         switch (action) {
-            case'view_expenses': tab ='expenses'; break;
-            case'view_files': tab ='files'; break;
-            case'open_checklist': tab ='itinerary'; break;
-            case'view_itinerary': tab ='itinerary'; break;
+            case 'view_expenses': tab = 'expenses'; break;
+            case 'view_files': tab = 'files'; break;
+            case 'open_checklist': tab = 'itinerary'; break;
+            case 'view_itinerary': tab = 'itinerary'; break;
             default: return;
         }
 
@@ -83,47 +111,45 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
 
     return (
         <div className="space-y-12 pb-24">
-            {/* 1. Immersive Header */}
-            <header className="relative py-8 md:py-12 px-4 md:px-0">
-                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-400/20 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
-
-                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+            {/* 1. Page Header — solid-color title, CTA inline in header row */}
+            <header className="py-8 md:py-10 px-4 md:px-0">
+                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
                     <div>
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur border border-white/50 text-[#1A1A1A] font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
+                            className="inline-block px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-500 font-bold text-xs uppercase tracking-widest mb-4 shadow-sm"
                         >
                             {(() => {
                                 const hours = new Date().getHours();
-                                if (hours < 12) return'Good Morning';
-                                if (hours < 18) return'Good Afternoon';
-                                return'Good Evening';
+                                if (hours < 12) return 'Good Morning';
+                                if (hours < 18) return 'Good Afternoon';
+                                return 'Good Evening';
                             })()}
                         </motion.div>
-                        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 tracking-tighter mb-4">
-                            Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{firstName}</span>.
+                        {/* Solid-color h1 — 26px/800 weight, no gradient */}
+                        <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#1E293B', letterSpacing: '-0.01em', lineHeight: 1.2, marginBottom: '6px' }}>
+                            Hello, <span style={{ color: '#FF6B35' }}>{firstName}</span>.
                         </h1>
-                        <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl leading-relaxed">
+                        <p className="text-sm text-slate-500 font-medium max-w-xl leading-relaxed">
                             Your financial compass for every journey. Ready to plan?
                         </p>
                     </div>
 
+                    {/* Primary CTA lives inside header row */}
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={createNewTrip}
-                        className="btn-primary pl-6 pr-8 py-4 md:py-5 rounded-[2.5rem] shadow-2xl flex items-center gap-4 group w-fit"
+                        className="btn-primary pl-5 pr-6 py-3 rounded-xl flex items-center gap-2.5 w-fit shrink-0 text-sm"
                     >
-                        <div className="bg-white/20 p-2 rounded-full group-hover:rotate-90 transition-transform duration-500">
-                            <Plus size={24} />
-                        </div>
-                        <span className="text-lg">New Trip</span>
+                        <Plus size={18} />
+                        <span className="font-bold">New Trip</span>
                     </motion.button>
                 </div>
             </header>
 
-            {/* 2. Next Best Action (Hero) - Updated in separate file, but container is here */}
+            {/* 2. Next Best Action (Hero) */}
             <section className="relative z-10">
                 <NBAWidget
                     trips={enrichedTrips}
@@ -147,7 +173,7 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     label="Total Budget"
                     value={formatMoney(totalBudget)}
                     subtext="Planned across trips"
-                    icon={currencyCode ==='INR' ? CurrencyInr : CurrencyDollar}
+                    icon={currencyCode === 'INR' ? CurrencyInr : CurrencyDollar}
                     color="0"
                 />
                 <InsightCard
@@ -156,58 +182,62 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
                     subtext="Current total spending"
                     icon={TrendUp}
                     color="0"
-                    trend={totalSpent > totalBudget ?'down' :'up'}
-                    trendLabel={totalSpent > totalBudget ?'Over Budget' :'On Track'}
+                    trend={totalSpent > totalBudget ? 'down' : 'up'}
+                    trendLabel={totalSpent > totalBudget ? 'Over Budget' : 'On Track'}
                 />
 
-                {/* Smart Tips often span full width or fit alongside */}
+                {/* Smart Tips */}
                 <div className="md:col-span-2 lg:col-span-3">
                     <SmartTipWidget onViewTip={handleTipAction} />
                 </div>
             </section>
 
-            {/* 4. Active Trips (Story Cards) */}
-            <section className="space-y-8 relative z-10">
-                <div className="flex justify-between items-end px-2">
+            {/* 4. Active Trips */}
+            <section className="space-y-6 relative z-10">
+                {/* Section header — solid-color title, grey subtitle, CTA inline */}
+                <div className="flex justify-between items-end px-1">
                     <div>
-                        <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Your Adventures</h3>
-                        <p className="text-slate-500 font-medium">Continue where you left off</p>
+                        <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#1E293B', letterSpacing: '-0.01em', lineHeight: 1.15 }}>
+                            Your Adventures
+                        </h2>
+                        <p className="text-sm text-slate-500 font-medium mt-1">Continue where you left off</p>
                     </div>
                     {tripsList.length > 3 && (
                         <button
                             onClick={() => setCurrentView('trips')}
-                            className="px-6 py-2 bg-white rounded-full font-bold text-slate-600 hover:text-[#1A1A1A] hover: transition-all shadow-sm border border-slate-200 flex items-center gap-2 group"
+                            className="px-5 py-2 bg-white rounded-lg font-semibold text-slate-600 transition-all shadow-sm border border-slate-200 flex items-center gap-2 group text-sm hover:border-[#FF6B35] hover:text-[#FF6B35]"
                         >
-                            View All <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            View All <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                     )}
                 </div>
 
                 {upcomingTrips.length === 0 ? (
-                    // Empty State - Glassmorphism
+                    // Empty State
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/50 shadow-xl p-12 md:p-20 text-center relative overflow-hidden"
+                        className="card p-12 md:p-20 text-center"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
-                        <div className="relative z-10">
-                            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-sm border border-white/60">
-                                <MapTrifold size={48} className="text-[#1A1A1A]" strokeWidth={1.5} />
-                            </div>
-                            <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">{EMPTY_STATE_MESSAGES.no_trips.headline}</h3>
-                            <p className="text-xl text-slate-500 max-w-lg mx-auto mb-10 leading-relaxed font-medium">{EMPTY_STATE_MESSAGES.no_trips.subhead}</p>
-                            <button
-                                onClick={createNewTrip}
-                                className="btn-primary px-10 py-4 rounded-full text-lg hover:scale-105"
-                            >
-                                {EMPTY_STATE_MESSAGES.no_trips.cta}
-                            </button>
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6">
+                            <MapTrifold size={32} strokeWidth={1.5} style={{ color: '#FF6B35' }} />
                         </div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>
+                            {EMPTY_STATE_MESSAGES.no_trips.headline}
+                        </h3>
+                        <p className="text-slate-500 max-w-lg mx-auto mb-8 leading-relaxed text-sm">
+                            {EMPTY_STATE_MESSAGES.no_trips.subhead}
+                        </p>
+                        <button
+                            onClick={createNewTrip}
+                            className="btn-primary px-8 py-3 rounded-xl text-sm"
+                        >
+                            {EMPTY_STATE_MESSAGES.no_trips.cta}
+                        </button>
                     </motion.div>
                 ) : (
                     // Story Grid
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                         {upcomingTrips.map(trip => (
                             <TripStoryCard
                                 key={trip.id}

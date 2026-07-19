@@ -212,3 +212,52 @@ export const getNextBestActions = (trips, user) => {
 
     return actions.sort((a, b) => b.priority - a.priority).slice(0, 3);
 };
+
+/**
+ * Maps a category from the API response (or activity details) into the application's category taxonomy:
+ * 'Food', 'Transport', 'Stay', 'Activity', 'Misc'.
+ * Falls back to keyword-based category matching on the activity name.
+ */
+export const mapCategoryAndFallback = (name, originalCategory) => {
+    // 1. Map originalCategory if provided (from API response)
+    if (originalCategory) {
+        const cat = String(originalCategory).toLowerCase().trim();
+        if (cat.includes('food') || cat.includes('restaurant') || cat.includes('dining') || cat.includes('cafe') || cat.includes('meal') || cat.includes('breakfast') || cat.includes('lunch') || cat.includes('dinner') || cat.includes('drink') || cat.includes('bar') || cat.includes('beverage') || cat.includes('pub') || cat.includes('gastronomy') || cat.includes('eat')) {
+            return 'Food';
+        }
+        if (cat.includes('transport') || cat.includes('flight') || cat.includes('taxi') || cat.includes('cab') || cat.includes('bus') || cat.includes('train') || cat.includes('drive') || cat.includes('transit') || cat.includes('car') || cat.includes('rental') || cat.includes('shuttle') || cat.includes('transfer') || cat.includes('uber') || cat.includes('lyft') || cat.includes('metro') || cat.includes('subway') || cat.includes('plane') || cat.includes('travel') || cat.includes('journey')) {
+            return 'Transport';
+        }
+        if (cat.includes('stay') || cat.includes('hotel') || cat.includes('hostel') || cat.includes('airbnb') || cat.includes('accommodation') || cat.includes('lodging') || cat.includes('resort') || cat.includes('motel') || cat.includes('villa') || cat.includes('room')) {
+            return 'Stay';
+        }
+        if (cat.includes('activity') || cat.includes('sightseeing') || cat.includes('tour') || cat.includes('museum') || cat.includes('attraction') || cat.includes('visit') || cat.includes('experience') || cat.includes('show') || cat.includes('park') || cat.includes('event') || cat.includes('hike') || cat.includes('excursion') || cat.includes('ticket') || cat.includes('monument') || cat.includes('temple') || cat.includes('beach') || cat.includes('concert') || cat.includes('gallery') || cat.includes('theater') || cat.includes('landmark') || cat.includes('history') || cat.includes('heritage') || cat.includes('relax') || cat.includes('nightlife')) {
+            return 'Activity';
+        }
+    }
+
+    // 2. Fallback to name-based keyword mapping
+    if (name) {
+        const nameLower = String(name).toLowerCase();
+        
+        // Food keywords
+        if (/\b(food|eat|restaurant|lunch|dinner|breakfast|cafe|dining|brunch|meal|bar|pub|coffee|bistro|bakery|snacks|supper|tea|drinks|boba|gelato|ice cream|pizza|burger|sushi|ramen|pasta)\b/.test(nameLower)) {
+            return 'Food';
+        }
+        // Transport keywords
+        if (/\b(flight|taxi|cab|bus|train|drive|transit|car|rental|shuttle|uber|lyft|metro|subway|plane|travel|transfer|ferry|boat|cruise|station|airport|ride)\b/.test(nameLower)) {
+            return 'Transport';
+        }
+        // Stay keywords
+        if (/\b(hotel|hostel|airbnb|stay|accommodation|lodging|resort|motel|villa|guesthouse|homestay|check-in|checkin|checkout|check-out|lodge|inn)\b/.test(nameLower)) {
+            return 'Stay';
+        }
+        // Activity keywords
+        if (/\b(sightseeing|tour|museum|attraction|visit|experience|show|park|event|hike|excursion|ticket|monument|temple|beach|concert|gallery|theater|palace|castle|zoo|aquarium|festival|climb|walk|trek|safari|surf|snorkeling|dive|exhibit|explore)\b/.test(nameLower)) {
+            return 'Activity';
+        }
+    }
+
+    return 'Misc';
+};
+

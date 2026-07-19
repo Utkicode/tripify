@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin, CheckCircle } from '@phosphor-icons/react';
+import { ArrowLeft, Users, Calendar, Gear, ShareNetwork, Plus, MapPin, CheckCircle, Sparkle, SpinnerGap } from '@phosphor-icons/react';
 import { doc, onSnapshot, updateDoc, collection, query, orderBy, writeBatch, deleteField, addDoc } from "firebase/firestore";
 import { db } from '../firebase';
 import { appId, createInitialDays, createInitialTravelers } from '../constants';
@@ -12,6 +12,9 @@ import NotificationBell from './NotificationBell';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import InviteModal from './InviteModal';
+import { useConfirm } from '../context/ConfirmContext';
+import { useProfile } from '../context/ProfileContext';
+import { plannerService } from '../services/plannerService';
 
 const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
@@ -29,6 +32,171 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const [tripData, setTripData] = useState(null);
     const [currency, setCurrency] = useState('INR');
     const [actualCost, setActualCost] = useState(0);
+    const [expensesCount, setExpensesCount] = useState(0);
+    const confirm = useConfirm();
+    const { profile } = useProfile();
+    const [isRegenerating, setIsRegenerating] = useState(false);
+    const [regeneratingDayId, setRegeneratingDayId] = useState(null);
+
+    const handleRegenerateItinerary = async () => {
+        if (!user || !tripId || isRegenerating) return;
+
+        const isPro = profile?.tier === 'pro' || profile?.isPro === true;
+        const currentRegenCount = tripData?.regenerationCount || 0;
+
+        if (!isPro && currentRegenCount >= 1) {
+            confirm({
+                title: 'Regeneration Limit Reached',
+                message: 'Free-tier users are capped at 1 AI regeneration per trip. Upgrade to Pro for unlimited AI planning!',
+                confirmLabel: 'OK',
+                cancelLabel: 'Close',
+                isDestructive: false,
+                onConfirm: () => {}
+            });
+            return;
+        }
+
+        confirm({
+            title: 'Regenerate Itinerary?',
+            message: 'This replaces your current itinerary — continue?',
+            confirmLabel: 'Regenerate',
+            cancelLabel: 'Cancel',
+            isDestructive: true,
+            onConfirm: async () => {
+                setIsRegenerating(true);
+                try {
+                    const startDateVal = tripData?.startDate || (days.length > 0 ? days[0].date : '');
+                    const endDateVal = tripData?.endDate || (days.length > 0 ? days[days.length - 1].date : '');
+
+                    if (!destination) {
+                        throw new Error('Destination is required to generate an itinerary.');
+                    }
+                    if (!startDateVal || !endDateVal) {
+                        throw new Error('Trip dates are required to generate an itinerary.');
+                    }
+
+                    const data = await plannerService.generateItinerary({
+                        destination,
+                        start_date: startDateVal,
+                        end_date: endDateVal,
+                        budget: budget || 1000,
+                        traveler_count: travelers.length || 1
+                    });
+
+                    await plannerService.persistItinerary(
+                        tripId,
+                        destination,
+                        startDateVal,
+                        endDateVal,
+                        budget,
+                        data.draft
+                    );
+
+                    const tripRef = doc(db, 'artifacts', appId, 'trips', tripId);
+                    await updateDoc(tripRef, {
+                        regenerationCount: currentRegenCount + 1,
+                        updatedAt: Date.now()
+                    });
+
+                    await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                        text: `regenerated the itinerary using AI`,
+                        type: 'update',
+                        timestamp: Date.now(),
+                        performedBy: user.uid,
+                        userName: user.displayName || 'Traveler',
+                        collaborators: collaborators
+                    });
+                } catch (err) {
+                    console.error("Regeneration failed:", err);
+                    confirm({
+                        title: 'Regeneration Error',
+                        message: err.message || 'Failed to regenerate itinerary. Please try again.',
+                        confirmLabel: 'OK',
+                        cancelLabel: '',
+                        isDestructive: false,
+                        onConfirm: () => {}
+                    });
+                } finally {
+                    setIsRegenerating(false);
+                }
+            }
+        });
+    };
+
+    const handleRegenerateDay = async (dayId, dayIndex) => {
+        if (!user || !tripId || regeneratingDayId) return;
+
+        const isPro = profile?.tier === 'pro' || profile?.isPro === true;
+        const currentRegenCount = tripData?.regenerationCount || 0;
+
+        if (!isPro && currentRegenCount >= 1) {
+            confirm({
+                title: 'Regeneration Limit Reached',
+                message: 'Free-tier users are capped at 1 AI regeneration per trip. Upgrade to Pro for unlimited AI planning!',
+                confirmLabel: 'OK',
+                cancelLabel: 'Close',
+                isDestructive: false,
+                onConfirm: () => {}
+            });
+            return;
+        }
+
+        confirm({
+            title: `Regenerate Day ${dayIndex + 1}?`,
+            message: `This replaces Day ${dayIndex + 1}\'s activities — the rest of your itinerary stays intact.`,
+            confirmLabel: 'Regenerate',
+            cancelLabel: 'Cancel',
+            isDestructive: false,
+            onConfirm: async () => {
+                setRegeneratingDayId(dayId);
+                try {
+                    const startDateVal = tripData?.startDate || (days.length > 0 ? days[0].date : '');
+                    const endDateVal = tripData?.endDate || (days.length > 0 ? days[days.length - 1].date : '');
+
+                    if (!destination) throw new Error('Destination is required.');
+                    if (!startDateVal || !endDateVal) throw new Error('Trip dates are required.');
+
+                    await plannerService.regenerateSingleDay(
+                        tripId,
+                        dayId,
+                        dayIndex,
+                        destination,
+                        startDateVal,
+                        endDateVal,
+                        budget || 1000,
+                        travelers.length || 1
+                    );
+
+                    const tripRef = doc(db, 'artifacts', appId, 'trips', tripId);
+                    await updateDoc(tripRef, {
+                        regenerationCount: currentRegenCount + 1,
+                        updatedAt: Date.now()
+                    });
+
+                    await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                        text: `regenerated Day ${dayIndex + 1} using AI`,
+                        type: 'update',
+                        timestamp: Date.now(),
+                        performedBy: user.uid,
+                        userName: user.displayName || 'Traveler',
+                        collaborators: collaborators
+                    });
+                } catch (err) {
+                    console.error('Day regeneration failed:', err);
+                    confirm({
+                        title: 'Regeneration Error',
+                        message: err.message || 'Failed to regenerate this day. Please try again.',
+                        confirmLabel: 'OK',
+                        cancelLabel: '',
+                        isDestructive: false,
+                        onConfirm: () => {}
+                    });
+                } finally {
+                    setRegeneratingDayId(null);
+                }
+            }
+        });
+    };
 
     // --- Data Sync: Fetch Detail ---
     // --- Data Sync: Fetch Detail & Days ---
@@ -113,6 +281,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             const expensesData = snapshot.docs.map(doc => doc.data());
             const computedActualCost = expensesData.reduce((sum, item) => sum + Number(item.amount || 0), 0);
             setActualCost(computedActualCost);
+            setExpensesCount(snapshot.docs.length);
         }, (error) => {
             console.error("Error listening to expenses:", error);
         });
@@ -127,25 +296,38 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
     const isCompleted = !!tripData?.isCompleted;
     const isOwner = tripData?.ownerId === user?.uid;
 
-    const handleCompleteTrip = async () => {
-        if (!user || !tripId) return;
-        try {
-            const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
-            await updateDoc(docRef, {
-                isCompleted: true,
-                updatedAt: Date.now()
-            });
-            await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
-                text: `marked the trip as completed`,
-                type: 'update',
-                timestamp: Date.now(),
-                performedBy: user.uid,
-                userName: user.displayName || 'Traveler',
-                collaborators: collaborators
-            });
-        } catch (error) {
-            console.error("Failed to complete trip:", error);
-        }
+    const hasItineraryItems = days.some(day => day.items && day.items.length > 0);
+    const hasExpenses = expensesCount > 0;
+    const isMarkCompleteDisabled = !hasItineraryItems || !hasExpenses;
+
+    const handleCompleteTrip = () => {
+        confirm({
+            title: 'Complete Trip?',
+            message: 'Are you sure you want to mark this trip as completed? This will lock editing and set the trip workspace to read-only.',
+            confirmLabel: 'Complete Trip',
+            cancelLabel: 'Cancel',
+            isDestructive: false,
+            onConfirm: async () => {
+                if (!user || !tripId) return;
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'trips', tripId);
+                    await updateDoc(docRef, {
+                        isCompleted: true,
+                        updatedAt: Date.now()
+                    });
+                    await addDoc(collection(db, 'artifacts', appId, 'trips', tripId, 'activities'), {
+                        text: `marked the trip as completed`,
+                        type: 'update',
+                        timestamp: Date.now(),
+                        performedBy: user.uid,
+                        userName: user.displayName || 'Traveler',
+                        collaborators: collaborators
+                    });
+                } catch (error) {
+                    console.error("Failed to complete trip:", error);
+                }
+            }
+        });
     };
 
     const handleReopenTrip = async () => {
@@ -319,7 +501,12 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                     ) : (
                         <button
                             onClick={handleCompleteTrip}
-                            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full transition-all active:scale-95 border border-emerald-200/50"
+                            disabled={isMarkCompleteDisabled}
+                            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full transition-all border ${isMarkCompleteDisabled
+                                    ? 'text-slate-400 bg-slate-100/50 border-slate-200 cursor-not-allowed opacity-60'
+                                    : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border-emerald-200/50 cursor-pointer'
+                                }`}
+                            title={isMarkCompleteDisabled ? 'Add at least one itinerary activity and one expense to complete the trip' : 'Complete Trip'}
                         >
                             <CheckCircle size={16} className="stroke-[2.5]" />
                             <span>Complete Trip</span>
@@ -367,31 +554,53 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Cover Image Area (Mockup) */}
-                <div className="h-40 md:h-48 bg-gradient-to-r from-blue-600 to-purple-600 relative shrink-0 transition-all">
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end bg-gradient-to-t from-black/60 to-transparent">
-                        <div className="text-white w-full">
-                            <div className="flex items-center gap-2 mb-2 text-white/80 text-xs md:text-sm font-medium">
-                                <Calendar size={14} className="md:w-4 md:h-4" /> {days.length} Days  •  <Users size={14} className="md:w-4 md:h-4" /> {travelers.length} Travelers
+                {/* Cover Band — z-10 keeps it below workspace header (z-30) but above content */}
+                <div
+                    className="h-40 md:h-48 relative shrink-0 transition-all z-10"
+                    style={{ background: '#1E293B' }}
+                >
+                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)' }}>
+                        <div className="text-white w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2 text-white/60 text-xs md:text-sm font-medium">
+                                    <Calendar size={14} className="md:w-4 md:h-4" /> {days.length} Days  •  <Users size={14} className="md:w-4 md:h-4" /> {travelers.length} Travelers
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <MapPin size={20} className="text-white/60 md:w-6 md:h-6" />
+                                    <input
+                                        type="text"
+                                        value={destination}
+                                        onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
+                                        disabled={isCompleted}
+                                        placeholder="Add Destination"
+                                        className={`bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/30 p-0 focus:ring-0 w-full max-w-md ${isCompleted ? 'cursor-default' : 'cursor-text'}`}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <MapPin size={20} className="text-white/80 md:w-6 md:h-6" />
-                                <input
-                                    type="text"
-                                    value={destination}
-                                    onChange={(e) => handleUpdateTripInfo('destination', e.target.value)}
-                                    disabled={isCompleted}
-                                    placeholder="Add Destination"
-                                    className={`bg-transparent border-none text-2xl md:text-3xl font-bold text-white placeholder-white/50 p-0 focus:ring-0 w-full max-w-md ${isCompleted ? 'cursor-default' : 'cursor-text'}`}
-                                />
-                            </div>
+
+                            {!isCompleted && destination && activeTab === 'itinerary' && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleRegenerateItinerary}
+                                    disabled={isRegenerating}
+                                    className="px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/20 text-white rounded-full text-xs font-bold flex items-center gap-1.5 backdrop-blur-md transition-all shrink-0 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isRegenerating ? (
+                                        <SpinnerGap size={14} className="animate-spin text-white" />
+                                    ) : (
+                                        <Sparkle size={14} weight="fill" className="text-amber-300" />
+                                    )}
+                                    <span>{isRegenerating ? 'Regenerating...' : 'Regenerate Itinerary'}</span>
+                                </motion.button>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-14 md:top-16">
+                {/* Tabs — sticky below workspace header (h-16 md:h-20 = 64px/80px) */}
+                <div className="border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 md:px-8 z-20 sticky top-16 md:top-20">
                     <div className="flex gap-8 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         {[
                             { id: 'itinerary', label: 'Itinerary' },
@@ -403,7 +612,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`py-4 text-sm font-bold border-b-[3px] transition-all relative whitespace-nowrap px-1 ${activeTab === tab.id
-                                    ? 'border-blue-600 text-[#1A1A1A]'
+                                    ? 'border-[#FF6B35] text-[#FF6B35]'
                                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                     }`}
                             >
@@ -451,6 +660,9 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                         collaborators={collaborators}
                                         isLoading={detailLoading || daysLoading}
                                         isCompleted={isCompleted}
+                                        isRegenerating={isRegenerating}
+                                        regeneratingDayId={regeneratingDayId}
+                                        onRegenerateDay={handleRegenerateDay}
                                     />
                                 )}
                                 {activeTab === 'travelers' && (
