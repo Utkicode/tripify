@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import('./components/Dashboard'));
 const Layout = lazy(() => import('./components/Layout'));
 const PublicLayout = lazy(() => import('./components/common/PublicLayout'));
 const Features = lazy(() => import('./components/Features'));
+
 const About = lazy(() => import('./components/About'));
 const VerifyEmail = lazy(() => import('./components/VerifyEmail'));
 const ProfileCompletion = lazy(() => import('./components/ProfileCompletion'));
@@ -24,6 +25,7 @@ const ProTips = lazy(() => import('./components/ProTips'));
 const GlobalExpenses = lazy(() => import('./components/GlobalExpenses'));
 const AppPrivacy = lazy(() => import('./components/AppPrivacy'));
 const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const NewTripModal = lazy(() => import('./components/NewTripModal'));
 
 import AuthActionHandler from'./components/AuthActionHandler';
 import { AppLoadingSkeleton } from'./components/common/LoadingSkeleton';
@@ -85,6 +87,7 @@ export default function App() {
   const [targetTab, setTargetTab] = useState(null);
   const [tripsList, setTripsList] = useState([]);
   const [tripLoading, setTripLoading] = useState(true);
+  const [newTripModalConfig, setNewTripModalConfig] = useState({ isOpen: false, tripId: null });
 
   // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
@@ -129,38 +132,11 @@ export default function App() {
     }
   };
 
-  const createNewTrip = async () => {
-    if (!user) return;
-    try {
-      const newTrip = {
-        tripName:'New Trip',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        days: [], // Start empty
-        travelers: [{ id: user.uid, name: user.displayName ||'You', email: user.email }], // Initial traveler is creator
-        travelerCount: 1,
-        totalCost: 0,
-        ownerId: user.uid,
-        collaborators: [user.uid] // Critical for access control
-      };
-
-      const docRef = await addDoc(collection(db,'artifacts', appId,'trips'), newTrip);
-
-      // Log Notification (Global)
-      // Note: We might want a separate notifications system later, keeping local for now or moving to global too?
-      // Keeping notifications local for now as they are user-specific.
-      await addDoc(collection(db,'artifacts', appId,'users', user.uid,'notifications'), {
-        type:'create',
-        message: `Created a new trip`,
-        user: user.displayName ||'User',
-        timestamp: Date.now(),
-        read: false
-      });
-
-      setCurrentTripId(docRef.id); // Open the new trip immediately
-    } catch (error) {
-      console.error("Error creating trip:", error);
-    }
+  const createNewTrip = (tripId = null) => {
+    setNewTripModalConfig({
+      isOpen: true,
+      tripId: typeof tripId === 'string' ? tripId : null
+    });
   };
 
   // --- Delete Trip Logic ---
@@ -387,6 +363,14 @@ export default function App() {
         )}
 
       </Layout>
+      <NewTripModal
+        isOpen={newTripModalConfig.isOpen}
+        onClose={() => setNewTripModalConfig({ isOpen: false, tripId: null })}
+        tripId={newTripModalConfig.tripId}
+        user={user}
+        setCurrentTripId={setCurrentTripId}
+        setTargetTab={setTargetTab}
+      />
     </Suspense>
   );
 }

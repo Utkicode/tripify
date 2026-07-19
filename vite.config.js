@@ -63,6 +63,16 @@ export default defineConfig({
     })
 
   ],
+  server: {
+    proxy: {
+      '/api/planner': {
+        target: 'https://planner-api-174168932168.asia-south1.run.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/planner/, ''),
+        secure: true
+      }
+    }
+  },
   build: {
     sourcemap: false,
     rollupOptions: {
@@ -76,4 +86,4 @@ export default defineConfig({
       }
     }
   }
-})
+})

@@ -30,25 +30,53 @@ const Dashboard = ({ tripsList, setCurrentTripId, createNewTrip, setCurrentView,
     // --- Metric Calculations ---
     const { totalBudget, totalSpent } = React.useMemo(() => calculateGlobalStats(tripsList), [tripsList]);
 
-    // Enrich trips with financial stats for Intelligence Engine
-    const enrichedTrips = React.useMemo(() => {
+    // Disambiguate duplicate trip names
+    const processedTripsList = React.useMemo(() => {
         return tripsList.map(trip => {
-            const stats = calculateTripStats(trip);
-            return { ...trip, ...stats, totalCost: stats.spent }; // Ensure totalCost is present
+            const baseName = trip.tripName || trip.destination || 'Untitled Trip';
+            if (baseName === 'Untitled Trip' || baseName === 'New Trip') return trip;
+            
+            const duplicates = tripsList.filter(t => {
+                const tName = t.tripName || t.destination || 'Untitled Trip';
+                return tName.toLowerCase() === baseName.toLowerCase();
+            });
+            
+            if (duplicates.length > 1) {
+                const dateTag = trip.startDate 
+                    ? new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'Draft';
+                return { 
+                    ...trip, 
+                    tripName: trip.tripName ? `${trip.tripName} (${dateTag})` : trip.tripName,
+                    destination: trip.destination ? `${trip.destination} (${dateTag})` : trip.destination
+                };
+            }
+            return trip;
         });
     }, [tripsList]);
 
-    const totalTrips = tripsList.length;
+    // Enrich trips with financial stats for Intelligence Engine
+    const enrichedTrips = React.useMemo(() => {
+        return processedTripsList.map(trip => {
+            const stats = calculateTripStats(trip);
+            return { ...trip, ...stats, totalCost: stats.spent }; // Ensure totalCost is present
+        });
+    }, [processedTripsList]);
 
-    const upcomingTrips = tripsList
+    const totalTrips = processedTripsList.length;
+
+    const upcomingTrips = processedTripsList
         .filter(t => !t.isArchived)
         .sort((a, b) => (a.startDate || 0) - (b.startDate || 0))
         .slice(0, 3);
 
     // --- Handlers ---
     const handleNBAAction = (action) => {
-        if (action.action === 'create_trip') createNewTrip();
-        else if (action.tripId) {
+        if (action.action === 'create_trip') {
+            createNewTrip();
+        } else if (action.id && action.id.startsWith('add_dest_')) {
+            createNewTrip(action.tripId);
+        } else if (action.tripId) {
             setCurrentTripId(action.tripId);
             if (action.action === 'view_trip_expenses') setTargetTab('expenses');
             if (action.action === 'view_trip_itinerary') setTargetTab('itinerary');

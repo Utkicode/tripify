@@ -3,7 +3,31 @@ import { MapPin, Trash, Clock, Users, PencilSimple, Plus, ArrowRight, Warning } 
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limit }) => {
-    const displayedTrips = limit ? tripsList.slice(0, limit) : tripsList;
+    const processedTrips = React.useMemo(() => {
+        return tripsList.map(trip => {
+            const baseName = trip.tripName || trip.destination || 'Untitled Trip';
+            if (baseName === 'Untitled Trip' || baseName === 'New Trip') return trip;
+            
+            const duplicates = tripsList.filter(t => {
+                const tName = t.tripName || t.destination || 'Untitled Trip';
+                return tName.toLowerCase() === baseName.toLowerCase();
+            });
+            
+            if (duplicates.length > 1) {
+                const dateTag = trip.startDate 
+                    ? new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'Draft';
+                return { 
+                    ...trip, 
+                    tripName: trip.tripName ? `${trip.tripName} (${dateTag})` : trip.tripName,
+                    destination: trip.destination ? `${trip.destination} (${dateTag})` : trip.destination
+                };
+            }
+            return trip;
+        });
+    }, [tripsList]);
+
+    const displayedTrips = limit ? processedTrips.slice(0, limit) : processedTrips;
 
     const item = {
         hidden: { opacity: 0, y: 20 },

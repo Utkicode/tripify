@@ -1,8 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash, Calendar, Tag, CaretRight, CurrencyInr, MapPin, MagnifyingGlass, SpinnerGap, X } from '@phosphor-icons/react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Plus, Trash, Calendar, Tag, CaretRight, CurrencyInr, MapPin, MagnifyingGlass, SpinnerGap, X, Sparkle } from '@phosphor-icons/react';
+
+// Auto-resize textarea that grows with content and never truncates
+const AutoTextarea = ({ value, onChange, disabled, placeholder, className }) => {
+    const ref = useRef(null);
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.style.height = 'auto';
+            ref.current.style.height = ref.current.scrollHeight + 'px';
+        }
+    }, [value]);
+    return (
+        <textarea
+            ref={ref}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+            placeholder={placeholder}
+            rows={1}
+            className={`${className} resize-none overflow-hidden`}
+        />
+    );
+};
+
+// Compute total estimated cost for a day's items
+const getDayTotal = (items = []) =>
+    items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+const formatINR = (n) =>
+    n === 0 ? null : new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 import { motion, AnimatePresence } from 'framer-motion';
 import { CATEGORIES } from '../constants';
 import { useProfile } from '../context/ProfileContext';
+import { mapCategoryAndFallback } from '../utils/intelligence';
 
 import { collection, addDoc, updateDoc, setDoc, deleteDoc, doc } from "firebase/firestore";
 import { db } from '../firebase';
@@ -10,7 +40,21 @@ import { appId } from '../constants';
 import AddExpenseModal from './AddExpenseModal';
 import { useConfirm } from '../context/ConfirmContext';
 
-const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = false, isCompleted = false }) => {
+// Shimmer animation keyframe is defined in index.css as @keyframes shimmer
+// We rely on the 'animate-pulse' Tailwind class for the skeleton cards here.
+
+const Planner = ({
+    days,
+    setDays,
+    user,
+    tripId,
+    collaborators = [],
+    isLoading = false,
+    isCompleted = false,
+    isRegenerating = false,
+    regeneratingDayId = null,
+    onRegenerateDay = null,
+}) => {
     const { profile } = useProfile();
     const confirm = useConfirm();
     const [expandedDay, setExpandedDay] = useState(days[0]?.id || null);
@@ -19,6 +63,13 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+
+    // Keep expandedDay in sync when days list changes (e.g. after regeneration)
+    useEffect(() => {
+        if (days.length > 0 && !days.find(d => d.id === expandedDay)) {
+            setExpandedDay(days[0]?.id || null);
+        }
+    }, [days]);
 
     const logActivity = async (message, type = 'update') => {
         if (!user || !tripId) return;
@@ -29,7 +80,7 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                 timestamp: Date.now(),
                 performedBy: user.uid,
                 userName: user.displayName || 'Traveler',
-                collaborators: collaborators // key for filtering notifications
+                collaborators: collaborators
             });
         } catch (error) {
             console.error("Failed to log activity:", error);
@@ -173,6 +224,7 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
             id: crypto.randomUUID(),
             name: '',
             amount: '',
+            isEstimate: false,
             category: 'Misc',
             time: newItemTime,
             notes: '',
@@ -195,7 +247,20 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
         if (!day) return;
 
         const updatedItems = day.items.map(item => {
-            if (item.id === itemId) return { ...item, [field]: value };
+            if (item.id === itemId) {
+                const updated = { ...item, [field]: value };
+                if (field === 'name') {
+                    const mappedCategory = mapCategoryAndFallback(value, null);
+                    if (mappedCategory !== 'Misc' || item.category === 'Misc') {
+                        updated.category = mappedCategory;
+                    }
+                }
+                // When a user manually edits the amount, clear the isEstimate flag
+                if (field === 'amount') {
+                    updated.isEstimate = false;
+                }
+                return updated;
+            }
             return item;
         });
 
@@ -218,19 +283,42 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
         }
     };
 
+    // Loading skeleton — shown while initial data loads
     if (isLoading) {
         return (
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex gap-8">
                     <div className="w-64 hidden lg:block space-y-2">
-                        {[1, 2, 3].map(i => <div key={i} className="h-12  rounded-xl animate-pulse" />)}
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse" />
+                        ))}
                     </div>
                     <div className="flex-1 space-y-4">
-                        <div className="h-32  rounded-3xl animate-pulse" />
-                        <div className="h-20  rounded-3xl animate-pulse" />
-                        <div className="h-20  rounded-3xl animate-pulse" />
+                        {/* Day header skeleton */}
+                        <div className="bg-white/60 rounded-[3rem] border border-white/60 overflow-hidden">
+                            <div className="p-8 border-b border-slate-100 space-y-3">
+                                <div className="h-5 w-24 bg-slate-100 rounded-full animate-pulse" />
+                                <div className="h-8 w-56 bg-slate-100 rounded-xl animate-pulse" />
+                            </div>
+                            <div className="p-8 space-y-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="flex gap-8">
+                                        <div className="flex flex-col items-center gap-3 w-24 shrink-0">
+                                            <div className="h-9 w-full bg-slate-100 rounded-xl animate-pulse" />
+                                            <div className="w-14 h-14 bg-slate-100 rounded-[1.2rem] animate-pulse" />
+                                        </div>
+                                        <div className="flex-1 bg-slate-50 rounded-[2.2rem] p-6 space-y-3 border border-slate-100">
+                                            <div className="h-3 w-20 bg-slate-100 rounded-full animate-pulse" />
+                                            <div className="h-6 w-3/4 bg-slate-100 rounded-lg animate-pulse" />
+                                            <div className="h-4 w-1/2 bg-slate-100 rounded-lg animate-pulse" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <p className="text-center text-sm text-slate-400 font-medium animate-pulse">Building your itinerary…</p>
             </div>
         );
     }
@@ -255,36 +343,79 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
             ) : (
                 <div className="flex gap-8 items-start relative z-10">
                     {/* Sidebar / Timeline Nav */}
-                    <div className="w-72 shrink-0 hidden lg:block sticky top-28 h-fit">
+                    {/* sticky: top must be below workspace header (80px) + tabs bar (~48px) = 128px = 8rem */}
+                    <div className="w-72 shrink-0 hidden lg:block sticky top-[8.5rem] h-fit">
                         <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-xl shadow-slate-200/50 p-5">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-4 mb-4 flex items-center gap-2">
                                 <Calendar size={14} /> Itinerary
                             </h3>
-                            <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                                {days.map((day, index) => (
-                                    <button
-                                        key={day.id}
-                                        onClick={() => setExpandedDay(day.id)}
-                                        className={`w-full text-left px-5 py-4 rounded-[1.8rem] flex items-center justify-between group transition-all duration-300 relative overflow-hidden ${expandedDay === day.id
-                                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-105 z-10'
-                                            : 'hover:bg-white/60 text-slate-500 hover:text-slate-900'
-                                            }`}
-                                    >
-                                        <div className="relative z-10">
-                                            <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${expandedDay === day.id ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                Day {index + 1}
-                                            </p>
-                                            <p className="font-bold truncate text-sm tracking-tight">{day.dayName}</p>
-                                        </div>
-                                        {expandedDay === day.id ? (
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[#FF6B35] shadow-inner">
-                                                <CaretRight size={16} strokeWidth={3} />
+                            <div className="max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar space-y-1.5">
+                                {days.map((day, index) => {
+                                    const dayTotal = getDayTotal(day.items);
+                                    const hasEstimates = day.items?.some(i => i.isEstimate);
+                                    const isActive = expandedDay === day.id;
+                                    return (
+                                        <button
+                                            key={day.id}
+                                            onClick={() => setExpandedDay(day.id)}
+                                            className={`w-full text-left px-4 py-3.5 rounded-[1.5rem] flex items-start justify-between group transition-all duration-300 relative overflow-hidden ${isActive
+                                                ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-[1.02] z-10'
+                                                : 'hover:bg-white/60 text-slate-500 hover:text-slate-900'
+                                                }`}
+                                        >
+                                            <div className="relative z-10 min-w-0 flex-1 pr-2">
+                                                {/* Day N + date */}
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <p className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-slate-400' : 'text-slate-400'}`}>
+                                                        Day {index + 1}
+                                                    </p>
+                                                    {day.date && (
+                                                        <p className={`text-[9px] font-semibold ${isActive ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                            {new Date(day.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                {/* Theme — wraps up to 2 lines */}
+                                                <p className={`font-bold text-sm tracking-tight leading-snug line-clamp-2 ${isActive ? 'text-white' : ''}`}>{day.dayName}</p>
+                                                {/* Day total */}
+                                                {dayTotal > 0 && (
+                                                    <p className={`text-[10px] font-bold mt-1.5 ${isActive ? 'text-amber-300' : 'text-slate-400'}`}>
+                                                        {hasEstimates ? 'Est. ' : ''}₹{formatINR(dayTotal)}
+                                                    </p>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-[#FF6B35] transition-colors"></div>
-                                        )}
-                                    </button>
-                                ))}
+                                            <div className="flex flex-col items-end gap-1.5 shrink-0 pt-0.5">
+                                                {/* Per-day regen button */}
+                                                {!isCompleted && onRegenerateDay && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onRegenerateDay(day.id, index);
+                                                        }}
+                                                        disabled={regeneratingDayId === day.id}
+                                                        title={`Regenerate Day ${index + 1}`}
+                                                        className={`p-1.5 rounded-full transition-all ${isActive
+                                                            ? 'text-amber-300 hover:text-amber-200 hover:bg-slate-800'
+                                                            : 'text-slate-300 hover:text-amber-500 hover:bg-white/60'
+                                                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                    >
+                                                        {regeneratingDayId === day.id
+                                                            ? <SpinnerGap size={12} className="animate-spin" />
+                                                            : <Sparkle size={12} weight="fill" />
+                                                        }
+                                                    </button>
+                                                )}
+                                                {isActive ? (
+                                                    <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-[#FF6B35] shadow-inner">
+                                                        <CaretRight size={14} strokeWidth={3} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-[#FF6B35] transition-colors mt-1"></div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                             {!isCompleted && (
                                 <button
@@ -310,11 +441,37 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                                         className="bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 overflow-hidden relative"
                                     >
+                                        {/* Per-day regeneration overlay */}
+                                        <AnimatePresence>
+                                            {regeneratingDayId === day.id && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="absolute inset-0 z-30 rounded-[3rem] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4"
+                                                >
+                                                    <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/30">
+                                                        <Sparkle size={28} weight="fill" className="text-white animate-pulse" />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="font-black text-slate-900 text-lg">Regenerating Day {index + 1}</p>
+                                                        <p className="text-slate-400 text-sm font-medium mt-1">AI is crafting a fresh plan…</p>
+                                                    </div>
+                                                    <div className="flex gap-1.5 mt-2">
+                                                        {[0, 1, 2].map(i => (
+                                                            <div key={i} className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
                                         {/* Day Header */}
-                                        <div className="p-6 md:p-10 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50 flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-center gap-3 mb-3">
-                                                    <span className="bg-[#FF6B35] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-[#FF6B35]/25 shadow-lg">
+                                        <div className="px-6 md:px-10 pt-8 pb-6 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
+                                            {/* Top row: Day N badge + date + day total + actions */}
+                                            <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                                                <div className="flex items-center gap-3 flex-wrap">
+                                                    <span className="bg-[#FF6B35] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-[#FF6B35]/25 shadow-lg shrink-0">
                                                         Day {index + 1}
                                                     </span>
                                                     <input
@@ -324,25 +481,53 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                         disabled={isCompleted}
                                                         className={`bg-transparent border-none text-sm font-semibold text-slate-500 p-0 focus:ring-0 transition-colors ${isCompleted ? 'cursor-default' : 'cursor-pointer hover:text-[#1A1A1A]'}`}
                                                     />
+                                                    {/* Day total cost pill */}
+                                                    {(() => {
+                                                        const total = getDayTotal(day.items);
+                                                        const hasEst = day.items?.some(i => i.isEstimate);
+                                                        if (!total) return null;
+                                                        return (
+                                                            <span className="flex items-center gap-1 bg-amber-50 border border-amber-200/70 text-amber-700 px-3 py-1 rounded-full text-xs font-bold shrink-0">
+                                                                {hasEst && <span className="text-[9px] text-amber-500 font-black uppercase tracking-wider">Est.</span>}
+                                                                <CurrencyInr size={11} />
+                                                                {formatINR(total)}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </div>
-                                                <input
-                                                    type="text"
-                                                    value={day.dayName}
-                                                    onChange={(e) => updateDay(day.id, 'dayName', e.target.value)}
-                                                    disabled={isCompleted}
-                                                    className={`text-3xl md:text-4xl font-black text-slate-900 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full tracking-tight ${isCompleted ? 'cursor-default' : ''}`}
-                                                    placeholder="Day Title"
-                                                />
+                                                {!isCompleted && (
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        {onRegenerateDay && (
+                                                            <button
+                                                                onClick={() => onRegenerateDay(day.id, index)}
+                                                                disabled={regeneratingDayId === day.id}
+                                                                title={`Regenerate Day ${index + 1}`}
+                                                                className="p-2.5 text-amber-400 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                            >
+                                                                {regeneratingDayId === day.id
+                                                                    ? <SpinnerGap size={18} className="animate-spin" />
+                                                                    : <Sparkle size={18} weight="fill" />
+                                                                }
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => openDeleteDayModal(day.id)}
+                                                            className="p-2.5 text-slate-300 hover:text-slate-600 rounded-2xl transition-all"
+                                                            title="Delete Day"
+                                                        >
+                                                            <Trash size={18} />
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                            {!isCompleted && (
-                                                <button
-                                                    onClick={() => openDeleteDayModal(day.id)}
-                                                    className="p-3 text-slate-300 hover:text-[#1A1A1A] hover: rounded-2xl transition-all"
-                                                    title="Delete Day"
-                                                >
-                                                    <Trash size={20} />
-                                                </button>
-                                            )}
+                                            {/* Day title — auto-resizing textarea so it wraps, never truncates */}
+                                            <AutoTextarea
+                                                value={day.dayName}
+                                                onChange={(e) => updateDay(day.id, 'dayName', e.target.value)}
+                                                disabled={isCompleted}
+                                                placeholder="Day Title"
+                                                className={`text-3xl md:text-4xl font-black text-slate-900 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 w-full tracking-tight leading-tight ${isCompleted ? 'cursor-default' : ''}`}
+                                            />
                                         </div>
 
                                         {/* Timeline */}
@@ -352,39 +537,49 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
 
                                             <div className="space-y-8 relative z-10">
                                                 <AnimatePresence initial={false}>
-                                                    {day.items.map((item) => (
-                                                        <motion.div
-                                                            key={item.id}
-                                                            layout
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.9 }}
-                                                            className="flex gap-4 md:gap-8 group"
-                                                        >
-                                                            {/* Time & Icon */}
-                                                            <div className="flex flex-col items-center gap-4 pt-2 shrink-0 w-16 md:w-24">
-                                                                <div className="flex items-center justify-center w-full">
-                                                                    <input
-                                                                        type="time"
-                                                                        value={item.time}
-                                                                        onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
-                                                                        disabled={isCompleted}
-                                                                        className={`text-xs md:text-sm font-bold text-slate-500 bg-white/50 border border-transparent rounded-xl px-2 py-1.5 w-full text-center focus:text-[#1A1A1A] focus:ring-0 transition-all shadow-sm ${isCompleted ? 'cursor-default' : 'hover:bg-white hover:border-[#FF6B35]/30 cursor-pointer'}`}
-                                                                    />
-                                                                </div>
-                                                                <div
-                                                                    className="w-14 h-14 rounded-[1.2rem] shadow-lg flex items-center justify-center text-white z-10 transition-transform duration-300 group-hover:scale-110 border-[3px] border-white ring-1 ring-slate-100"
-                                                                    style={{ backgroundColor: CATEGORIES.find(c => c.name === item.category)?.color || '#94a3b8' }}
-                                                                >
-                                                                    <Tag size={20} strokeWidth={2.5} />
-                                                                </div>
-                                                            </div>
+                                                    {day.items.map((item) => {
+                                                        // Location pill: only show if the location name is
+                                                        // meaningfully different from the activity name
+                                                        const activityName = (item.name || '').trim().toLowerCase();
+                                                        const locationName = (item.location?.name || '').trim().toLowerCase();
+                                                        const showLocationPill = item.location &&
+                                                            locationName &&
+                                                            locationName !== activityName &&
+                                                            !activityName.startsWith(locationName) &&
+                                                            !locationName.startsWith(activityName);
 
-                                                            {/* Card */}
-                                                            <div className="flex-1 bg-white/50 hover:bg-white/80 backdrop-blur-sm border border-white/60 rounded-[2.2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-[#FF6B35]/5 hover:-translate-y-1 transition-all duration-300 min-w-0 relative overflow-hidden group/card">
+                                                        return (
+                                                            <motion.div
+                                                                key={item.id}
+                                                                layout
+                                                                initial={{ opacity: 0, y: 20 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                className="flex gap-4 md:gap-8 group"
+                                                            >
+                                                                {/* Time & Icon */}
+                                                                <div className="flex flex-col items-center gap-4 pt-2 shrink-0 w-16 md:w-24">
+                                                                    <div className="flex items-center justify-center w-full">
+                                                                        <input
+                                                                            type="time"
+                                                                            value={item.time}
+                                                                            onChange={(e) => updateItem(day.id, item.id, 'time', e.target.value)}
+                                                                            disabled={isCompleted}
+                                                                            className={`text-xs md:text-sm font-bold text-slate-500 bg-white/50 border border-transparent rounded-xl px-2 py-1.5 w-full text-center focus:text-[#1A1A1A] focus:ring-0 transition-all shadow-sm ${isCompleted ? 'cursor-default' : 'hover:bg-white hover:border-[#FF6B35]/30 cursor-pointer'}`}
+                                                                        />
+                                                                    </div>
+                                                                    <div
+                                                                        className="w-14 h-14 rounded-[1.2rem] shadow-lg flex items-center justify-center text-white z-10 transition-transform duration-300 group-hover:scale-110 border-[3px] border-white ring-1 ring-slate-100"
+                                                                        style={{ backgroundColor: CATEGORIES.find(c => c.name === item.category)?.color || '#94a3b8' }}
+                                                                    >
+                                                                        <Tag size={20} strokeWidth={2.5} />
+                                                                    </div>
+                                                                </div>
 
-                                                                <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center relative z-10">
-                                                                    <div className="flex-1 w-full space-y-3 min-w-0 overflow-hidden">
+                                                                {/* Card — full-width single column, no dead xl:flex-row space */}
+                                                                <div className="flex-1 bg-white/50 hover:bg-white/80 backdrop-blur-sm border border-white/60 rounded-[2.2rem] p-5 md:p-6 shadow-sm hover:shadow-xl hover:shadow-[#FF6B35]/5 hover:-translate-y-0.5 transition-all duration-300 min-w-0 relative overflow-hidden group/card">
+                                                                    <div className="relative z-10 space-y-2.5">
+                                                                        {/* Row 1: category select */}
                                                                         <div className="flex items-center gap-2">
                                                                             <select
                                                                                 value={item.category}
@@ -397,85 +592,97 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                                                                                 ))}
                                                                             </select>
                                                                         </div>
-                                                                        <input
-                                                                            type="text"
+
+                                                                        {/* Row 2: activity title — auto-resizing, wraps fully */}
+                                                                        <AutoTextarea
                                                                             value={item.name}
                                                                             onChange={(e) => updateItem(day.id, item.id, 'name', e.target.value)}
                                                                             disabled={isCompleted}
                                                                             placeholder="Activity name..."
-                                                                            className={`w-full font-black text-slate-900 bg-transparent border-none pr-2 py-0.5 pl-0 focus:ring-0 text-xl md:text-2xl placeholder:text-slate-300/80 tracking-tight overflow-hidden text-ellipsis ${isCompleted ? 'cursor-default' : ''}`}
+                                                                            className={`w-full font-black text-slate-900 bg-transparent border-none p-0 focus:ring-0 text-xl md:text-2xl placeholder:text-slate-300/80 tracking-tight leading-tight ${isCompleted ? 'cursor-default' : ''}`}
                                                                         />
 
-                                                                        {/* Location & Notes */}
-                                                                        <div className="space-y-3">
-                                                                            {item.location && (
-                                                                                <div className="flex items-center gap-2 text-xs font-bold text-[#1A1A1A]/80 border border-[#FF6B35]/20 px-3 py-1.5 rounded-xl w-fit max-w-full backdrop-blur-md">
-                                                                                    <MapPin size={14} className="shrink-0" />
-                                                                                    <span className="truncate">{item.location.name}</span>
-                                                                                    {!isCompleted && <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-1 hover:text-[#FF6B35] shrink-0"><X size={14} /></button>}
-                                                                                </div>
-                                                                            )}
-
-                                                                            <input
-                                                                                type="text"
-                                                                                value={item.notes}
-                                                                                onChange={(e) => updateItem(day.id, item.id, 'notes', e.target.value)}
-                                                                                disabled={isCompleted}
-                                                                                placeholder="Add details, tickets, or notes..."
-                                                                                className={`w-full text-sm font-semibold text-slate-500 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-400 ${isCompleted ? 'cursor-default' : ''}`}
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex items-center gap-2 w-full xl:w-auto justify-between xl:justify-end border-t xl:border-none border-slate-100 pt-4 xl:pt-0">
-                                                                        <div className="bg-white rounded-2xl px-4 py-3 flex items-center gap-2 border border-slate-200/50 shadow-sm focus-within:ring-2 focus-within:ring-[#FF6B35]/15 transition-all">
-                                                                            <CurrencyInr size={16} className="text-slate-400" />
-                                                                            <input
-                                                                                type="number"
-                                                                                value={item.amount}
-                                                                                onChange={(e) => updateItem(day.id, item.id, 'amount', e.target.value)}
-                                                                                disabled={isCompleted}
-                                                                                placeholder="0"
-                                                                                className={`bg-transparent border-none w-16 md:w-20 text-sm font-bold text-slate-800 p-0 focus:ring-0 text-right ${isCompleted ? 'cursor-default' : ''}`}
-                                                                            />
-                                                                        </div>
-                                                                        {!isCompleted && (
-                                                                            <div className="flex items-center">
-                                                                                <button
-                                                                                    onClick={() => setLocationSearch({ isOpen: true, dayId: day.id, itemId: item.id })}
-                                                                                    className={`p-3 rounded-2xl transition-all hover:scale-110 active:scale-95 ${item.location ? 'text-[#1A1A1A]' : 'text-slate-400 hover:text-[#1A1A1A] hover:bg-white'}`}
-                                                                                    title="Set Location"
-                                                                                >
-                                                                                    <MapPin size={20} />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => setExpenseModalInfo({
-                                                                                        isOpen: true,
-                                                                                        data: {
-                                                                                            name: item.name,
-                                                                                            amount: item.amount,
-                                                                                            category: item.category,
-                                                                                            date: day.date
-                                                                                        }
-                                                                                    })}
-                                                                                    className="text-slate-400 hover:text-[#1A1A1A] p-3 hover:bg-white rounded-2xl transition-all hover:scale-110 active:scale-95"
-                                                                                    title="Log as Expense"
-                                                                                >
-                                                                                    <CurrencyInr size={20} />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => openDeleteItemModal(day.id, item.id)}
-                                                                                    className="text-slate-400 hover:text-[#1A1A1A] p-3 hover:bg-white rounded-2xl transition-all hover:scale-110 active:scale-95"
-                                                                                >
-                                                                                    <Trash size={20} />
-                                                                                </button>
+                                                                        {/* Row 3: location pill (only if genuinely distinct) */}
+                                                                        {showLocationPill && (
+                                                                            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg w-fit max-w-full">
+                                                                                <MapPin size={12} className="shrink-0 text-[#FF6B35]" />
+                                                                                <span className="truncate max-w-[260px]">{item.location.name}</span>
+                                                                                {!isCompleted && (
+                                                                                    <button onClick={() => updateItem(day.id, item.id, 'location', null)} className="ml-0.5 text-slate-400 hover:text-[#FF6B35] shrink-0">
+                                                                                        <X size={11} />
+                                                                                    </button>
+                                                                                )}
                                                                             </div>
                                                                         )}
+
+                                                                        {/* Row 4: notes */}
+                                                                        <input
+                                                                            type="text"
+                                                                            value={item.notes}
+                                                                            onChange={(e) => updateItem(day.id, item.id, 'notes', e.target.value)}
+                                                                            disabled={isCompleted}
+                                                                            placeholder="Add notes, ticket info..."
+                                                                            className={`w-full text-sm font-medium text-slate-400 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 ${isCompleted ? 'cursor-default' : ''}`}
+                                                                        />
+
+                                                                        {/* Row 5: cost + actions — single bottom bar, full width */}
+                                                                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100/80">
+                                                                            {/* Cost input with Est. badge */}
+                                                                            <div className={`rounded-xl px-3 py-2 flex items-center gap-1.5 border focus-within:ring-2 focus-within:ring-[#FF6B35]/10 transition-all ${item.isEstimate ? 'bg-amber-50/80 border-amber-200/50' : 'bg-slate-50 border-slate-200/50'}`}>
+                                                                                {item.isEstimate && (
+                                                                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider leading-none select-none">Est.</span>
+                                                                                )}
+                                                                                <CurrencyInr size={14} className={item.isEstimate ? 'text-amber-400' : 'text-slate-400'} />
+                                                                                <input
+                                                                                    type="number"
+                                                                                    value={item.amount}
+                                                                                    onChange={(e) => updateItem(day.id, item.id, 'amount', e.target.value)}
+                                                                                    disabled={isCompleted}
+                                                                                    placeholder="0"
+                                                                                    className={`bg-transparent border-none w-20 text-sm font-bold p-0 focus:ring-0 text-right ${item.isEstimate ? 'text-amber-700' : 'text-slate-700'} ${isCompleted ? 'cursor-default' : ''}`}
+                                                                                />
+                                                                            </div>
+                                                                            {/* Action buttons */}
+                                                                            {!isCompleted ? (
+                                                                                <div className="flex items-center gap-0.5">
+                                                                                    <button
+                                                                                        onClick={() => setLocationSearch({ isOpen: true, dayId: day.id, itemId: item.id })}
+                                                                                        className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 ${item.location ? 'text-[#FF6B35] bg-orange-50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}`}
+                                                                                        title="Set Location"
+                                                                                    >
+                                                                                        <MapPin size={17} />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => setExpenseModalInfo({
+                                                                                            isOpen: true,
+                                                                                            data: { name: item.name, amount: item.amount, category: item.category, date: day.date }
+                                                                                        })}
+                                                                                        className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95"
+                                                                                        title="Log as Expense"
+                                                                                    >
+                                                                                        <CurrencyInr size={17} />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => openDeleteItemModal(day.id, item.id)}
+                                                                                        className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95"
+                                                                                        title="Delete activity"
+                                                                                    >
+                                                                                        <Trash size={17} />
+                                                                                    </button>
+                                                                                </div>
+                                                                            ) : (
+                                                                                /* read-only: show category dot instead of buttons */
+                                                                                <div
+                                                                                    className="w-3 h-3 rounded-full shrink-0"
+                                                                                    style={{ backgroundColor: CATEGORIES.find(c => c.name === item.category)?.color || '#94a3b8' }}
+                                                                                />
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    ))}
+                                                            </motion.div>
+                                                        );
+                                                    })}
                                                 </AnimatePresence>
 
                                                 {!isCompleted && (
@@ -498,8 +705,11 @@ const Planner = ({ days, setDays, user, tripId, collaborators = [], isLoading = 
                             ))}
                         </AnimatePresence>
 
-                        {/* Mobile Day Nav */}
-                        <div className="lg:hidden flex overflow-x-auto gap-3 pb-6 pt-2 scrollbar-hide px-1 sticky top-16 z-20 -mx-4 px-4 bg-gradient-to-b from-slate-50/90 to-slate-50/0 backdrop-blur-[2px]">
+                        {/* Mobile Day Nav
+                            z-index: z-10 (below workspace header z-30 and tabs z-20)
+                            top: 128px on mobile = header(64px) + tabs(~48px) + small gap
+                                 136px on md = header(80px) + tabs(~48px) + small gap */}
+                        <div className="lg:hidden flex overflow-x-auto gap-3 pb-6 pt-2 scrollbar-hide px-1 sticky top-[128px] md:top-[136px] z-10 -mx-4 px-4 bg-gradient-to-b from-slate-50/90 to-slate-50/0 backdrop-blur-[2px]">
                             {days.map((day, index) => (
                                 <button
                                     key={day.id}
