@@ -118,7 +118,7 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                                 </div>
                                                 {trip.isCompleted && (
                                                     <span className="px-2.5 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-wide shadow-sm shrink-0">
-                                                        Done
+                                                        Completed
                                                     </span>
                                                 )}
                                             </div>
