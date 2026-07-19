@@ -1,6 +1,6 @@
-import React, { useState } from'react';
-import { motion, AnimatePresence } from'framer-motion';
-import { ArrowRight, List, X, Receipt, Users, ChartBar, FileArrowDown, WifiHigh, DeviceMobile, ListDashes } from'@phosphor-icons/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, List, X, Receipt, Users, ChartBar, FileArrowDown, WifiHigh, DeviceMobile, ListDashes } from '@phosphor-icons/react';
 import SEO from'./common/SEO';
 import Auth from'./Auth';
 import { SITE_URL } from '../constants';
@@ -8,12 +8,82 @@ import { SITE_URL } from '../constants';
 const LandingPage = ({ currentView }) => {
     const [showAuth, setShowAuth] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [cardTilt, setCardTilt] = useState({ rotateX: 0, rotateY: 0 });
+    const [budgetPercent, setBudgetPercent] = useState(0);
+    const [reducedMotion, setReducedMotion] = useState(false);
+    const [canTilt, setCanTilt] = useState(false);
+
+    // Fire hero entrance once per page load — survives re-renders, resets on hard reload
+    const heroHasFired = useRef(false);
+    const heroAnimate = !heroHasFired.current;
+    if (!heroHasFired.current) heroHasFired.current = true;
+
+    // Shared cubic-bezier for headline entrance
+    const heroBezier = [0.2, 0.7, 0.2, 1];
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+
+        const motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const pointerMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+        const updateMotionPreference = () => {
+            const prefersReducedMotion = motionMedia.matches;
+            setReducedMotion(prefersReducedMotion);
+            setCanTilt(pointerMedia.matches && !prefersReducedMotion);
+        };
+
+        updateMotionPreference();
+
+        if (motionMedia.addEventListener) {
+            motionMedia.addEventListener('change', updateMotionPreference);
+            pointerMedia.addEventListener('change', updateMotionPreference);
+        } else {
+            motionMedia.addListener(updateMotionPreference);
+            pointerMedia.addListener(updateMotionPreference);
+        }
+
+        const timer = window.setTimeout(() => {
+            setBudgetPercent(74);
+        }, reducedMotion ? 0 : 1100);
+
+        return () => {
+            window.clearTimeout(timer);
+            if (motionMedia.removeEventListener) {
+                motionMedia.removeEventListener('change', updateMotionPreference);
+                pointerMedia.removeEventListener('change', updateMotionPreference);
+            } else {
+                motionMedia.removeListener(updateMotionPreference);
+                pointerMedia.removeListener(updateMotionPreference);
+            }
+        };
+    }, [reducedMotion]);
+
+    const handleCardMove = (event) => {
+        if (!canTilt || reducedMotion) return;
+
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const x = event.clientX - bounds.left;
+        const y = event.clientY - bounds.top;
+        const offsetX = (x / bounds.width) - 0.5;
+        const offsetY = (y / bounds.height) - 0.5;
+
+        setCardTilt({
+            rotateX: -(offsetY * 10),
+            rotateY: offsetX * 10
+        });
+    };
+
+    const handleCardLeave = () => {
+        if (!canTilt || reducedMotion) return;
+        setCardTilt({ rotateX: 0, rotateY: 0 });
+    };
 
     // --- Dynamic Content Strategy ---
     const defaultContent = {
         eyebrow: null,
         title:"Stop texting\n'who owes\nwhat' after\nevery trip.",
-        desc:"Plan the trip. Track the bill. Actually enjoy the vacation."
+        desc:"Stop texting 'who owes what' and chasing receipts. Plan itineraries, log expenses, and settle splits automatically."
     };
 
     const contentMap = {'travel-expense-tracker': {
@@ -40,7 +110,7 @@ const LandingPage = ({ currentView }) => {
     // Features for the asymmetric layout
     const heroFeature = {
         icon: <Receipt size={20} strokeWidth={1.5} className="text-[#374151]" />,
-        title:"Log an expense in 3 taps.",
+        title:"Plan the trip. Track the bill. Actually enjoy the vacation.",
         desc:"Pick who paid. Choose how to split it. Done. TravelCFO does the math so you don't have to hold it all in your head during the trip.",
         detail:"Multi-currency. Syncs instantly to everyone's phone."
     };
@@ -99,7 +169,7 @@ const LandingPage = ({ currentView }) => {
             {/* ── Navbar ── */}
             <nav className="w-full px-6 md:px-10 py-5 flex justify-between items-center border-b border-[#E5E7EB] bg-[#FAFAF7] sticky top-0 z-50">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-[#1A1A1A] flex items-center justify-center text-white">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#FF6B35] to-[#e8553d] rounded-lg flex items-center justify-center text-white shadow-sm border border-white/10">
                         <span className="font-black text-sm tracking-tighter">T</span>
                     </div>
                     <span className="font-black text-lg tracking-tight text-[#1A1A1A]">TravelCFO</span>
@@ -124,7 +194,7 @@ const LandingPage = ({ currentView }) => {
                     </button>
                     <button
                         onClick={() => setShowAuth(true)}
-                        className="hidden md:block px-5 py-2 bg-[#1A1A1A] text-white rounded-lg font-semibold hover:bg-black transition-all text-sm"
+                        className="hidden md:block btn-primary px-5 py-2 rounded-lg text-sm"
                     >
                         Get Started Free
                     </button>
@@ -155,7 +225,7 @@ const LandingPage = ({ currentView }) => {
                             <a href="/?view=protips" className="text-base font-semibold text-[#374151] py-1.5 border-b border-[#E5E7EB]">Pro Tips</a>
                             <button
                                 onClick={() => { setShowAuth(true); setMobileMenuOpen(false); }}
-                                className="w-full py-3 mt-2 bg-[#1A1A1A] text-white rounded-lg font-bold"
+                                className="w-full btn-primary py-3 mt-2 rounded-lg"
                             >
                                 Get Started Free
                             </button>
@@ -168,42 +238,158 @@ const LandingPage = ({ currentView }) => {
             <main>
 
                 {/* ── Hero ── */}
-                <section className="w-full bg-[#1A1A1A] text-white">
-                    <div className="px-6 md:px-10 pt-24 pb-32 md:pt-32 md:pb-40 max-w-6xl mx-auto flex flex-col items-center text-center">
+                <section className="relative isolate overflow-hidden bg-[#0B1016] text-white">
+                    <div className="absolute inset-0" aria-hidden="true">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,107,53,0.24),_transparent_34%),radial-gradient(circle_at_82%_18%,_rgba(255,255,255,0.12),_transparent_32%)]" />
+                        <div className="absolute inset-0 opacity-[0.18]" style={{ backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 44px), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 44px)' }} />
+                        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 46%)' }} />
+                    </div>
+
+                    <div className="relative mx-auto flex max-w-7xl flex-col gap-12 px-6 py-20 md:px-10 lg:grid lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-16 lg:py-28">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className="w-full max-w-4xl"
+                            initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 26, filter: 'blur(10px)' } : false}
+                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                            transition={{ duration: reducedMotion ? 0 : 0.7, ease: heroBezier, delay: 0 }}
+                            className="max-w-xl"
                         >
-                            {content.eyebrow && (
-                                <span className="inline-block mb-6 text-sm font-bold uppercase tracking-widest text-[#E8A317] border-b-2 border-[#E8A317] pb-1">
-                                    {content.eyebrow}
-                                </span>
-                            )}
-                            
-                            <h1 className="text-7xl md:text-[100px] font-black leading-[0.85] tracking-tighter mb-4 text-white">
-                                Plan Smarter.
-                            </h1>
-                            <h2 className="text-5xl md:text-[70px] font-extrabold leading-[0.9] tracking-tight text-white/40 mb-10">
-                                Spend in Control.
-                            </h2>
-                            
-                            <p className="text-lg md:text-2xl text-white/70 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
-                                {content.desc}
-                            </p>
-                            
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                                <button
+                            <motion.span
+                                initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 16, filter: 'blur(8px)' } : false}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                transition={{ duration: reducedMotion ? 0 : 0.55, ease: heroBezier, delay: 0.04 }}
+                                className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/35 bg-[#FF6B35]/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#FFB38A]"
+                            >
+                                <span className={`h-2.5 w-2.5 rounded-full bg-[#FF6B35] ${reducedMotion ? '' : 'animate-pulse'}`} />
+                                Public Beta
+                            </motion.span>
+
+                            <motion.h1
+                                initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 24, filter: 'blur(10px)' } : false}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                transition={{ duration: reducedMotion ? 0 : 0.7, ease: heroBezier, delay: 0.18 }}
+                                className="mt-6 text-4xl font-black leading-[0.92] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl"
+                            >
+                                Build the trip
+                                <br />
+                                before the chaos <span className="text-[#FF6B35]">starts.</span>
+                            </motion.h1>
+
+                            <motion.p
+                                initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 20, filter: 'blur(8px)' } : false}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                transition={{ duration: reducedMotion ? 0 : 0.6, ease: heroBezier, delay: 0.18 + 0.7 + 0.25 }}
+                                className="mt-6 max-w-[460px] text-base leading-7 text-white/70 sm:text-lg"
+                            >
+                                Keep every plan, receipt, and shared expense in one calm place so your group can travel lighter and settle up faster.
+                            </motion.p>
+
+                            <motion.div
+                                initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 18, filter: 'blur(8px)' } : false}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                transition={{ duration: reducedMotion ? 0 : 0.55, ease: heroBezier, delay: 0.18 + 0.7 + 0.25 + 0.6 + 0.2 }}
+                                className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+                            >
+                                <motion.button
                                     onClick={() => setShowAuth(true)}
-                                    className="px-8 py-4 bg-white text-[#1A1A1A] rounded-xl font-extrabold text-lg hover:bg-gray-100 transition-all flex items-center gap-2 group shadow-2xl"
+                                    className="btn-primary rounded-xl px-7 py-3.5 text-base font-extrabold shadow-[0_20px_50px_rgba(255,107,53,0.24)]"
+                                    whileHover={reducedMotion ? undefined : { scale: 1.03, transition: { duration: 0.16, ease: 'easeOut' } }}
+                                    whileTap={reducedMotion ? undefined : { scale: 0.98, transition: { duration: 0.1 } }}
                                 >
                                     Start for free
-                                    <ArrowRight size={20} className="group-hover:translate-x-1.5 transition-transform" />
-                                </button>
-                                <span className="text-sm text-white/50 font-bold">
-                                    No credit card. No catch.
-                                </span>
+                                </motion.button>
+                                <p className="text-sm font-medium text-white/60">
+                                    Trusted by 2,400+ travelers. No credit card required.
+                                </p>
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={heroAnimate && !reducedMotion ? { opacity: 0, y: 24, rotateX: 6, rotateY: -8, filter: 'blur(6px)' } : false}
+                            animate={{ opacity: 1, y: 0, rotateX: 0, rotateY: 0, filter: 'blur(0px)' }}
+                            transition={{ duration: reducedMotion ? 0 : 1, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
+                            className="relative w-full max-w-[480px] self-center justify-self-center"
+                            onMouseMove={handleCardMove}
+                            onMouseLeave={handleCardLeave}
+                            style={{
+                                transformStyle: 'preserve-3d',
+                                transform: `perspective(1200px) rotateX(${cardTilt.rotateX}deg) rotateY(${cardTilt.rotateY}deg)`,
+                                transition: reducedMotion ? 'none' : 'transform 250ms ease-out'
+                            }}
+                        >
+                            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,32,0.95),rgba(7,12,20,0.9))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,107,53,0.2),_transparent_40%)]" />
+                                <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.16), transparent 32%), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 25%)' }} />
+
+                                <div className="relative">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/45">Airline</p>
+                                            <p className="mt-1 text-xl font-semibold text-white">Air India</p>
+                                            <p className="mt-1 text-sm text-white/55">Flight AI 816</p>
+                                        </div>
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300">
+                                            <span className={`h-2.5 w-2.5 rounded-full bg-emerald-400 ${reducedMotion ? '' : 'animate-pulse'}`} />
+                                            On time
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 rounded-[22px] border border-white/10 bg-[#0F1721]/80 p-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/45">Route</p>
+                                                <div className="mt-3 flex items-center gap-3">
+                                                    <span className="text-3xl font-semibold tracking-[0.08em] text-white">DEL</span>
+                                                    <div className="relative h-5 w-28 sm:w-32">
+                                                        <div className="absolute inset-y-0 left-0 right-0 my-auto h-px border-t border-dashed border-white/25" />
+                                                        <motion.span
+                                                            className="absolute top-1/2 -translate-y-1/2 text-lg"
+                                                            animate={reducedMotion ? { x: 0 } : { x: ['0%', '100%', '0%'] }}
+                                                            transition={{ duration: 3.4, ease: 'easeInOut', repeat: Infinity }}
+                                                        >
+                                                            ✈
+                                                        </motion.span>
+                                                    </div>
+                                                    <span className="text-3xl font-semibold tracking-[0.08em] text-white">GOI</span>
+                                                </div>
+                                            </div>
+                                            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-white/75">
+                                                1h 45m
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-5 flex items-center justify-between text-sm text-white/65">
+                                            <div>
+                                                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/35">Date</p>
+                                                <p className="mt-1 font-semibold text-white/90">Aug 14</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/35">Departure</p>
+                                                <p className="mt-1 font-semibold text-white/90">06:40</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/35">Gate</p>
+                                                <p className="mt-1 font-semibold text-white/90">B12</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-5 rounded-[22px] border border-white/10 bg-white/5 p-4">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <p className="font-semibold text-white/70">Trip Budget Utilized</p>
+                                            <p className="font-semibold text-white">{budgetPercent}%</p>
+                                        </div>
+                                        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10">
+                                            <motion.div
+                                                className="h-full rounded-full bg-gradient-to-r from-[#FF6B35] to-[#FFB38A]"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${budgetPercent}%` }}
+                                                transition={{ duration: reducedMotion ? 0 : 1.1, ease: [0.22, 1, 0.36, 1], delay: reducedMotion ? 0 : 0.2 }}
+                                            />
+                                        </div>
+                                        <p className="mt-3 text-sm text-white/55">
+                                            Illustrative preview · replace with real trip data for signed-in views.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     </div>

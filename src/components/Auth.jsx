@@ -110,8 +110,8 @@ const Auth = ({ isModal = false, onClose }) => {
 
                 {/* Brand Logo Area */}
                 <div className="flex flex-col items-center mb-10 gap-5">
-                    {/* Flat dark square — no gradient */}
-                    <div className="w-14 h-14 bg-[#1A1A1A] flex items-center justify-center text-white">
+                    {/* Orange brand gradient logo mark */}
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#FF6B35] to-[#e8553d] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#FF6B35]/20 border border-white/20">
                         <span className="text-2xl font-black tracking-tighter">T</span>
                     </div>
 
@@ -120,12 +120,12 @@ const Auth = ({ isModal = false, onClose }) => {
                             <span className="font-black text-3xl tracking-tighter text-[#1A1A1A]">
                                 TravelCFO
                             </span>
-                            <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider  text-[#6B7280] border border-[#E5E7EB]">
+                            <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#6B7280] border border-[#E5E7EB]">
                                 BETA
                             </span>
                         </div>
-                        <p className="text-[#9CA3AF] font-medium text-xs">
-                            Know what you owe. Split it fast.
+                        <p className="text-[#9CA3AF] font-bold text-xs uppercase tracking-wider">
+                            Plan smarter. Spend in control.
                         </p>
                     </div>
                 </div>
@@ -238,7 +238,7 @@ const Auth = ({ isModal = false, onClose }) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 px-6 bg-[#1A1A1A] hover:bg-black text-white rounded-lg font-bold text-base transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+                        className="btn-primary w-full py-3.5 px-6 rounded-lg text-base shadow-sm flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed mt-4"
                     >
                         {loading ? (
                             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />

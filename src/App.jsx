@@ -31,6 +31,7 @@ import AuthActionHandler from'./components/AuthActionHandler';
 import { AppLoadingSkeleton } from'./components/common/LoadingSkeleton';
 import SEO from'./components/common/SEO';
 import { useConfirm } from'./context/ConfirmContext';
+import AuthLoadingTransition from './components/AuthLoadingTransition';
 
 export default function App() {
   // --- Check for Firebase Auth Actions (Email Verify / Password Reset) ---
@@ -88,6 +89,20 @@ export default function App() {
   const [tripsList, setTripsList] = useState([]);
   const [tripLoading, setTripLoading] = useState(true);
   const [newTripModalConfig, setNewTripModalConfig] = useState({ isOpen: false, tripId: null });
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasStartedTransition, setHasStartedTransition] = useState(false);
+
+  useEffect(() => {
+    if (user && isProfileComplete && (!user.email || user.emailVerified)) {
+      if (!hasStartedTransition) {
+        setIsTransitioning(true);
+        setHasStartedTransition(true);
+      }
+    } else {
+      setIsTransitioning(false);
+      setHasStartedTransition(false);
+    }
+  }, [user, isProfileComplete]);
 
   // Fetch trips (Active when user & profile are ready)
   useEffect(() => {
@@ -201,6 +216,21 @@ export default function App() {
 
   if (loading) {
     return <AppLoadingSkeleton />;
+  }
+
+  // Fallback destination check for transition screen
+  const transitionDestination = (tripsList.length === 1 && tripsList[0].destination)
+    ? tripsList[0].destination
+    : null;
+
+  if (isTransitioning) {
+    return (
+      <AuthLoadingTransition
+        isDataReady={!tripLoading}
+        destination={transitionDestination}
+        onTransitionComplete={() => setIsTransitioning(false)}
+      />
+    );
   }
 
   // --- UNAUTHENTICATED OR PUBLIC VIEW HANDLER ---
