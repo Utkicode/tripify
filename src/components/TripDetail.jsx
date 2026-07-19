@@ -663,6 +663,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                         isRegenerating={isRegenerating}
                                         regeneratingDayId={regeneratingDayId}
                                         onRegenerateDay={handleRegenerateDay}
+                                        travelers={travelers}
                                     />
                                 )}
                                 {activeTab === 'travelers' && (
@@ -670,6 +671,7 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
                                         travelers={travelers}
                                         setTravelers={handleSetTravelers}
                                         isCompleted={isCompleted}
+                                        tripId={tripId}
                                     />
                                 )}
                                 {activeTab === 'expenses' && (

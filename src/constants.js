@@ -1,9 +1,9 @@
 export const SITE_URL = 'https://travelcfo.app';
 
 export const CATEGORIES = [
-    { name: 'Transport', color: '#3b82f6', icon: 'Plane' },
-    { name: 'Stay', color: '#8b5cf6', icon: 'Hotel' },
-    { name: 'Food', color: '#10b981', icon: 'Utensils' },
+    { name: 'Transport', color: '#2563eb', icon: 'Plane' },
+    { name: 'Stay', color: '#059669', icon: 'Hotel' },
+    { name: 'Food', color: '#ff6b35', icon: 'Utensils' },
     { name: 'Activity', color: '#f59e0b', icon: 'Ticket' },
     { name: 'Misc', color: '#64748b', icon: 'ShoppingBag' }
 ];

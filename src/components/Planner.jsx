@@ -54,6 +54,7 @@ const Planner = ({
     isRegenerating = false,
     regeneratingDayId = null,
     onRegenerateDay = null,
+    travelers = [],
 }) => {
     const { profile } = useProfile();
     const confirm = useConfirm();
@@ -624,6 +625,25 @@ const Planner = ({
                                                                             placeholder="Add notes, ticket info..."
                                                                             className={`w-full text-sm font-medium text-slate-400 bg-transparent border-none p-0 focus:ring-0 placeholder:text-slate-300 ${isCompleted ? 'cursor-default' : ''}`}
                                                                         />
+
+                                                                        {/* Dietary Badges: shown when category is Food */}
+                                                                        {item.category === 'Food' && travelers.some(t => t.dietaryPreferences?.trim()) && (
+                                                                            <div className="flex flex-wrap gap-1.5 pt-1">
+                                                                                {travelers
+                                                                                    .filter(t => t.dietaryPreferences?.trim())
+                                                                                    .map(t => (
+                                                                                        <span
+                                                                                            key={t.id}
+                                                                                            title={`${t.name}: ${t.dietaryPreferences}`}
+                                                                                            className="badge"
+                                                                                            style={{ fontSize: '9px', padding: '2px 7px', textTransform: 'uppercase' }}
+                                                                                        >
+                                                                                            {t.name?.split(' ')[0]}: {t.dietaryPreferences}
+                                                                                        </span>
+                                                                                    ))
+                                                                                }
+                                                                            </div>
+                                                                        )}
 
                                                                         {/* Row 5: cost + actions — single bottom bar, full width */}
                                                                         <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100/80">

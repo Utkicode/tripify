@@ -7,13 +7,13 @@ const Select = ({ label, icon: Icon, options = [], className ='', error, ...prop
     return (
         <div className={`relative ${className}`}>
             {label && (
-                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 transition-colors ${isFocused ?'text-[#1A1A1A]' :'text-slate-500'}`}>
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 transition-colors ${isFocused ?'text-[#FF6B35]' :'text-slate-500'}`}>
                     {label}
                 </label>
             )}
             <div className={`relative group transition-all duration-200 ${isFocused ?'transform -translate-y-[1px]' :''}`}>
                 {Icon && (
-                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isFocused ?'text-[#1A1A1A]' :'text-slate-400 group-hover:text-slate-500'}`}>
+                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isFocused ?'text-[#FF6B35]' :'text-slate-400 group-hover:text-slate-500'}`}>
                         <Icon size={18} />
                     </div>
                 )}
@@ -39,7 +39,7 @@ const Select = ({ label, icon: Icon, options = [], className ='', error, ...prop
             ${error
                             ?'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
                             : isFocused
-                                ?'border-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.1)]'
+                                ?'border-[#FF6B35] shadow-[0_0_0_4px_rgba(255,107,53,0.15)]'
                                 :'border-slate-200 hover:border-slate-300'
                         }
           `}
