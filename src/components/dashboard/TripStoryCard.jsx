@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Users, ArrowRight, WarningCircle, CheckCircle } from '@phosphor-icons/react';
 import { calculateTripReadiness } from '../../utils/intelligence';
 import { getCurrencySymbol } from '../../utils/currency';
+import { getImageUrl } from '../../services/plannerService';
 
 const TripStoryCard = ({ trip, onClick }) => {
     const readiness = useMemo(() => calculateTripReadiness(trip), [trip]);
@@ -43,10 +44,26 @@ const TripStoryCard = ({ trip, onClick }) => {
             whileTap={{ scale: 0.98 }}
             className="group relative bg-white/60 backdrop-blur-xl rounded-[3rem] border border-white/60 shadow-xl shadow-slate-200/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full"
         >
-            {/* Minimal Cover - Focus on content */}
-            <div className="h-32 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden group-hover:h-36 transition-all duration-300">
-                <div className="absolute -top-10 -right-10 w-40 h-40 0/10 rounded-full blur-[50px] group-hover:0/20 transition-colors"></div>
-                <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 0/10 rounded-full blur-[40px]"></div>
+            <div
+                className="h-32 relative overflow-hidden group-hover:h-36 transition-all duration-300 bg-cover bg-center"
+                style={{
+                    backgroundImage: (trip.imageUrl || trip.destination)
+                        ? `url(${getImageUrl(trip.imageUrl || `/media/destination?q=${encodeURIComponent(trip.destination.replace(/\s*\([^)]*\)\s*$/, '').trim())}`)})`
+                        : 'none',
+                    background: (trip.imageUrl || trip.destination)
+                        ? undefined
+                        : 'linear-gradient(to bottom right, #eff6ff, #e0e7ff)'
+                }}
+            >
+                {!(trip.imageUrl || trip.destination) && (
+                    <>
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-[50px] group-hover:bg-indigo-500/20 transition-colors"></div>
+                        <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 bg-indigo-500/10 rounded-full blur-[40px]"></div>
+                    </>
+                )}
+                {(trip.imageUrl || trip.destination) && (
+                    <div className="absolute inset-0 bg-black/35" />
+                )}
 
                 {trip.isCompleted && (
                     <div className="absolute top-4 right-4 z-20">
@@ -57,11 +74,15 @@ const TripStoryCard = ({ trip, onClick }) => {
                 )}
 
                 <div className="absolute bottom-6 left-8 right-8 z-10">
-                    <h3 className="font-black text-2xl text-slate-900 leading-tight group-hover:text-[#1A1A1A] transition-colors drop-shadow-sm truncate tracking-tight">
+                    <h3 className={`font-black text-2xl leading-tight transition-colors drop-shadow-sm truncate tracking-tight ${
+                        (trip.imageUrl || trip.destination) ? 'text-white group-hover:text-white/95' : 'text-slate-900 group-hover:text-[#1A1A1A]'
+                    }`}>
                         {trip.destination || trip.tripName}
                     </h3>
                     {trip.startDate && (
-                        <p className="text-xs font-semibold text-slate-500 mt-1">
+                        <p className={`text-xs font-semibold mt-1 ${
+                            (trip.imageUrl || trip.destination) ? 'text-white/80' : 'text-slate-500'
+                        }`}>
                             {formatDateRange(trip.startDate, trip.endDate)}
                         </p>
                     )}

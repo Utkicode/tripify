@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InviteModal from './InviteModal';
 import { useConfirm } from '../context/ConfirmContext';
 import { useProfile } from '../context/ProfileContext';
-import { plannerService } from '../services/plannerService';
+import { plannerService, getImageUrl } from '../services/plannerService';
 
 const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTab }) => {
     const [tripName, setTripName] = useState('My Trip');
@@ -556,10 +556,15 @@ const TripDetail = ({ user, tripId, setCurrentTripId, initialTab, clearInitialTa
             <div className="flex-1 overflow-hidden flex flex-col">
                 {/* Cover Band — z-10 keeps it below workspace header (z-30) but above content */}
                 <div
-                    className="h-40 md:h-48 relative shrink-0 transition-all z-10"
-                    style={{ background: '#1E293B' }}
+                    className="h-40 md:h-48 relative shrink-0 transition-all z-10 bg-cover bg-center"
+                    style={{
+                        backgroundImage: (tripData?.imageUrl || (tripData?.destination || destination))
+                            ? `url(${getImageUrl(tripData?.imageUrl || `/media/destination?q=${encodeURIComponent((tripData?.destination || destination).replace(/\s*\([^)]*\)\s*$/, '').trim())}`)})`
+                            : 'none',
+                        backgroundColor: '#1E293B'
+                    }}
                 >
-                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="absolute inset-0 bg-black/35" />
                     <div className="absolute bottom-0 left-0 w-full p-4 md:p-6 flex justify-between items-end" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)' }}>
                         <div className="text-white w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                             <div>

@@ -9,6 +9,16 @@ const API_URL = import.meta.env.DEV
   ? '/api/planner/plan'
   : 'https://planner-api-174168932168.asia-south1.run.app/plan';
 
+export const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const base = import.meta.env.DEV
+      ? '/api/planner'
+      : 'https://planner-api-174168932168.asia-south1.run.app';
+    return `${base}${path}`;
+};
+
+
 
 // Helpers for caching
 const getCacheKey = ({ destination, start_date, end_date, budget, traveler_count }) => {
@@ -255,7 +265,9 @@ export const plannerService = {
             budget: Number(budget) || 0,
             dayCount: dayCount,
             tripName: tripTitle,
-            updatedAt: Date.now()
+            updatedAt: Date.now(),
+            imageUrl: draft.imageUrl || '',
+            destinationBlurb: draft.destinationBlurb || ''
         });
     },
 

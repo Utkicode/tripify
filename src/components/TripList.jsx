@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Trash, Clock, Users, PencilSimple, Plus, ArrowRight, Warning } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getImageUrl } from '../services/plannerService';
 
 const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limit }) => {
     const processedTrips = React.useMemo(() => {
@@ -110,8 +111,19 @@ const TripList = ({ tripsList, setCurrentTripId, createNewTrip, deleteTrip, limi
                                             <p className="text-xs font-bold text-slate-400 tracking-wide">Untitled trip — tap to name it</p>
                                         </div>
                                     ) : (
-                                        <div className="h-28 relative overflow-hidden" style={{ background: '#F1F5F9' }}>
-                                            <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between gap-2">
+                                        <div
+                                            className="h-28 relative overflow-hidden bg-cover bg-center"
+                                            style={{
+                                                backgroundImage: (trip.imageUrl || trip.destination)
+                                                    ? `url(${getImageUrl(trip.imageUrl || `/media/destination?q=${encodeURIComponent(trip.destination.replace(/\s*\([^)]*\)\s*$/, '').trim())}`)})`
+                                                    : 'none',
+                                                backgroundColor: '#F1F5F9'
+                                            }}
+                                        >
+                                            {(trip.imageUrl || trip.destination) && (
+                                                <div className="absolute inset-0 bg-black/20" />
+                                            )}
+                                            <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between gap-2 z-10">
                                                 <div className="inline-flex items-center gap-1.5 bg-white/80 backdrop-blur-md border border-white/60 px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 shadow-sm truncate max-w-[70%]">
                                                     <MapPin size={11} className="text-[#FF6B35] shrink-0" />
                                                     <span className="truncate">{trip.destination || 'Destination TBD'}</span>
