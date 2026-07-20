@@ -240,7 +240,7 @@ export default function App() {
     if (currentView ==='dashboard') {
       return (
         <Suspense fallback={<AppLoadingSkeleton />}>
-          <LandingPage currentView={currentView} />
+          <LandingPage currentView={currentView} setCurrentView={setCurrentView} />
         </Suspense>
       );
     }
@@ -255,7 +255,7 @@ export default function App() {
           {currentView ==='privacy' && <AppPrivacy />}
           {currentView ==='terms' && <TermsOfService />}
           {/* Fallback to Landing if unknown view or is a SEO landing view */}
-          {['features','about','protips','privacy','terms'].indexOf(currentView) === -1 && <LandingPage currentView={currentView} />}
+          {['features','about','protips','privacy','terms'].indexOf(currentView) === -1 && <LandingPage currentView={currentView} setCurrentView={setCurrentView} />}
         </PublicLayout>
       </Suspense>
     );

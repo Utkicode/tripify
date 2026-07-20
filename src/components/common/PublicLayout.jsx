@@ -102,10 +102,10 @@ const PublicLayout = ({ children, setCurrentView, currentView }) => {
                             The smartest way to plan trips and manage travel expenses. Built for modern explorers.
                         </p>
                         <div className="flex gap-4">
-                            {[Twitter, Instagram, Linkedin].map((Icon, i) => (
+                            {[LinkedinLogo].map((Icon, i) => (
                                 <button
                                     key={i}
-                                    aria-label={`Visit our ${i === 0 ?'Twitter' : i === 1 ?'Instagram' :'LinkedIn'} page`}
+                                    aria-label={`Visit our ${i === 0 ? 'LinkedIn' : 'social'} page`}
                                     className="w-10 h-10 rounded-full  flex items-center justify-center text-slate-400 hover: hover:text-[#1A1A1A] transition-colors"
                                 >
                                     <Icon size={18} />
